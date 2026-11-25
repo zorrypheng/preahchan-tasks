@@ -1,0 +1,110 @@
+{
+  "id": "_pb_users_auth_",
+  "name": "users",
+  "type": "auth",
+  "listRule": "@request.auth.id != \"\"",
+  "viewRule": "@request.auth.id != \"\"",
+  "createRule": "@request.auth.role = \"admin\"",
+  "updateRule": "@request.auth.role = \"admin\" || (id = @request.auth.id && @request.body.role:isset = false && @request.body.kpi:isset = false && @request.body.cap:isset = false && @request.body.active:isset = false && @request.body.username:isset = false)",
+  "deleteRule": "@request.auth.role = \"admin\" && id != @request.auth.id",
+  "manageRule": "@request.auth.role = \"admin\"",
+  "authRule": "active = true",
+  "passwordAuth": {
+    "enabled": true,
+    "identityFields": [
+      "username",
+      "email"
+    ]
+  },
+  "fields": [
+    {
+      "name": "email",
+      "type": "email",
+      "system": true,
+      "required": false
+    },
+    {
+      "name": "name",
+      "type": "text",
+      "required": true,
+      "min": 1,
+      "max": 80
+    },
+    {
+      "name": "username",
+      "type": "text",
+      "required": true,
+      "min": 2,
+      "max": 30,
+      "pattern": "^[a-z0-9._]+$"
+    },
+    {
+      "name": "role",
+      "type": "select",
+      "values": [
+        "admin",
+        "manager",
+        "staff"
+      ],
+      "maxSelect": 1,
+      "required": true
+    },
+    {
+      "name": "kpi",
+      "type": "number",
+      "min": 0,
+      "max": 99,
+      "onlyInt": true
+    },
+    {
+      "name": "cap",
+      "type": "number",
+      "min": 1,
+      "max": 80
+    },
+    {
+      "name": "active",
+      "type": "bool"
+    },
+    {
+      "name": "lang",
+      "type": "select",
+      "values": [
+        "en",
+        "km"
+      ],
+      "maxSelect": 1
+    },
+    {
+      "name": "tg_chat",
+      "type": "text",
+      "hidden": true,
+      "max": 40
+    },
+    {
+      "name": "tg_code",
+      "type": "text",
+      "hidden": true,
+      "max": 20
+    },
+    {
+      "name": "tg_on",
+      "type": "bool"
+    },
+    {
+      "name": "created",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": false
+    },
+    {
+      "name": "updated",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": true
+    }
+  ],
+  "indexes": [
+    "CREATE UNIQUE INDEX idx_users_username ON users (username)"
+  ]
+}

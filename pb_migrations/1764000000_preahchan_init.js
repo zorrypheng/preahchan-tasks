@@ -1,0 +1,638 @@
+/// <reference path="../pb_data/types.d.ts" />
+// Creates the Preahchan Tasks tables on a fresh PocketBase.
+// If the tables already exist (for example they were created through the admin API), it does nothing.
+migrate((app) => {
+  try { app.findCollectionByNameOrId("tasks"); return } catch (e) {}
+  const collections = [
+ {
+  "id": "_pb_users_auth_",
+  "name": "users",
+  "type": "auth",
+  "listRule": "@request.auth.id != \"\"",
+  "viewRule": "@request.auth.id != \"\"",
+  "createRule": "@request.auth.role = \"admin\"",
+  "updateRule": "@request.auth.role = \"admin\" || (id = @request.auth.id && @request.body.role:isset = false && @request.body.kpi:isset = false && @request.body.cap:isset = false && @request.body.active:isset = false && @request.body.username:isset = false)",
+  "deleteRule": "@request.auth.role = \"admin\" && id != @request.auth.id",
+  "manageRule": "@request.auth.role = \"admin\"",
+  "authRule": "active = true",
+  "passwordAuth": {
+   "enabled": true,
+   "identityFields": [
+    "username",
+    "email"
+   ]
+  },
+  "fields": [
+   {
+    "name": "email",
+    "type": "email",
+    "system": true,
+    "required": false
+   },
+   {
+    "name": "name",
+    "type": "text",
+    "required": true,
+    "min": 1,
+    "max": 80
+   },
+   {
+    "name": "username",
+    "type": "text",
+    "required": true,
+    "min": 2,
+    "max": 30,
+    "pattern": "^[a-z0-9._]+$"
+   },
+   {
+    "name": "role",
+    "type": "select",
+    "values": [
+     "admin",
+     "manager",
+     "staff"
+    ],
+    "maxSelect": 1,
+    "required": true
+   },
+   {
+    "name": "kpi",
+    "type": "number",
+    "min": 0,
+    "max": 99,
+    "onlyInt": true
+   },
+   {
+    "name": "cap",
+    "type": "number",
+    "min": 1,
+    "max": 80
+   },
+   {
+    "name": "active",
+    "type": "bool"
+   },
+   {
+    "name": "lang",
+    "type": "select",
+    "values": [
+     "en",
+     "km"
+    ],
+    "maxSelect": 1
+   },
+   {
+    "name": "tg_chat",
+    "type": "text",
+    "hidden": true,
+    "max": 40
+   },
+   {
+    "name": "tg_code",
+    "type": "text",
+    "hidden": true,
+    "max": 20
+   },
+   {
+    "name": "tg_on",
+    "type": "bool"
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   },
+   {
+    "name": "updated",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": true
+   }
+  ],
+  "indexes": [
+   "CREATE UNIQUE INDEX idx_users_username ON users (username)"
+  ]
+ },
+ {
+  "id": "pc_clients00001",
+  "name": "clients",
+  "type": "base",
+  "listRule": "@request.auth.id != \"\"",
+  "viewRule": "@request.auth.id != \"\"",
+  "createRule": "@request.auth.id != \"\" && @request.body.created_by = @request.auth.id",
+  "updateRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "deleteRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "fields": [
+   {
+    "name": "name",
+    "type": "text",
+    "required": true,
+    "min": 1,
+    "max": 80
+   },
+   {
+    "name": "created_by",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "cascadeDelete": false
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   },
+   {
+    "name": "updated",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": true
+   }
+  ],
+  "indexes": [
+   "CREATE UNIQUE INDEX idx_clients_name ON clients (name COLLATE NOCASE)"
+  ]
+ },
+ {
+  "id": "pc_tasks0000001",
+  "name": "tasks",
+  "type": "base",
+  "listRule": "assignee = @request.auth.id || creator = @request.auth.id || @request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "viewRule": "assignee = @request.auth.id || creator = @request.auth.id || @request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "createRule": "@request.auth.id != \"\" && @request.body.creator = @request.auth.id && (@request.body.assignee = @request.auth.id || @request.auth.role != \"staff\")",
+  "updateRule": "(assignee = @request.auth.id || creator = @request.auth.id || @request.auth.role != \"staff\") && (@request.auth.role != \"staff\" || @request.body.assignee:isset = false) && @request.body.creator:isset = false",
+  "deleteRule": "creator = @request.auth.id || @request.auth.role != \"staff\"",
+  "fields": [
+   {
+    "name": "title",
+    "type": "text",
+    "required": true,
+    "min": 1,
+    "max": 200
+   },
+   {
+    "name": "desc",
+    "type": "text",
+    "max": 2000
+   },
+   {
+    "name": "assignee",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": false
+   },
+   {
+    "name": "creator",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": false
+   },
+   {
+    "name": "client",
+    "type": "relation",
+    "collectionId": "pc_clients00001",
+    "maxSelect": 1,
+    "cascadeDelete": false
+   },
+   {
+    "name": "due",
+    "type": "text",
+    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+    "max": 10
+   },
+   {
+    "name": "priority",
+    "type": "select",
+    "values": [
+     "high",
+     "normal",
+     "low"
+    ],
+    "maxSelect": 1,
+    "required": true
+   },
+   {
+    "name": "status",
+    "type": "select",
+    "values": [
+     "todo",
+     "doing",
+     "done"
+    ],
+    "maxSelect": 1,
+    "required": true
+   },
+   {
+    "name": "est",
+    "type": "number",
+    "min": 0,
+    "max": 99
+   },
+   {
+    "name": "spent",
+    "type": "number",
+    "min": 0,
+    "max": 99
+   },
+   {
+    "name": "done_at",
+    "type": "text",
+    "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$",
+    "max": 10
+   },
+   {
+    "name": "repeat",
+    "type": "bool"
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   },
+   {
+    "name": "updated",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": true
+   }
+  ],
+  "indexes": [
+   "CREATE INDEX idx_tasks_assignee ON tasks (assignee, status)",
+   "CREATE INDEX idx_tasks_done ON tasks (done_at)"
+  ]
+ },
+ {
+  "id": "pc_comments0001",
+  "name": "comments",
+  "type": "base",
+  "listRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"",
+  "viewRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"",
+  "createRule": "@request.body.author = @request.auth.id && (@request.body.task.assignee = @request.auth.id || @request.body.task.creator = @request.auth.id || @request.auth.role != \"staff\")",
+  "updateRule": null,
+  "deleteRule": "author = @request.auth.id",
+  "fields": [
+   {
+    "name": "task",
+    "type": "relation",
+    "collectionId": "pc_tasks0000001",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": true
+   },
+   {
+    "name": "author",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": false
+   },
+   {
+    "name": "text",
+    "type": "text",
+    "required": true,
+    "min": 1,
+    "max": 1000
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   }
+  ],
+  "indexes": [
+   "CREATE INDEX idx_comments_task ON comments (task)"
+  ]
+ },
+ {
+  "id": "pc_documents001",
+  "name": "documents",
+  "type": "base",
+  "listRule": "area = \"company\" || area = \"client\" || owner = @request.auth.id",
+  "viewRule": "area = \"company\" || area = \"client\" || owner = @request.auth.id",
+  "createRule": "@request.body.owner = @request.auth.id && (@request.body.area != \"company\" || @request.auth.role != \"staff\") && (@request.body.area != \"client\" || @request.body.client != \"\")",
+  "updateRule": "owner = @request.auth.id || @request.auth.role != \"staff\"",
+  "deleteRule": "owner = @request.auth.id || @request.auth.role != \"staff\"",
+  "fields": [
+   {
+    "name": "name",
+    "type": "text",
+    "required": true,
+    "min": 1,
+    "max": 240
+   },
+   {
+    "name": "file",
+    "type": "file",
+    "required": true,
+    "maxSelect": 1,
+    "maxSize": 2147483648,
+    "protected": true
+   },
+   {
+    "name": "area",
+    "type": "select",
+    "values": [
+     "company",
+     "client",
+     "mine"
+    ],
+    "maxSelect": 1,
+    "required": true
+   },
+   {
+    "name": "client",
+    "type": "relation",
+    "collectionId": "pc_clients00001",
+    "maxSelect": 1,
+    "cascadeDelete": false
+   },
+   {
+    "name": "task",
+    "type": "relation",
+    "collectionId": "pc_tasks0000001",
+    "maxSelect": 1,
+    "cascadeDelete": false
+   },
+   {
+    "name": "owner",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": false
+   },
+   {
+    "name": "version",
+    "type": "number",
+    "min": 1
+   },
+   {
+    "name": "size",
+    "type": "number",
+    "min": 0
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   },
+   {
+    "name": "updated",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": true
+   }
+  ],
+  "indexes": [
+   "CREATE INDEX idx_documents_area ON documents (area, client)"
+  ]
+ },
+ {
+  "id": "pc_notes0000001",
+  "name": "notes",
+  "type": "base",
+  "listRule": "owner = @request.auth.id || share = \"team\" || (share = \"people\" && people.id ?= @request.auth.id)",
+  "viewRule": "owner = @request.auth.id || share = \"team\" || (share = \"people\" && people.id ?= @request.auth.id)",
+  "createRule": "@request.body.owner = @request.auth.id",
+  "updateRule": "owner = @request.auth.id || ((share = \"team\" || (share = \"people\" && people.id ?= @request.auth.id)) && @request.body.owner:isset = false && @request.body.share:isset = false && @request.body.people:isset = false)",
+  "deleteRule": "owner = @request.auth.id",
+  "fields": [
+   {
+    "name": "owner",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": true
+   },
+   {
+    "name": "title",
+    "type": "text",
+    "max": 120
+   },
+   {
+    "name": "text",
+    "type": "text",
+    "max": 5000
+   },
+   {
+    "name": "items",
+    "type": "json",
+    "maxSize": 200000
+   },
+   {
+    "name": "color",
+    "type": "select",
+    "values": [
+     "yellow",
+     "blue",
+     "green",
+     "pink",
+     "lilac",
+     "white"
+    ],
+    "maxSelect": 1
+   },
+   {
+    "name": "pinned",
+    "type": "bool"
+   },
+   {
+    "name": "label",
+    "type": "text",
+    "max": 40
+   },
+   {
+    "name": "share",
+    "type": "select",
+    "values": [
+     "private",
+     "team",
+     "people"
+    ],
+    "maxSelect": 1,
+    "required": true
+   },
+   {
+    "name": "people",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 99,
+    "cascadeDelete": false
+   },
+   {
+    "name": "remind",
+    "type": "text",
+    "pattern": "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2})?$",
+    "max": 16
+   },
+   {
+    "name": "reminded",
+    "type": "bool"
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   },
+   {
+    "name": "updated",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": true
+   }
+  ],
+  "indexes": [
+   "CREATE INDEX idx_notes_owner ON notes (owner)"
+  ]
+ },
+ {
+  "id": "pc_notifs000001",
+  "name": "notifications",
+  "type": "base",
+  "listRule": "user = @request.auth.id",
+  "viewRule": "user = @request.auth.id",
+  "createRule": null,
+  "updateRule": "user = @request.auth.id && @request.body.user:isset = false && @request.body.kind:isset = false && @request.body.data:isset = false",
+  "deleteRule": "user = @request.auth.id",
+  "fields": [
+   {
+    "name": "user",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": true
+   },
+   {
+    "name": "kind",
+    "type": "text",
+    "required": true,
+    "max": 30
+   },
+   {
+    "name": "data",
+    "type": "json",
+    "maxSize": 20000
+   },
+   {
+    "name": "read",
+    "type": "bool"
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   }
+  ],
+  "indexes": [
+   "CREATE INDEX idx_notifs_user ON notifications (user, read)"
+  ]
+ },
+ {
+  "id": "pc_reports00001",
+  "name": "reports",
+  "type": "base",
+  "listRule": "user = @request.auth.id || @request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && user.role = \"staff\")",
+  "viewRule": "user = @request.auth.id || @request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && user.role = \"staff\")",
+  "createRule": "@request.body.user = @request.auth.id",
+  "updateRule": "user != @request.auth.id && (@request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && user.role = \"staff\")) && @request.body.user:isset = false && @request.body.snap:isset = false && @request.body.week:isset = false",
+  "deleteRule": null,
+  "fields": [
+   {
+    "name": "user",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "required": true,
+    "cascadeDelete": false
+   },
+   {
+    "name": "week",
+    "type": "text",
+    "required": true,
+    "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+    "max": 10
+   },
+   {
+    "name": "snap",
+    "type": "json",
+    "maxSize": 500000
+   },
+   {
+    "name": "note",
+    "type": "text",
+    "max": 1000
+   },
+   {
+    "name": "status",
+    "type": "select",
+    "values": [
+     "pending",
+     "approved",
+     "returned"
+    ],
+    "maxSelect": 1,
+    "required": true
+   },
+   {
+    "name": "decided_by",
+    "type": "relation",
+    "collectionId": "_pb_users_auth_",
+    "maxSelect": 1,
+    "cascadeDelete": false
+   },
+   {
+    "name": "decided_at",
+    "type": "text",
+    "max": 20
+   },
+   {
+    "name": "comment",
+    "type": "text",
+    "max": 1000
+   },
+   {
+    "name": "pdf",
+    "type": "file",
+    "maxSelect": 1,
+    "maxSize": 20971520,
+    "mimeTypes": [
+     "application/pdf"
+    ],
+    "protected": true
+   },
+   {
+    "name": "created",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": false
+   },
+   {
+    "name": "updated",
+    "type": "autodate",
+    "onCreate": true,
+    "onUpdate": true
+   }
+  ],
+  "indexes": [
+   "CREATE INDEX idx_reports_user ON reports (user, week)"
+  ]
+ }
+]
+  app.importCollections(collections, false)
+}, (app) => {
+  // no automatic rollback: removing the tables would delete your data
+})
