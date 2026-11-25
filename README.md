@@ -12,7 +12,13 @@ Internal task, weekly KPI and hours app for the Preahchan team, running on Pocke
 | `schema/` | not deployed | The table design, for reference |
 | `src/`, `tools/`, `vendor/` | not deployed | Source of the web app. `python3 tools/build.py` rebuilds `pb_public/index.html` |
 
-## Install or update on ZimaOS
+## Install from GitHub on ZimaOS (recommended)
+
+The server runs straight from a clone of this repository:
+PocketBase's `pb_public`, `pb_hooks` and `pb_migrations` volumes point at the folders of the same name in the clone.
+To update: `sh /DATA/AppData/pocketbase/app/update.sh`
+
+## Install or update by hand (zip)
 
 1. In ZimaOS **Files**, open the folder that holds PocketBase's `pb_data` (for example `/DATA/AppData/pocketbase/`).
 2. Copy the contents of `pb_public`, `pb_hooks` and `pb_migrations` into the folders of the same name there. Keep any files already in `pb_migrations`.
