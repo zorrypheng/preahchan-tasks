@@ -102,9 +102,9 @@ async function loadAndShow() {
 }
 
 function summary(user) {
-  const kpi = user.kpi || 0, cap = user.cap || 44, pct = kpi ? Math.min(1, st.week.done / kpi) : 0, C = 2 * Math.PI * 24;
+  const kpi = user.kpi || 0, cap = user.cap || 44, pct = kpi ? Math.min(1, st.week.done / kpi) : 0, C = 2 * Math.PI * 30;
   return `<section class="sum" aria-label="${esc(fill(t("week"), st.week.done, kpi))}">
-    <div class="ring"><svg viewBox="0 0 56 56" aria-hidden="true"><circle class="trk" cx="28" cy="28" r="24"/><circle class="prg" cx="28" cy="28" r="24" style="stroke-dasharray:${C.toFixed(1)};stroke-dashoffset:${(C * (1 - pct)).toFixed(1)}"/></svg><b>${st.week.done}</b></div>
+    <div class="ring"><svg viewBox="0 0 68 68" aria-hidden="true"><circle class="trk" cx="34" cy="34" r="30"/><circle class="prg" cx="34" cy="34" r="30" style="stroke-dasharray:${C.toFixed(1)};stroke-dashoffset:${(C * (1 - pct)).toFixed(1)}"/></svg><b>${st.week.done}</b></div>
     <span class="l1">${esc(fill(t("week"), st.week.done, kpi))}</span>
     <span class="l2">${esc(fill(t("hours"), st.week.hours, cap))}</span></section>
     ${st.unread ? `<button class="bell" id="bell" type="button">● ${esc(st.unread === 1 ? t("unread1") : fill(t("unread"), st.unread))}</button>` : ""}`;
