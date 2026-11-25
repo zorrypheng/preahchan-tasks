@@ -35,3 +35,13 @@ The Application URL in PocketBase settings must be the public `https://` address
 ## Times
 
 Scheduled jobs use Cambodia time (UTC+7) whatever the server's timezone: the morning summary runs at 08:00 Monday to Saturday, note reminders every minute.
+
+## Chrome extension (`extension/`)
+
+One-click access from the browser toolbar: weekly KPI and hours, today's and overdue tasks with Done + hours, quick Add task, quick Note,
+a badge with tasks due today or overdue, desktop notifications (checked every 5 minutes), and right-click "Add as Preahchan task" / "Save to Preahchan note".
+Shortcut: Alt+Shift+P. Signs in with the same username and password as the app. Works in Chrome, Edge and Brave.
+
+Install: download `preahchan-tasks-extension.zip` (or the `extension` folder), unzip it, open `chrome://extensions`, turn on **Developer mode**,
+click **Load unpacked** and choose the unzipped `extension` folder.
+Update: replace the folder with the new version and click the reload arrow on the extension card.

@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Preahchan Tasks",
+  "short_name": "Preahchan",
+  "version": "1.0.0",
+  "description": "Your Preahchan tasks, notes and weekly KPI in one click. Finish tasks, log hours and save pages as tasks or notes.",
+  "icons": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "action": {
+    "default_title": "Preahchan Tasks",
+    "default_popup": "popup.html",
+    "default_icon": { "16": "icons/icon16.png", "32": "icons/icon32.png", "48": "icons/icon48.png" }
+  },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["storage", "alarms", "notifications", "contextMenus", "activeTab"],
+  "host_permissions": ["https://d.preahchan.com/*"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "commands": {
+    "_execute_action": { "suggested_key": { "default": "Alt+Shift+P" }, "description": "Open Preahchan Tasks" }
+  }
+}

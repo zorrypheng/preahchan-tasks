@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Preahchan Tasks</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<header class="bar">
+  <span class="brand"><span class="moon" aria-hidden="true"></span>Preahchan</span>
+  <span class="sp"></span>
+  <button class="ib" id="open-app" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span class="sr" data-t="openApp"></span></button>
+  <button class="ib" id="sign-out" type="button" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg><span class="sr" data-t="signOut"></span></button>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script type="module" src="popup.js"></script>
+</body>
+</html>
