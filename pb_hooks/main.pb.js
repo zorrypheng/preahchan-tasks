@@ -129,7 +129,8 @@ onRecordUpdateRequest((e) => {
   const pc = require(`${__hooks}/lib/pc.js`)
   const r = e.record, o = r.original()
   if (r.getString("status") !== o.getString("status")) {
-    if (e.auth) r.set("decided_by", e.auth.id)
+    // only app accounts can be recorded as the approver (not the PocketBase superuser)
+    if (e.auth && e.auth.collection().name === "users") r.set("decided_by", e.auth.id)
     r.set("decided_at", pc.ict().stamp)
     if (r.getString("status") === "returned" && !r.getString("comment").trim()) throw new BadRequestError("A comment is required to send a report back.")
   }
