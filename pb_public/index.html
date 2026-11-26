@@ -4,7 +4,14 @@
 <meta charset="utf-8">
 <title>Preahchan Tasks</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<link rel="icon" href="data:,">
+<link rel="icon" href="icons/favicon-32.png" type="image/png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#f7f4ec">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Preahchan">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700&display=swap">
 <style>
@@ -495,6 +502,12 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 .tag.warn{background:#fdecd3;color:#8a4b00}
 .salrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .salrow:first-child{border-top:0}
+
+/* Install app button (top bar) */
+.installbtn{display:inline-flex;align-items:center;gap:6px}
+.installbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:520px){.installbtn span{display:none}.installbtn{padding:0 10px}}
+.installsteps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;line-height:22px}
 </style>
 
 </head>
@@ -739,9 +752,9 @@ function render(){
   const menter=!!S.menu&&!R.m;R.m=!!S.menu;R.fe=!!S.fn&&!R.f;R.f=!!S.fn;
   const m=me();if(!NAV[m.role].includes(S.view)&&S.view!=="account"&&S.view!=="report")S.view=NAV[m.role][0];
   const V={tasks:vTasks,team:vTeam,board:vBoard,dash:vDash,users:vUsers,clients:vClients,notes:vNotes,docs:vDocs,account:vAccount,report:vReport,reports:vReports,settings:vSettings,costs:vCosts}[S.view]();
-  const D=S.dlg?`<div class="scrim ${denter?"enter":""}" data-act="scrim"><div class="dlg" role="dialog" aria-modal="true">${{new:dNew,task:dTask,user:dUser,note:dNote,notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos,uedit:dUedit,uteam:dUteam,salary:dSalary}[S.dlg.type]()}</div></div>`:"";
+  const D=S.dlg?`<div class="scrim ${denter?"enter":""}" data-act="scrim"><div class="dlg" role="dialog" aria-modal="true">${{new:dNew,task:dTask,user:dUser,note:dNote,notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos,uedit:dUedit,uteam:dUteam,salary:dSalary,install:dInstall}[S.dlg.type]()}</div></div>`:"";
   app.innerHTML=`<div class="shell ${S.view==="tasks"?"hasfab":""} ${S.view==="tasks"&&S.fn?"fnopen":""}"><header class="top"><button class="iconbtn menubtn" data-act="menu" aria-expanded="${!!S.menu}" aria-controls="mainnav" aria-label="${t("menu")}"><svg viewBox="0 0 24 24" aria-hidden="true">${S.menu?'<path d="M6 6l12 12M18 6L6 18"/>':'<path d="M4 7h16M4 12h16M4 17h16"/>'}</svg></button><img src="${LOGO}" alt="Preahchan Digital"><span class="sp"></span>
-    ${(c=>`<button class="iconbtn" data-act="bell" aria-label="${t("notifs")}${c?`, ${c} ${t("unread")}`:""}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>${c?`<span class="count num">${c}</span>`:""}</button>`)(unreadCount())}
+    ${(c=>`${installBtn()}<button class="iconbtn" data-act="bell" aria-label="${t("notifs")}${c?`, ${c} ${t("unread")}`:""}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>${c?`<span class="count num">${c}</span>`:""}</button>`)(unreadCount())}
     <button class="avbtn" data-act="account" aria-label="${t("account")}: ${esc(m.name)}" ${S.view==="account"?'aria-current="page"':""}><span class="av">${esc(initials(m.name))}</span></button></header>
    <div class="body">${S.menu?`<div class="navscrim ${menter?"enter":""}" data-act="navclose"></div>`:""}<nav class="nav ${S.menu?"openmenu":""} ${menter?"enter":""}" id="mainnav" aria-label="${t("menu")}">${NAV[m.role].map(v=>`<button data-act="nav" data-v="${v}" ${S.view===v?'aria-current="page"':""}><svg class="ni" viewBox="0 0 24 24" aria-hidden="true">${NI[v]||""}</svg><span>${t("n_"+v)}</span>${v==="reports"&&pendingFor()?`<span class="ncount num">${pendingFor()}</span>`:""}</button>`).join("")}</nav><main class="${enter?"enter":""}">${V}</main></div></div>${S.view==="tasks"?floatNotes():""}${D}`;
   app.querySelectorAll(".av").forEach(el=>{let h=0;for(const c of el.textContent)h=(h*31+c.charCodeAt(0))>>>0;el.dataset.c=h%6});
@@ -2334,6 +2347,35 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",e=>{const el=e.target;if(el.dataset&&el.dataset.ch==="crange"){e.stopImmediatePropagation();S.cFrom=val("c-from");S.cTo=val("c-to");render()}},true);
 document.addEventListener("input",e=>{const el=e.target;if(el.id!=="sal-amt"||!S.dlg)return;const u=U(S.dlg.id),v=parseFloat(el.value),out=document.getElementById("sal-rate");
   if(out)out.textContent=u&&v>0?fill(t("salRateIs"),usd(v/paidHoursMonth(u)),u.cap||44):""});
+
+/* ---------- Install on the home screen ---------- */
+Object.assign(T.en,{install:"Install app",installT:"Install Preahchan Tasks",installed:"App installed",
+  installIOS1:"Open this page in Safari.",installIOS2:"Tap the Share button (the square with an arrow).",installIOS3:"Choose “Add to Home Screen”, then “Add”.",
+  installHelp:"The app opens in its own window from your home screen, like other apps."});
+Object.assign(T.km,{install:"ដំឡើងកម្មវិធី",installT:"ដំឡើង Preahchan Tasks",installed:"បានដំឡើងកម្មវិធី",
+  installIOS1:"បើកទំព័រនេះក្នុង Safari។",installIOS2:"ចុចប៊ូតុង Share (ការ៉េមានព្រួញ)។",installIOS3:"ជ្រើស “Add to Home Screen” រួចចុច “Add”។",
+  installHelp:"កម្មវិធីនឹងបើកក្នុងផ្ទាំងផ្ទាល់ខ្លួនពីអេក្រង់ដើម ដូចកម្មវិធីផ្សេងៗ។"});
+BLOCKING.push("install");
+let installEvt=null;
+const isStandalone=()=>{try{return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}catch(e){return false}};
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(S.me)render()});
+window.addEventListener("appinstalled",()=>{installEvt=null;if(S.me){render();toast(t("installed"))}});
+if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+function installBtn(){
+  if(isStandalone()||(!installEvt&&!isIOS))return "";
+  return `<button class="btn small installbtn" data-act="install" aria-label="${t("install")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3"/><path d="m7 10 5 5 5-5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg><span>${t("install")}</span></button>`;
+}
+function dInstall(){
+  return `<h2>${t("installT")}</h2><p class="muted">${t("installHelp")}</p>
+   <ol class="installsteps"><li>${t("installIOS1")}</li><li>${t("installIOS2")}</li><li>${t("installIOS3")}</li></ol>
+   <div class="acts"><button class="btn" data-act="close">${t("close")}</button></div>`;
+}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest('[data-act="install"]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();
+  if(installEvt){const ev=installEvt;installEvt=null;try{await ev.prompt();await ev.userChoice}catch(x){}render();return}
+  S.dlg={type:"install"};render();
+},true);
 
 /* Start */
 setTimeout(()=>{DL=dlObj();},0);

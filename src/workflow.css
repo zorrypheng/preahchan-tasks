@@ -128,3 +128,9 @@
 .tag.warn{background:#fdecd3;color:#8a4b00}
 .salrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
 .salrow:first-child{border-top:0}
+
+/* Install app button (top bar) */
+.installbtn{display:inline-flex;align-items:center;gap:6px}
+.installbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media (max-width:520px){.installbtn span{display:none}.installbtn{padding:0 10px}}
+.installsteps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;line-height:22px}
