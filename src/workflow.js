@@ -1,5 +1,5 @@
 /* ===== Workflow: statuses, task types, positions, Kanban, hand-off, Settings ===== */
-Object.assign(T.en,{hoursSet:"Hours when finishing",hoursAuto:"Automatic",hours_required:"Hours required",hours_optional:"Hours optional",hours_none:"Record only (no hours)",defPos:"Suggested position",editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",noTeam:"No team yet",teamHelpSup:"Tick the staff this supervisor looks after. The supervisor can see and assign their tasks.",supBy:"Supervisor",pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
+Object.assign(T.en,{hoursSet:"Hours when finishing",hoursAuto:"Automatic",hours_required:"Hours required",hours_optional:"Hours optional",hours_none:"Record only (no hours)",defPos:"Suggested position",workersT:"Who works on this stage",workersHelp:"Tick the positions. Only people with these positions are offered for this stage in the stage plan. None ticked = everyone.",editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",noTeam:"No team yet",teamHelpSup:"Tick the staff this supervisor looks after. The supervisor can see and assign their tasks.",supBy:"Supervisor",pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
  otherStages:"Other stages",otherHelp:"These cards are in statuses your position doesn't handle. You can open them but not move them.",
  moveTo:"Move to…",nextStep:"Move to next status",movedTo:"Moved to {a}",cantMove:"Your position can't move tasks to {a}.",lastStep:"This task is already at its last status.",
  handoffT:"Hand off to someone who handles {a}?",handoffHelp:"{a}'s position doesn't cover {b}. Choose who takes it next. They will be notified.",
@@ -13,7 +13,7 @@ Object.assign(T.en,{hoursSet:"Hours when finishing",hoursAuto:"Automatic",hours_
  positionsF:"Positions",noPos:"No position yet",editPos:"Edit positions",posSaved:"Positions saved",finishedWeek:"Finished this week",
  dragHint:"Drag cards between columns, or use Move to on each card.",nameReq:"Enter a name.",usedBy:"Used by {a} tasks",
  inUse:"Tasks still use this. Move them to another status or type first.",finishedTag:"Finished",stepsN:"{a} statuses",typesN:"{a} types"});
-Object.assign(T.km,{hoursSet:"ម៉ោងពេលបញ្ចប់",hoursAuto:"ស្វ័យប្រវត្តិ",hours_required:"ត្រូវការម៉ោង",hours_optional:"ម៉ោងស្រេចចិត្ត",hours_none:"កត់ត្រាតែប៉ុណ្ណោះ (គ្មានម៉ោង)",defPos:"តួនាទីណែនាំ",editTeam:"កែក្រុម",teamOfT:"ក្រុម",teamSaved:"បានរក្សាទុកក្រុម",noTeam:"មិនទាន់មានក្រុម",teamHelpSup:"ធីកបុគ្គលិកដែលអ្នកត្រួតពិនិត្យនេះមើលការខុសត្រូវ។ អ្នកត្រួតពិនិត្យអាចមើល និងចាត់តាំងការងាររបស់ពួកគេ។",supBy:"អ្នកត្រួតពិនិត្យ",pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
+Object.assign(T.km,{hoursSet:"ម៉ោងពេលបញ្ចប់",hoursAuto:"ស្វ័យប្រវត្តិ",hours_required:"ត្រូវការម៉ោង",hours_optional:"ម៉ោងស្រេចចិត្ត",hours_none:"កត់ត្រាតែប៉ុណ្ណោះ (គ្មានម៉ោង)",defPos:"តួនាទីណែនាំ",workersT:"អ្នកធ្វើដំណាក់កាលនេះ",workersHelp:"ធីកតួនាទី។ មានតែអ្នកមានតួនាទីទាំងនេះប៉ុណ្ណោះ ដែលត្រូវបានផ្តល់ជូនក្នុងផែនការដំណាក់កាល។ មិនធីក = ទាំងអស់គ្នា។",editTeam:"កែក្រុម",teamOfT:"ក្រុម",teamSaved:"បានរក្សាទុកក្រុម",noTeam:"មិនទាន់មានក្រុម",teamHelpSup:"ធីកបុគ្គលិកដែលអ្នកត្រួតពិនិត្យនេះមើលការខុសត្រូវ។ អ្នកត្រួតពិនិត្យអាចមើល និងចាត់តាំងការងាររបស់ពួកគេ។",supBy:"អ្នកត្រួតពិនិត្យ",pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
  otherStages:"ដំណាក់កាលផ្សេងទៀត",otherHelp:"កាតទាំងនេះស្ថិតក្នុងស្ថានភាពដែលតួនាទីរបស់អ្នកមិនទទួលខុសត្រូវ។ អ្នកអាចបើកមើលបាន ប៉ុន្តែមិនអាចផ្លាស់ទីបានទេ។",
  moveTo:"ផ្លាស់ទៅ…",nextStep:"ផ្លាស់ទៅស្ថានភាពបន្ទាប់",movedTo:"បានផ្លាស់ទៅ {a}",cantMove:"តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។",lastStep:"ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
  handoffT:"ប្រគល់ទៅអ្នកទទួលខុសត្រូវ {a}?",handoffHelp:"តួនាទីរបស់ {a} មិនគ្របដណ្តប់ {b} ទេ។ សូមជ្រើសរើសអ្នកបន្ត។ ពួកគេនឹងទទួលដំណឹង។",
@@ -206,7 +206,7 @@ function vSettings(){
   let body="";
   if(S.setTab==="statuses"){
     const list=sortedSt();
-    body=`<div class="rows">${list.map((s,i)=>`<div class="srow"><span class="kdot sc-${s.color||"gray"}"></span><span class="sname"><b>${esc(s.name)}</b>${s.name_km?` <span class="muted">· ${esc(s.name_km)}</span>`:""}<br><span class="cap muted">${s.done?`<span class="conf">${t("finishedTag")}</span> · `:`${t("hours_"+hoursMode(s,""))} · `}${fill(t("usedBy"),count(k=>k.stage===s.id))}</span></span>
+    body=`<div class="rows">${list.map((s,i)=>`<div class="srow"><span class="kdot sc-${s.color||"gray"}"></span><span class="sname"><b>${esc(s.name)}</b>${s.name_km?` <span class="muted">· ${esc(s.name_km)}</span>`:""}<br><span class="cap muted">${s.done?`<span class="conf">${t("finishedTag")}</span> · `:`${t("hours_"+hoursMode(s,""))} · ${(s.workers||[]).length?(s.workers||[]).map(PO).filter(Boolean).map(p=>esc(nm(p))).join(", ")+" · ":""}`}${fill(t("usedBy"),count(k=>k.stage===s.id))}</span></span>
       <span class="sacts"><button class="iconbtn sm" data-act="st-move" data-id="${s.id}" data-d="-1" ${i===0?"disabled":""} aria-label="${t("up")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button><button class="iconbtn sm" data-act="st-move" data-id="${s.id}" data-d="1" ${i===list.length-1?"disabled":""} aria-label="${t("down")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="btn small" data-act="st-edit" data-id="${s.id}">${t("editT")}</button></span></div>`).join("")}</div>
       <button class="btn primary" data-act="st-edit" data-id="" style="align-self:flex-start">${t("addStatus")}</button>`;
   }else if(S.setTab==="types"){
@@ -232,7 +232,8 @@ function dStEdit(){const d=S.dlg.draft;return `<h2>${d.id?t("editT"):t("addStatu
   <div class="stack" style="gap:8px"><span class="lab">${t("colour")}</span><div class="sw">${STCOLORS.map(c=>`<button type="button" class="sc-${c}" data-act="sd-color" data-c="${c}" aria-pressed="${d.color===c}" aria-label="${c}"></button>`).join("")}</div></div>
   <label class="c"><input type="checkbox" data-sd-b="done" ${d.done?"checked":""}>${t("finished")}</label>
   <div class="two"><label class="f">${t("hoursSet")}<select data-sd="hours"><option value="">${t("hoursAuto")}</option>${["required","optional","none"].map(v=>`<option value="${v}" ${d.hours===v?"selected":""}>${t("hours_"+v)}</option>`).join("")}</select></label>
-  <label class="f">${t("defPos")}<select data-sd="pos"><option value="">—</option>${positions.map(p=>`<option value="${p.id}" ${d.pos===p.id?"selected":""}>${esc(nm(p))}</option>`).join("")}</select></label></div>${sdActs()}`}
+</div>
+  <div class="stack" style="gap:4px"><span class="lab">${t("workersT")}</span><span class="cap muted">${t("workersHelp")}</span>${checks(positions,"workers",d.workers)}</div>${sdActs()}`}
 function dTtEdit(){const d=S.dlg.draft;return `<h2>${d.id?t("editT"):t("addType")}</h2>${nameFields(d)}
   <label class="f">${t("estDefault")}<input type="number" min="0" max="99" step="0.25" data-sd="est" value="${d.est||""}" style="max-width:160px"></label>
   <div class="stack" style="gap:4px"><span class="lab">${t("workflowSteps")}</span>${checks(sortedSt(),"statuses",d.statuses)}</div>${sdActs()}`}
@@ -252,7 +253,7 @@ async function moveTo(k,stageId){
     render();toast(fill(t("movedTo"),nm(s)))}catch(e){fail(e);refresh(true)}
 }
 function draftFor(kind,id){
-  if(kind==="stEdit"){const s=ST(id)||{name:"",name_km:"",color:"gray",done:false};return {id:s.id||null,name:s.name,name_km:s.name_km||"",color:s.color||"gray",done:!!s.done,hours:s.hours||"",pos:s.pos||""}}
+  if(kind==="stEdit"){const s=ST(id)||{name:"",name_km:"",color:"gray",done:false};return {id:s.id||null,name:s.name,name_km:s.name_km||"",color:s.color||"gray",done:!!s.done,hours:s.hours||"",pos:s.pos||"",workers:[...(s.workers||(s.pos?[s.pos]:[]))]}}
   if(kind==="ttEdit"){const x=TT(id)||{name:"",name_km:"",statuses:[],est:0};return {id:x.id||null,name:x.name,name_km:x.name_km||"",statuses:[...(x.statuses||[])],est:x.est||""}}
   const p=PO(id)||{name:"",name_km:"",types:[],statuses:[]};return {id:p.id||null,name:p.name,name_km:p.name_km||"",types:[...p.types],statuses:[...p.statuses]};
 }
@@ -261,7 +262,7 @@ async function saveDraft(){
   if(!d.name.trim()){er.textContent=t("nameReq");er.hidden=false;return}
   const col=kind==="stEdit"?"statuses":kind==="ttEdit"?"task_types":"positions";
   const data={name:d.name.trim(),name_km:(d.name_km||"").trim()};
-  if(kind==="stEdit"){data.color=d.color;data.done=!!d.done;data.hours=d.hours||"";data.pos=d.pos||"";if(!d.id)data.sort=(sortedSt().slice(-1)[0]?.sort||0)+10}
+  if(kind==="stEdit"){data.color=d.color;data.done=!!d.done;data.hours=d.hours||"";data.workers=positions.filter(p=>d.workers.includes(p.id)).map(p=>p.id);if(!d.id)data.sort=(sortedSt().slice(-1)[0]?.sort||0)+10}
   if(kind==="ttEdit"){data.statuses=sortedSt().filter(s=>d.statuses.includes(s.id)).map(s=>s.id);data.est=parseFloat(d.est)||0}
   if(kind==="poEdit"){data.types=d.types;data.statuses=d.statuses}
   try{d.id?await pb.collection(col).update(d.id,data):await pb.collection(col).create(data);S.dlg=null;S.arm=null;await refresh(true);toast(t("savedT"))}

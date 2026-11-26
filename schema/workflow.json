@@ -113,6 +113,47 @@
         "presentable": false,
         "system": false,
         "type": "autodate"
+      },
+      {
+        "hidden": false,
+        "id": "select2317008269",
+        "maxSelect": 1,
+        "name": "hours",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "select",
+        "values": [
+          "required",
+          "optional",
+          "none"
+        ]
+      },
+      {
+        "cascadeDelete": false,
+        "collectionId": "pc_positions001",
+        "hidden": false,
+        "id": "relation2161764012",
+        "maxSelect": 1,
+        "minSelect": 0,
+        "name": "pos",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
+      },
+      {
+        "cascadeDelete": false,
+        "collectionId": "pc_positions001",
+        "hidden": false,
+        "id": "relation3089989056",
+        "maxSelect": 50,
+        "minSelect": 0,
+        "name": "workers",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       }
     ],
     "indexes": [

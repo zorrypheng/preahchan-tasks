@@ -276,7 +276,7 @@ module.exports = {
   boardStats(app, from, to) {
     const out = {}
     app.findRecordsByFilter("work_logs", "day >= {:a} && day <= {:b} && user != ''", "day", 20000, 0, { a: from, b: to }).forEach((l) => {
-      const u = l.getString("user"); (out[u] = out[u] || []).push({ d: l.getString("day"), h: l.getFloat("hours") })
+      const u = l.getString("user"); (out[u] = out[u] || []).push({ d: l.getString("day"), h: l.getFloat("hours"), w: l.getFloat("wait_h") })
     })
     return out
   },

@@ -56,22 +56,27 @@ async function loadStageData(){
   const [l,c,b]=await Promise.all([
     pb.collection("work_logs").getFullList({filter:`day >= "${since}"`,sort:"day,at",batch:1000}).catch(()=>[]),
     pb.collection("crews").getFullList({sort:"name"}).catch(()=>[]),
-    pb.send("/api/pc/board",{query:{from:WK0,to:WK6}}).catch(()=>null)]);
+    pb.send("/api/pc/board",{query:{from:iso(addDays(wk0,-35)),to:WK6}}).catch(()=>null)]);
   wlogs.length=0;l.forEach(r=>wlogs.push({id:r.id,task:r.task_id||r.task||"",stage:r.stage,user:r.user||"",by:r.by||"",hours:r.hours||0,note:r.note||"",day:r.day,at:r.at||"",wait:r.wait_h||0,title:r.title||"",client:r.client||"",type:r.type||""}));
   crews.length=0;c.forEach(r=>crews.push({id:r.id,name:r.name,type:r.type||"",plan:r.plan||{},owner:r.owner}));
   board=b&&typeof b==="object"?b:null;
 }
 /* finished stages with hours this week, as the old "done tasks" list (doneAt, spent) */
 function weekItems(uid){
-  if(board)return (board[uid]||[]).filter(x=>x.h>0).map(x=>({doneAt:x.d,spent:x.h}));
+  if(board)return (board[uid]||[]).filter(x=>x.h>0&&x.d>=WK0&&x.d<=WK6).map(x=>({doneAt:x.d,spent:x.h}));
   return wlogs.filter(l=>l.user===uid&&l.hours>0&&l.day>=WK0&&l.day<=WK6).map(l=>({doneAt:l.day,spent:l.hours}));
 }
 /* workload shown next to names: hours this week, open tasks */
 function loadLabel(u){const h=weekItems(u.id).reduce((a,x)=>a+x.spent,0),n=tasks.filter(k=>k.to===u.id&&k.status!=="done").length;
   return `${u.name} · ${Math.round(h*10)/10}/${u.cap||44} h · ${n} ${t("open")}`}
 /* people for a stage: those whose position is the stage's default position or who work on that stage first */
+/* people for a stage: only those whose position is ticked for it in Settings (everyone if none is ticked) */
+function stageWorkers(s){const w=(s.workers&&s.workers.length)?s.workers:(s.pos?[s.pos]:[]);return w}
 function stageCandidates(s){
-  const all=users.filter(u=>u.active&&u.role!=="admin");
+  const all=users.filter(u=>u.active&&u.role!=="admin"),w=stageWorkers(s);
+  if(w.length){const ok=all.filter(u=>(u.positions||[]).some(p=>w.includes(p)));
+    if(ok.length){const load=u=>weekItems(u.id).reduce((a,x)=>a+x.spent,0),open=u=>tasks.filter(k=>k.to===u.id&&k.status!=="done").length;
+      return {good:ok.sort((a,b)=>load(a)-load(b)||open(a)-open(b)||a.name.localeCompare(b.name)),rest:[],only:true}}}
   const fit=u=>(s.pos&&(u.positions||[]).includes(s.pos))?2:(posOf(u.id).some(p=>p.statuses.includes(s.id))?1:0);
   const load=u=>weekItems(u.id).reduce((a,x)=>a+x.spent,0);
   const open=u=>tasks.filter(k=>k.to===u.id&&k.status!=="done").length;
@@ -82,6 +87,7 @@ function suggestFor(s){const c=stageCandidates(s);return c.good[0]?c.good[0].id:
 function personOpts(s,cur,allowEmpty){
   const c=stageCandidates(s),o=u=>`<option value="${u.id}" ${u.id===cur?"selected":""}>${esc(loadLabel(u))}</option>`;
   const extra=cur&&!c.good.concat(c.rest).some(u=>u.id===cur)&&U(cur)?o(U(cur)):"";
+  if(c.only)return `${allowEmpty?`<option value="">${t("pickLater")}</option>`:""}${extra}${c.good.map(o).join("")}`;
   return `${allowEmpty?`<option value="">${t("pickLater")}</option>`:""}${extra}${c.good.length?`<optgroup label="${t("suggested")}">${c.good.map(o).join("")}</optgroup><optgroup label="${t("everyone")}">${c.rest.map(o).join("")}</optgroup>`:c.rest.map(o).join("")}`;
 }
 const planStages=typeId=>flowOf(typeId).filter(s=>!s.done);
@@ -92,7 +98,8 @@ function defaultPlan(typeId,clientId){
   // B: the last task for this client (and type) with a plan
   if(clientId){const prev=tasks.filter(k=>k.client===clientId&&k.type===typeId&&k.plan&&Object.keys(k.plan).length).slice(-1)[0];
     if(prev){st.forEach(s=>{if(prev.plan[s.id])plan[s.id]=prev.plan[s.id]});from="client"}}
-  st.forEach((s,i)=>{if(!plan[s.id])plan[s.id]=i===0?(S.dlg.assign&&S.expand?S.expand:S.me):suggestFor(s)});
+  const can=(s,uid)=>{const c=stageCandidates(s);return !c.only||c.good.some(u=>u.id===uid)};
+  st.forEach((s,i)=>{if(!plan[s.id])plan[s.id]=i===0?(S.dlg.assign&&S.expand?S.expand:(can(s,S.me)?S.me:suggestFor(s))):suggestFor(s)});
   if(me().role==="staff"&&st[0])plan[st[0].id]=S.me;
   return {plan,est,from};
 }
