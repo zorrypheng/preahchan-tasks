@@ -80,7 +80,30 @@ export async function recentUnread(user) {
   return r.items;
 }
 
-export const finishTask = (id, hours) => api(`/api/collections/tasks/records/${v(id)}`, { method: "PATCH", body: { status: "done", done_at: today(), spent: hours } });
+export const finishTask = (id, hours, stage) => api(`/api/collections/tasks/records/${v(id)}`, { method: "PATCH", body: Object.assign({ status: "done", done_at: today(), spent: hours }, stage ? { stage } : {}) });
+export const moveStage = (id, stage) => api(`/api/collections/tasks/records/${v(id)}`, { method: "PATCH", body: { stage } });
+
+// Workflow: statuses, task types and positions
+export async function loadWorkflow() {
+  const get = (c) => api(`/api/collections/${c}/records?perPage=500`).then((r) => r.items).catch(() => []);
+  const [statuses, types, positions] = await Promise.all([get("statuses"), get("task_types"), get("positions")]);
+  statuses.sort((a, b) => (a.sort || 0) - (b.sort || 0));
+  return { statuses, types, positions };
+}
+export function flowOf(wf, typeId) {
+  const tp = wf.types.find((x) => x.id === typeId);
+  return wf.statuses.filter((s) => !tp || !(tp.statuses || []).length || tp.statuses.includes(s.id));
+}
+export function nextOf(wf, task) {
+  const f = flowOf(wf, task.type), i = f.findIndex((s) => s.id === task.stage);
+  return i >= 0 ? (f[i + 1] || null) : (f[0] || null);
+}
+export function canMoveTo(wf, user, stageId) {
+  if (user.role === "admin") return true;
+  const ps = wf.positions.filter((p) => (user.positions || []).includes(p.id));
+  if (!ps.length) return true;
+  return ps.some((p) => (p.statuses || []).includes(stageId));
+}
 export const startTask = (id) => api(`/api/collections/tasks/records/${v(id)}`, { method: "PATCH", body: { status: "doing" } });
 
 export function addTask(user, { title, desc = "", due, est, priority = "normal" }) {

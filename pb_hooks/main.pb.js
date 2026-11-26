@@ -9,6 +9,21 @@ onBootstrap((e) => {
 })
 
 // ---------- Tasks ----------
+// Workflow: block moves a position isn't allowed to make (requests from the app, extension or API)
+onRecordUpdateRequest((e) => {
+  require(`${__hooks}/lib/pc.js`).checkMove(e.app, e.record, e.auth)
+  e.next()
+}, "tasks")
+// Keep the simple done/not-done status in step with the workflow status, on every save
+onRecordCreate((e) => {
+  try { require(`${__hooks}/lib/pc.js`).syncStage(e.app, e.record, true) } catch (err) { console.log("stage sync (create): " + err) }
+  e.next()
+}, "tasks")
+onRecordUpdate((e) => {
+  try { require(`${__hooks}/lib/pc.js`).syncStage(e.app, e.record, false) } catch (err) { console.log("stage sync (update): " + err) }
+  e.next()
+}, "tasks")
+
 onRecordAfterCreateSuccess((e) => {
   e.next()
   try {
@@ -39,6 +54,7 @@ onRecordAfterUpdateSuccess((e) => {
       next.set("status", "todo")
       next.set("est", r.getFloat("est"))
       next.set("repeat", true)
+      next.set("type", r.getString("type"))
       next.set("due", pc.addDays(r.getString("due") || pc.ict().date, 7))
       e.app.save(next)
       // the task no longer repeats itself; its copy carries the repeat on

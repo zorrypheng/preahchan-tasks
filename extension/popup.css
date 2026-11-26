@@ -78,3 +78,9 @@ textarea{min-height:110px;resize:vertical}
 .toast{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);background:var(--brand);color:var(--on-brand);padding:8px 16px;border-radius:999px;font-size:13px;font-weight:600;max-width:420px;animation:rise .25s var(--ease)}
 @keyframes rise{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.stg{border-radius:6px;padding:0 6px;font-weight:600}
+.sc-gray{background:#e3e6ee;color:#3d4a6b}.sc-blue{background:#d9ecf2;color:#0b5f7a}.sc-purple{background:#e7e2f3;color:#4b3a8a}
+.sc-orange{background:#fbe3d0;color:#a33f06}.sc-yellow{background:#fbe9b7;color:#6b4a00}.sc-pink{background:#fbdcd8;color:#9b2335}
+.sc-teal{background:#d5efe9;color:#1d6b5c}.sc-navy{background:#14213d;color:#f7f4ec}.sc-green{background:#dcebd9;color:#2f6b3a}.sc-red{background:#f8d3cf;color:#b3261e}
+.task .top .btn.small{max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

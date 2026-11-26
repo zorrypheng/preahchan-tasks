@@ -15,14 +15,18 @@ const locStamp=s=>{if(!s)return "";const d=new Date(String(s).replace(" ","T"));
 const docGroups={};
 async function loadAll(){
   const g=(c,o)=>pb.collection(c).getFullList(Object.assign({batch:500},o||{}));
-  const [us,cl,ts,cm,dc,nt,nf,rp]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
-    g("documents",{sort:"-created"}),g("notes",{sort:"-updated"}),pb.collection("notifications").getList(1,100,{sort:"-created"}).then(r=>r.items),g("reports",{sort:"created"})]);
-  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on}));
+  const [us,cl,ts,cm,dc,nt,nf,rp,sts,tts,pos]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
+    g("documents",{sort:"-created"}),g("notes",{sort:"-updated"}),pb.collection("notifications").getList(1,100,{sort:"-created"}).then(r=>r.items),g("reports",{sort:"created"}),
+    g("statuses",{sort:"sort"}).catch(()=>[]),g("task_types",{sort:"name"}).catch(()=>[]),g("positions",{sort:"name"}).catch(()=>[])]);
+  statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done}));
+  ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
+  positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
+  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[]}));
   clients.length=0;cl.forEach(r=>clients.push({id:r.id,name:r.name,by:r.created_by}));
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[]})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||""})});
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
   dc.forEach(r=>{if(!known.has(r.owner))return;const key=[r.area,r.client||"",r.area==="mine"?r.owner:"",r.name.toLowerCase()].join("|");
@@ -161,9 +165,10 @@ async function saveNoteLive(){
 async function logDone(){
   const h=parseFloat(document.getElementById("lg-h").value),er=document.getElementById("lg-err");
   if(!(h>0)){er.textContent=t("spentReq");er.hidden=false;document.getElementById("lg-h").focus();return}
-  const k=tasks.find(x=>x.id===S.dlg.id),back=S.dlg.back,u=U(k.to),before=doneWeek(k.to).length;
-  S.dlg=back?{type:"task",id:k.id,focused:true}:null;
-  const save=pb.collection("tasks").update(k.id,{status:"done",done_at:TODAY,spent:h});
+  const k=tasks.find(x=>x.id===S.dlg.id),back=!!S.dlg.back,u=U(k.to),before=doneWeek(k.to).length;
+  const stg=S.dlg.stage||(typeof doneStageOf==="function"&&doneStageOf(k.type)?doneStageOf(k.type).id:"");
+  S.dlg=S.dlg.back?{type:"task",id:k.id,focused:true}:null;
+  const save=pb.collection("tasks").update(k.id,Object.assign({status:"done",done_at:TODAY,spent:h},stg?{stage:stg}:{}));
   const commit=async()=>{
     try{await save}catch(e){fail(e);await refresh(true);return}
     try{await loadAll()}catch(e){}
@@ -227,8 +232,9 @@ document.addEventListener("submit",async e=>{
     try{let client=val("nt-client");
       if(client==="__new"){const n=val("nt-newclient");if(!n){er(t("clientReq"));if(btn)btn.disabled=false;return}
         const ex=clients.find(c=>c.name.toLowerCase()===n.toLowerCase());client=ex?ex.id:(await pb.collection("clients").create({name:n,created_by:S.me})).id}
+      const type=val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
       await pb.collection("tasks").create({title,desc:val("nt-desc"),assignee:val("nt-to")||S.me,creator:S.me,client:client||"",due:val("nt-due")||off(2),
-        priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked});
+        priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:""});
       S.dlg=null;await refresh(true);toast(t("saved"))}
     catch(err){if(btn)btn.disabled=false;fail(err)}return}
   if(f==="client"){stop();const n=val("cl-name");if(!n)return;if(clients.some(c=>c.name.toLowerCase()===n.toLowerCase())){toast(t("clientDup"));return}
@@ -241,7 +247,7 @@ document.addEventListener("submit",async e=>{
     if(pw.length<8){uerr(t("pwShort"));return}
     if(users.some(u=>u.username===un)){uerr(t("userDup"));return}
     try{await pb.collection("users").create({name,username:un,password:pw,passwordConfirm:pw,role:val("nu-role"),kpi:Math.max(0,+val("nu-kpi")||0),
-        cap:Math.max(1,Math.min(80,+val("nu-cap")||44)),active:true,lang:S.lang});S.dlg=null;S.err="";await refresh(true);toast(t("userMade"))}
+        cap:Math.max(1,Math.min(80,+val("nu-cap")||44)),active:true,lang:S.lang,positions:[...document.querySelectorAll('input[name="nu-pos"]:checked')].map(x=>x.value)});S.dlg=null;S.err="";await refresh(true);toast(t("userMade"))}
     catch(err){uerr((err&&err.response&&err.response.data&&err.response.data.username)?t("userDup"):((err&&err.message)||"Error"))}return}
   if(f==="log"){stop();logDone();return}
   if(f==="qnote"){stop();const el=document.getElementById("qn-text"),v=el.value.trim();if(!v)return;

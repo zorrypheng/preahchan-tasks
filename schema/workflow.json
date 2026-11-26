@@ -1,0 +1,36 @@
+[
+  {"id":"pc_statuses0001","name":"statuses","type":"base",
+   "listRule":"@request.auth.id != \"\"","viewRule":"@request.auth.id != \"\"",
+   "createRule":"@request.auth.role = \"admin\"","updateRule":"@request.auth.role = \"admin\"","deleteRule":"@request.auth.role = \"admin\"",
+   "fields":[
+     {"name":"name","type":"text","required":true,"min":1,"max":60},
+     {"name":"name_km","type":"text","max":80},
+     {"name":"color","type":"select","values":["gray","blue","purple","orange","yellow","pink","teal","navy","green","red"],"maxSelect":1},
+     {"name":"sort","type":"number","onlyInt":true},
+     {"name":"done","type":"bool"},
+     {"name":"created","type":"autodate","onCreate":true,"onUpdate":false},
+     {"name":"updated","type":"autodate","onCreate":true,"onUpdate":true}],
+   "indexes":["CREATE UNIQUE INDEX idx_statuses_name ON statuses (name COLLATE NOCASE)"]},
+  {"id":"pc_tasktypes001","name":"task_types","type":"base",
+   "listRule":"@request.auth.id != \"\"","viewRule":"@request.auth.id != \"\"",
+   "createRule":"@request.auth.role = \"admin\"","updateRule":"@request.auth.role = \"admin\"","deleteRule":"@request.auth.role = \"admin\"",
+   "fields":[
+     {"name":"name","type":"text","required":true,"min":1,"max":60},
+     {"name":"name_km","type":"text","max":80},
+     {"name":"statuses","type":"relation","collectionId":"pc_statuses0001","maxSelect":99,"cascadeDelete":false},
+     {"name":"est","type":"number","min":0,"max":99},
+     {"name":"created","type":"autodate","onCreate":true,"onUpdate":false},
+     {"name":"updated","type":"autodate","onCreate":true,"onUpdate":true}],
+   "indexes":["CREATE UNIQUE INDEX idx_task_types_name ON task_types (name COLLATE NOCASE)"]},
+  {"id":"pc_positions001","name":"positions","type":"base",
+   "listRule":"@request.auth.id != \"\"","viewRule":"@request.auth.id != \"\"",
+   "createRule":"@request.auth.role = \"admin\"","updateRule":"@request.auth.role = \"admin\"","deleteRule":"@request.auth.role = \"admin\"",
+   "fields":[
+     {"name":"name","type":"text","required":true,"min":1,"max":60},
+     {"name":"name_km","type":"text","max":80},
+     {"name":"types","type":"relation","collectionId":"pc_tasktypes001","maxSelect":99,"cascadeDelete":false},
+     {"name":"statuses","type":"relation","collectionId":"pc_statuses0001","maxSelect":99,"cascadeDelete":false},
+     {"name":"created","type":"autodate","onCreate":true,"onUpdate":false},
+     {"name":"updated","type":"autodate","onCreate":true,"onUpdate":true}],
+   "indexes":["CREATE UNIQUE INDEX idx_positions_name ON positions (name COLLATE NOCASE)"]}
+]

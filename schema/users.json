@@ -5,7 +5,7 @@
   "listRule": "@request.auth.id != \"\"",
   "viewRule": "@request.auth.id != \"\"",
   "createRule": "@request.auth.role = \"admin\"",
-  "updateRule": "@request.auth.role = \"admin\" || (id = @request.auth.id && @request.body.role:isset = false && @request.body.kpi:isset = false && @request.body.cap:isset = false && @request.body.active:isset = false && @request.body.username:isset = false)",
+  "updateRule": "@request.auth.role = \"admin\" || (id = @request.auth.id && @request.body.role:isset = false && @request.body.kpi:isset = false && @request.body.cap:isset = false && @request.body.active:isset = false && @request.body.username:isset = false && @request.body.positions:isset = false)",
   "deleteRule": "@request.auth.role = \"admin\" && id != @request.auth.id",
   "manageRule": "@request.auth.role = \"admin\"",
   "authRule": "active = true",
@@ -90,6 +90,13 @@
     {
       "name": "tg_on",
       "type": "bool"
+    },
+    {
+      "name": "positions",
+      "type": "relation",
+      "collectionId": "pc_positions001",
+      "maxSelect": 99,
+      "cascadeDelete": false
     },
     {
       "name": "created",

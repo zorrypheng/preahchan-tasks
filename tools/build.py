@@ -29,7 +29,14 @@ rep('const m=me(),canAssign=m.role==="manager";','const m=me(),canAssign=m.role!
 rep('${clickable?` · <span class="${kpiConf[u.id]?"conf":""}">${kpiConf[u.id]?t("kpiConfirmed"):t("kpiNotConfirmed")}</span>`:""}','${clickable?repChip(u.id):""}')
 rep('   case "kpi":{const u=me();return fill(t("tK"),doneWeek(u.id).length,u.kpi)}','   case "kpi":{const u=me();return fill(t("tK"),doneWeek(u.id).length,u.kpi)}\n   case "noteRemind":{const nt=notes.find(x=>x.id===p.note);return fill(t("noteRemindN"),"","<b>"+esc(nt?(nt.title||t("notes")):(p.title||t("notes")))+"</b>")}')
 rep('<div id="app"></div>','<div id="app"></div>\n<script src="pocketbase.umd.js"></script>')
+rep('account:vAccount,report:vReport,reports:vReports}','account:vAccount,report:vReport,reports:vReports,settings:vSettings}')
+rep('notifs:dNotifs,log:dLog}','notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos}')
+rep('&&S.view!=="account"&&S.view!=="report")S.view=NAV','&&S.view!=="account"&&S.view!=="report")S.view=NAV')
+s=s.replace('</style>\n\n<div id="app">','\n'+open('src/workflow.css',encoding='utf-8').read()+'</style>\n\n<div id="app">',1)
 live=open('src/live.js',encoding='utf-8').read()
+wf=open('src/workflow.js',encoding='utf-8').read()
+assert '/* Start */' in live
+live=live.replace('/* Start */',wf+'\n/* Start */',1)
 rep('\nrender();\n</script>','\n'+live+'\n</script>')
 # the page is served as a full document by PocketBase, so give it the skeleton the artifact host used to add
 s='<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'+s.replace('<div id="app"></div>','</head>\n<body>\n<div id="app"></div>',1)+'\n</body>\n</html>\n'

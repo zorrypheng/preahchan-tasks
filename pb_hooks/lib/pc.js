@@ -27,7 +27,9 @@ const TEXT = {
     unknown: "Open the Preahchan Tasks app, tap your avatar, then Connect Telegram. Send the code it shows you here.",
     badCode: "That code did not work. Open the app and tap Connect Telegram again for a new code.",
     approved: "Approved", notAllowed: "You can't do that.",
-    kpi: "This week: {n} of {kpi} tasks done · {h} of {cap} hours logged."
+    kpi: "This week: {n} of {kpi} tasks done · {h} of {cap} hours logged.",
+    next: "Next: {s}", movedTo: "Moved to {s}", cantMove: "Your position can't move tasks to {s}.", lastStep: "This task is already at its last status.",
+    handoff: "<b>{title}</b> is now at {s}. Open the app to hand it to someone who handles {s}."
   },
   km: {
     assigned: "ភារកិច្ចថ្មីពី {by}៖ <b>{title}</b>\nកំណត់ {due} · ប៉ាន់ស្មាន {est} ម៉ោង",
@@ -52,7 +54,9 @@ const TEXT = {
     unknown: "បើកកម្មវិធី Preahchan Tasks ចុចរូបគណនី រួចចុច ភ្ជាប់ Telegram។ ផ្ញើលេខកូដដែលវាបង្ហាញមកទីនេះ។",
     badCode: "លេខកូដនេះមិនដំណើរការទេ។ សូមបើកកម្មវិធី ហើយចុច ភ្ជាប់ Telegram ម្តងទៀត។",
     approved: "បានអនុម័ត", notAllowed: "អ្នកមិនអាចធ្វើបែបនេះបានទេ។",
-    kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ភារកិច្ច · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។"
+    kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ភារកិច្ច · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
+    next: "បន្ទាប់៖ {s}", movedTo: "បានផ្លាស់ទៅ {s}", cantMove: "តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {s} បានទេ។", lastStep: "ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
+    handoff: "<b>{title}</b> ឥឡូវនៅ {s}។ សូមបើកកម្មវិធីដើម្បីប្រគល់ទៅអ្នកទទួលខុសត្រូវ {s}។"
   }
 }
 
@@ -115,6 +119,75 @@ module.exports = {
     }
   },
 
+  // ---------- Workflow: statuses, task types, positions ----------
+  flow(app, typeId) {
+    let ids = []
+    if (typeId) { try { ids = app.findRecordById("task_types", typeId).getStringSlice("statuses") } catch (e) {} }
+    const all = app.findRecordsByFilter("statuses", "id != ''", "sort", 200, 0)
+    return all.filter((s) => !ids.length || ids.indexOf(s.id) >= 0)
+  },
+  userSees(app, user, stageId) {
+    if (!user || user.getString("role") === "admin") return true
+    const pids = user.getStringSlice("positions")
+    if (!pids.length) return true
+    return app.findRecordsByIds("positions", pids).some((p) => p.getStringSlice("statuses").indexOf(stageId) >= 0)
+  },
+  stageName(app, id, lang) {
+    try { const s = app.findRecordById("statuses", id); return (lang === "km" && s.getString("name_km")) || s.getString("name") } catch (e) { return "" }
+  },
+  nextOf(app, task) {
+    const f = this.flow(app, task.getString("type"))
+    const i = f.findIndex((s) => s.id === task.getString("stage"))
+    return i >= 0 ? (f[i + 1] || null) : (f[0] || null)
+  },
+  // Keep the simple done/not-done status in step with the workflow status, for KPI, hours and reports
+  syncStage(app, r, isNew) {
+    const f = this.flow(app, r.getString("type"))
+    if (!f.length) return
+    const o = isNew ? null : r.original()
+    const statusNow = r.getString("status"), statusBefore = o ? o.getString("status") : ""
+    const stageChanged = isNew || r.getString("stage") !== o.getString("stage")
+    const doneSt = f.find((s) => s.getBool("done"))
+    if (!r.getString("stage")) { r.set("stage", f[0].id) }
+    else if (!stageChanged && statusNow !== statusBefore) {
+      // an older client changed only the simple status
+      if (statusNow === "done" && doneSt) { r.set("stage", doneSt.id); return }
+      if (statusBefore === "done" && statusNow !== "done") {
+        const open = f.filter((s) => !s.getBool("done"))
+        const back = open.length ? open[open.length - 1] : f[0]
+        r.set("stage", back.id)
+        r.set("status", back.id === f[0].id ? "todo" : "doing")
+      }
+      return
+    }
+    const cur = f.find((s) => s.id === r.getString("stage"))
+    if (!cur) return
+    if (cur.getBool("done")) {
+      r.set("status", "done")
+      if (!r.getString("done_at")) r.set("done_at", this.ict().date)
+    } else {
+      r.set("status", cur.id === f[0].id ? "todo" : "doing")
+      if (o && o.getString("status") === "done") { r.set("done_at", ""); r.set("spent", 0) }
+    }
+  },
+  // Only people whose position covers the new status may move a task there
+  checkMove(app, r, auth) {
+    if (!auth || auth.collection().name !== "users" || auth.getString("role") === "admin") return
+    const o = r.original()
+    let target = ""
+    if (r.getString("stage") && r.getString("stage") !== o.getString("stage")) target = r.getString("stage")
+    else if (r.getString("status") === "done" && o.getString("status") !== "done") {
+      const d = this.flow(app, r.getString("type")).find((s) => s.getBool("done"))
+      if (d) target = d.id
+    }
+    if (target && !this.userSees(app, auth, target)) throw new ForbiddenError("Your position can't move tasks to " + this.stageName(app, target, "en") + ".")
+  },
+  nextButton(app, task, lang) {
+    if (task.getString("status") === "done") return null
+    const nx = this.nextOf(app, task)
+    return nx ? [{ text: fill(this.t(lang, "next"), { s: (lang === "km" && nx.getString("name_km")) || nx.getString("name") }), callback_data: "n:" + task.id }] : null
+  },
+
   // ---------- Telegram ----------
   token() { return $os.getenv("TELEGRAM_BOT_TOKEN") || "" },
   hookSecret() { const tok = this.token(); return tok ? $security.sha256("preahchan-webhook:" + tok).substring(0, 40) : "" },
@@ -167,7 +240,7 @@ module.exports = {
     if (kind === "assigned") {
       const k = task(); if (!k) return
       text = fill(this.t(lang, "assigned"), { by: by, title: esc(k.getString("title")), due: this.shortDate(k.getString("due")), est: round2(k.getFloat("est")) })
-      if (k.getString("status") !== "done") rows.push([{ text: this.t(lang, "start"), callback_data: "s:" + k.id }, { text: this.t(lang, "done"), callback_data: "d:" + k.id }])
+      const nb = this.nextButton(app, k, lang); if (nb) rows.push(nb)
     } else if (kind === "comment") {
       const k = task(); if (!k) return
       text = fill(this.t(lang, "comment"), { by: by, title: esc(k.getString("title")), text: esc(data.text || "") })
@@ -188,7 +261,7 @@ module.exports = {
     } else if (kind === "overdue" || kind === "dueTom") {
       const k = task(); if (!k) return
       text = fill(this.t(lang, kind), { title: esc(k.getString("title")) })
-      if (k.getString("status") !== "done") rows.push([{ text: this.t(lang, "done"), callback_data: "d:" + k.id }])
+      const nb = this.nextButton(app, k, lang); if (nb) rows.push(nb)
     } else {
       return
     }
@@ -213,7 +286,7 @@ module.exports = {
     let text = fill(this.t(lang, "morning"), { name: esc(user.getString("name") || user.getString("username")) }) + "\n"
     if (!list.length) text += this.t(lang, "nothing")
     list.forEach((k) => { text += "\n• " + esc(k.getString("title")) + (k.getString("due") < today ? " " + this.t(lang, "overdueTag") : "") })
-    const rows = list.slice(0, 6).map((k) => [{ text: "✓ " + k.getString("title").substring(0, 40), callback_data: "d:" + k.id }])
+    const rows = list.slice(0, 6).map((k) => [{ text: "→ " + k.getString("title").substring(0, 40), callback_data: "n:" + k.id }])
     return { text: text, rows: rows }
   },
 
@@ -321,8 +394,25 @@ module.exports = {
       answer(this.t(lang, "started"))
       return
     }
+    if (parts[0] === "n") {
+      const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
+      const nx = this.nextOf(app, k)
+      if (!nx || k.getString("status") === "done") { answer(this.t(lang, "lastStep")); return }
+      const nxName = (lang === "km" && nx.getString("name_km")) || nx.getString("name")
+      if (!this.userSees(app, user, nx.id)) { answer(fill(this.t(lang, "cantMove"), { s: nxName })); return }
+      if (!nx.getBool("done")) {
+        k.set("stage", nx.id); app.save(k)
+        answer(fill(this.t(lang, "movedTo"), { s: nxName }))
+        if (chat && mid) this.tg("editMessageText", { chat_id: chat, message_id: mid, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + fill(this.t(lang, "movedTo"), { s: esc(nxName) }) })
+        return
+      }
+      // the next status is the finished one: ask for hours first
+      parts[0] = "d"
+    }
     if (parts[0] === "d") {
       const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
+      const dn = this.flow(app, k.getString("type")).find((s) => s.getBool("done"))
+      if (dn && !this.userSees(app, user, dn.id)) { answer(fill(this.t(lang, "cantMove"), { s: (lang === "km" && dn.getString("name_km")) || dn.getString("name") })); return }
       const est = round2(k.getFloat("est"))
       const opts = [0.5, 1, 2, 4]
       if (est > 0 && opts.indexOf(est) < 0) opts.push(est)
