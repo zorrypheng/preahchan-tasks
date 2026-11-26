@@ -32,7 +32,7 @@ const TEXT = {
     badCode: "That code did not work. Open the app and tap Connect Telegram again for a new code.",
     approved: "Approved", notAllowed: "You can't do that.",
     kpi: "This week: {n} of {kpi} stages finished · {h} of {cap} hours logged.",
-    finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
+    meet: "Meeting with <b>{client}</b> today: {title}", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
     pickInApp: "Open the app to choose who does the next stage.", finishedStage: "Finished {s} · {h} h logged", finishedRec: "Finished {s}",
     nudge: "Today you logged {h} h across {n} stages.", nudgeNone: "You haven't logged any hours today. Anything missing?", nudgeOk: "Thanks! Anything missing? You can still log it in the app.",
     hoursNeeded: "Enter the hours you spent.", nextNeeded: "Choose who does the next stage.", notYours: "Only the person on this stage, or a manager, can finish it.",
@@ -67,7 +67,7 @@ const TEXT = {
     badCode: "លេខកូដនេះមិនដំណើរការទេ។ សូមបើកកម្មវិធី ហើយចុច ភ្ជាប់ Telegram ម្តងទៀត។",
     approved: "បានអនុម័ត", notAllowed: "អ្នកមិនអាចធ្វើបែបនេះបានទេ។",
     kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ដំណាក់កាល · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
-    finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
+    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
     pickInApp: "បើកកម្មវិធីដើម្បីជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", finishedStage: "បានបញ្ចប់ {s} · បានកត់ត្រា {h} ម៉ោង", finishedRec: "បានបញ្ចប់ {s}",
     nudge: "ថ្ងៃនេះអ្នកបានកត់ត្រា {h} ម៉ោង ក្នុង {n} ដំណាក់កាល។", nudgeNone: "ថ្ងៃនេះអ្នកមិនទាន់កត់ត្រាម៉ោងទេ។ មានអ្វីខ្វះទេ?", nudgeOk: "អរគុណ! មានអ្វីខ្វះទេ? អ្នកនៅតែអាចកត់ត្រាក្នុងកម្មវិធី។",
     hoursNeeded: "សូមបញ្ចូលម៉ោងដែលអ្នកបានចំណាយ។", nextNeeded: "សូមជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", notYours: "មានតែអ្នកនៅដំណាក់កាលនេះ ឬអ្នកគ្រប់គ្រងទេ ដែលអាចបញ្ចប់វាបាន។",
@@ -293,6 +293,15 @@ module.exports = {
     app.save(log)
   },
 
+  // 08:00: everyone in a meeting planned for today hears about it
+  meetingReminders(app) {
+    const today = this.ict().date
+    app.findRecordsByFilter("meetings", "next_date = {:d}", "", 200, 0, { d: today }).forEach((m) => {
+      const ids = m.getStringSlice("attendees").concat([m.getString("created_by")]).filter((v, i, a) => v && a.indexOf(v) === i)
+      ids.forEach((id) => { try { this.notify(app, id, "meet", { client: m.getString("client"), meeting: m.id, title: m.getString("title") }) } catch (e) {} })
+    })
+  },
+
   // Daily nudge at 17:30, Monday to Saturday
   nudge(app) {
     const today = this.ict().date
@@ -379,6 +388,10 @@ module.exports = {
       const hours = items.reduce((a, x) => a + (x.spent || 0), 0)
       text = fill(this.t(lang, kind), { by: by, week: this.weekLabel(r.getString("week")), n: items.length, h: round2(hours), comment: esc(r.getString("comment")) })
       if (kind === "rep" && r.getString("status") === "pending") rows.push([{ text: this.t(lang, "approve"), callback_data: "ra:" + r.id }])
+    } else if (kind === "meet") {
+      let client = ""
+      try { client = app.findRecordById("clients", data.client).getString("name") } catch (e) {}
+      text = fill(this.t(lang, "meet"), { client: esc(client), title: esc(data.title || "") })
     } else if (kind === "turn") {
       const k = task(); if (!k) return
       text = fill(this.t(lang, "turn"), { by: by, prev: esc(this.stageName(app, data.prev, lang)), title: esc(k.getString("title")), s: esc(this.stageName(app, k.getString("stage"), lang)), due: this.shortDate(k.getString("due")) })

@@ -629,13 +629,13 @@ function render(){
   const vk=S.me+"|"+S.view+"|"+(S.repId||""),enter=vk!==R.v;R.v=vk;
   const dk=S.dlg?S.dlg.type+":"+(S.dlg.id||""):"",denter=!!dk&&dk!==R.d;R.d=dk;
   const menter=!!S.menu&&!R.m;R.m=!!S.menu;R.fe=!!S.fn&&!R.f;R.f=!!S.fn;
-  const m=me();if(!NAV[m.role].includes(S.view)&&S.view!=="account"&&S.view!=="report")S.view=NAV[m.role][0];
+  const m=me();if(!NAV[m.role].includes(S.view)&&S.view!=="account"&&S.view!=="report"&&S.view!=="client")S.view=NAV[m.role][0];
   const V={tasks:vTasks,team:vTeam,board:vBoard,dash:vDash,users:vUsers,clients:vClients,notes:vNotes,docs:vDocs,account:vAccount,report:vReport,reports:vReports}[S.view]();
   const D=S.dlg?`<div class="scrim ${denter?"enter":""}" data-act="scrim"><div class="dlg" role="dialog" aria-modal="true">${{new:dNew,task:dTask,user:dUser,note:dNote,notifs:dNotifs,log:dLog}[S.dlg.type]()}</div></div>`:"";
   app.innerHTML=`<div class="shell ${S.view==="tasks"?"hasfab":""} ${S.view==="tasks"&&S.fn?"fnopen":""}"><header class="top"><button class="iconbtn menubtn" data-act="menu" aria-expanded="${!!S.menu}" aria-controls="mainnav" aria-label="${t("menu")}"><svg viewBox="0 0 24 24" aria-hidden="true">${S.menu?'<path d="M6 6l12 12M18 6L6 18"/>':'<path d="M4 7h16M4 12h16M4 17h16"/>'}</svg></button><img src="${LOGO}" alt="Preahchan Digital"><span class="sample">${t("sample")}</span><span class="sp"></span>
     ${(c=>`<button class="iconbtn" data-act="bell" aria-label="${t("notifs")}${c?`, ${c} ${t("unread")}`:""}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>${c?`<span class="count num">${c}</span>`:""}</button>`)(unreadCount())}
     <button class="avbtn" data-act="account" aria-label="${t("account")}: ${esc(m.name)}" ${S.view==="account"?'aria-current="page"':""}><span class="av">${avIn(m)}</span></button></header>
-   <div class="body">${S.menu?`<div class="navscrim ${menter?"enter":""}" data-act="navclose"></div>`:""}<nav class="nav ${S.menu?"openmenu":""} ${menter?"enter":""}" id="mainnav" aria-label="${t("menu")}">${NAV[m.role].map(v=>`<button data-act="nav" data-v="${v}" ${S.view===v?'aria-current="page"':""}><svg class="ni" viewBox="0 0 24 24" aria-hidden="true">${NI[v]||""}</svg><span>${t("n_"+v)}</span>${v==="reports"&&pendingFor()?`<span class="ncount num">${pendingFor()}</span>`:""}</button>`).join("")}</nav><main class="${enter?"enter":""}">${V}</main></div></div>${S.view==="tasks"?floatNotes():""}${D}`;
+   <div class="body">${S.menu?`<div class="navscrim ${menter?"enter":""}" data-act="navclose"></div>`:""}<nav class="nav ${S.menu?"openmenu":""} ${menter?"enter":""}" id="mainnav" aria-label="${t("menu")}">${NAV[m.role].map(v=>`<button data-act="nav" data-v="${v}" ${(S.view===v||S.view==="client"&&v==="clients")?'aria-current="page"':""}><svg class="ni" viewBox="0 0 24 24" aria-hidden="true">${NI[v]||""}</svg><span>${t("n_"+v)}</span>${v==="reports"&&pendingFor()?`<span class="ncount num">${pendingFor()}</span>`:""}</button>`).join("")}</nav><main class="${enter?"enter":""}">${V}</main></div></div>${S.view==="tasks"?floatNotes():""}${D}`;
   app.querySelectorAll(".av").forEach(el=>{let h=0;for(const c of el.textContent)h=(h*31+c.charCodeAt(0))>>>0;el.dataset.c=h%6});
   S.bump=false;S.celebrate=false;
   if(S.dlg&&!S.dlg.focused){S.dlg.focused=true;const f=app.querySelector(".dlg input[type=text],.dlg input[type=number]");if(f&&S.dlg.type!=="task"){f.focus();if(S.dlg.type==="log")f.select()}}
@@ -929,6 +929,7 @@ function nText(n){
    case "rep":return fill(t("nR"),"<b>"+by+"</b>");
    case "repok":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRok"),by,r?wkLabel(r.wk):"")}
    case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}
+   case "meet":return fill(t("tMeet"),esc(C(p.client)),esc(p.title||""));
    case "turn":return fill(t("tTurn"),by,tt,esc(nm(ST(p.prev))||""));
    case "delreq":return fill(t("tDelReq"),by,tt||"<b>"+esc(p.title||"")+"</b>");
    case "delok":return fill(t("tDelOk"),by,"<b>"+esc(p.title||"")+"</b>");

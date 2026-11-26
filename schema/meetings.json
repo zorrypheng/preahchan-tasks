@@ -1,0 +1,93 @@
+{
+  "id": "pc_meetings0001",
+  "name": "meetings",
+  "type": "base",
+  "listRule": "@request.auth.id != \"\" && (private = false || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\"))",
+  "viewRule": "@request.auth.id != \"\" && (private = false || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\"))",
+  "createRule": "(@request.auth.role = \"admin\" || @request.auth.role = \"manager\") && @request.body.created_by = @request.auth.id",
+  "updateRule": "(@request.auth.role = \"admin\" || @request.auth.role = \"manager\")",
+  "deleteRule": "(@request.auth.role = \"admin\" || @request.auth.role = \"manager\")",
+  "fields": [
+    {
+      "name": "client",
+      "type": "relation",
+      "collectionId": "pc_clients00001",
+      "maxSelect": 1,
+      "required": true,
+      "cascadeDelete": true
+    },
+    {
+      "name": "project",
+      "type": "relation",
+      "collectionId": "pc_projects0001",
+      "maxSelect": 1,
+      "cascadeDelete": false
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "required": true,
+      "max": 160
+    },
+    {
+      "name": "date",
+      "type": "text",
+      "max": 10
+    },
+    {
+      "name": "attendees",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 50,
+      "cascadeDelete": false
+    },
+    {
+      "name": "guests",
+      "type": "text",
+      "max": 500
+    },
+    {
+      "name": "body",
+      "type": "editor",
+      "maxSize": 200000,
+      "convertURLs": false
+    },
+    {
+      "name": "actions",
+      "type": "json",
+      "maxSize": 50000
+    },
+    {
+      "name": "next_date",
+      "type": "text",
+      "max": 10
+    },
+    {
+      "name": "private",
+      "type": "bool"
+    },
+    {
+      "name": "created_by",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 1,
+      "cascadeDelete": false
+    },
+    {
+      "name": "created",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": false
+    },
+    {
+      "name": "updated",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": true
+    }
+  ],
+  "indexes": [
+    "CREATE INDEX idx_meetings_client ON meetings (client)",
+    "CREATE INDEX idx_meetings_next ON meetings (next_date)"
+  ]
+}

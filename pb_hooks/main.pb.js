@@ -301,6 +301,7 @@ cronAdd("pc_morning", "0 * * * *", () => {
   const pc = require(`${__hooks}/lib/pc.js`)
   const now = pc.ict()
   if (now.hour === 8 && now.dow !== 0) pc.morning($app)
+  if (now.hour === 8) { try { pc.meetingReminders($app) } catch (err) { console.log("meeting reminders: " + err) } }
 })
 
 // Every night at 03:00 Cambodia time: remove finished tasks unchanged for 6 months

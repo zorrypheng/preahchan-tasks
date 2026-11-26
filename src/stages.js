@@ -277,7 +277,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.x==="crew"){const c=crews.find(x=>x.id===el.value);S.dlg.crew=el.value;if(c){keepPlan();S.dlg.touched=S.dlg.touched||{};Object.keys(c.plan||{}).forEach(k=>{S.dlg.plan[k]=c.plan[k];S.dlg.touched[k]=1});S.dlg.planFrom=""}rerenderKeep();return}
   if(el.dataset.replan){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id);const plan=Object.assign({},k.plan||{});if(el.value)plan[el.dataset.replan]=el.value;else delete plan[el.dataset.replan];
     run(()=>pb.collection("tasks").update(k.id,{plan}),t("savedT"));return}
-  if(el.id==="nt-type"||el.id==="nt-client"){if(el.id==="nt-client"&&el.value==="__new")return;keepPlan();const typeChanged=el.id==="nt-type";S.dlg.ptype=val("nt-type");
+  if(el.id==="nt-type"||el.id==="nt-client"){if(el.id==="nt-client"){S.dlg.pclient=el.value;if(el.value==="__new")return}keepPlan();const typeChanged=el.id==="nt-type";S.dlg.ptype=val("nt-type");
     if(S.dlg.ptype)applyPlanDefaults(!typeChanged);rerenderKeep();return}
 });
 document.addEventListener("input",e=>{const el=e.target;if(!S.dlg||!el.dataset.pest)return;S.dlg.estPlan[el.dataset.pest]=el.value;

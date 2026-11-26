@@ -1,0 +1,74 @@
+{
+  "id": "pc_wikipages001",
+  "name": "wiki_pages",
+  "type": "base",
+  "listRule": "@request.auth.id != \"\"",
+  "viewRule": "@request.auth.id != \"\"",
+  "createRule": "@request.auth.id != \"\" && @request.body.created_by = @request.auth.id && @request.body.updated_by = @request.auth.id",
+  "updateRule": "@request.auth.id != \"\" && @request.body.updated_by = @request.auth.id && @request.body.created_by:isset = false && @request.body.client:isset = false",
+  "deleteRule": "(@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || created_by = @request.auth.id",
+  "fields": [
+    {
+      "name": "client",
+      "type": "relation",
+      "collectionId": "pc_clients00001",
+      "maxSelect": 1,
+      "required": true,
+      "cascadeDelete": true
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "required": true,
+      "max": 160
+    },
+    {
+      "name": "section",
+      "type": "text",
+      "max": 40
+    },
+    {
+      "name": "body",
+      "type": "editor",
+      "maxSize": 200000,
+      "convertURLs": false
+    },
+    {
+      "name": "pinned",
+      "type": "bool"
+    },
+    {
+      "name": "sort",
+      "type": "number"
+    },
+    {
+      "name": "created_by",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 1,
+      "cascadeDelete": false
+    },
+    {
+      "name": "updated_by",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 1,
+      "cascadeDelete": false
+    },
+    {
+      "name": "created",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": false
+    },
+    {
+      "name": "updated",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": true
+    }
+  ],
+  "indexes": [
+    "CREATE INDEX idx_wiki_client ON wiki_pages (client)"
+  ]
+}

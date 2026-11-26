@@ -2,6 +2,11 @@
 
 Ideas agreed to revisit after the workflow update (statuses, task types, positions, Kanban).
 
+## Clients: next steps (agreed for later)
+- **Project templates:** create a project (e.g. "Monthly retainer") that makes all its standard tasks with stage plans.
+- **Monthly client report (PDF):** tasks finished, hours by stage, project progress, ready to send.
+- **Contract renewal reminder:** contract end date per client, reminder 30 days before.
+
 ## Built
 - **Per-stage hours** (stage plan, Finish with hours, work logs, KPI by finished stages, timesheet, stage report, crews, timer, 17:30 nudge).
 
