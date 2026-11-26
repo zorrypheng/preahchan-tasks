@@ -1,5 +1,5 @@
 /* ===== Workflow: statuses, task types, positions, Kanban, hand-off, Settings ===== */
-Object.assign(T.en,{editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",noTeam:"No team yet",teamHelpSup:"Tick the staff this supervisor looks after. The supervisor can see and assign their tasks.",supBy:"Supervisor",pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
+Object.assign(T.en,{hoursSet:"Hours when finishing",hoursAuto:"Automatic",hours_required:"Hours required",hours_optional:"Hours optional",hours_none:"Record only (no hours)",defPos:"Suggested position",editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",noTeam:"No team yet",teamHelpSup:"Tick the staff this supervisor looks after. The supervisor can see and assign their tasks.",supBy:"Supervisor",pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
  otherStages:"Other stages",otherHelp:"These cards are in statuses your position doesn't handle. You can open them but not move them.",
  moveTo:"Move to…",nextStep:"Move to next status",movedTo:"Moved to {a}",cantMove:"Your position can't move tasks to {a}.",lastStep:"This task is already at its last status.",
  handoffT:"Hand off to someone who handles {a}?",handoffHelp:"{a}'s position doesn't cover {b}. Choose who takes it next. They will be notified.",
@@ -13,7 +13,7 @@ Object.assign(T.en,{editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",n
  positionsF:"Positions",noPos:"No position yet",editPos:"Edit positions",posSaved:"Positions saved",finishedWeek:"Finished this week",
  dragHint:"Drag cards between columns, or use Move to on each card.",nameReq:"Enter a name.",usedBy:"Used by {a} tasks",
  inUse:"Tasks still use this. Move them to another status or type first.",finishedTag:"Finished",stepsN:"{a} statuses",typesN:"{a} types"});
-Object.assign(T.km,{editTeam:"កែក្រុម",teamOfT:"ក្រុម",teamSaved:"បានរក្សាទុកក្រុម",noTeam:"មិនទាន់មានក្រុម",teamHelpSup:"ធីកបុគ្គលិកដែលអ្នកត្រួតពិនិត្យនេះមើលការខុសត្រូវ។ អ្នកត្រួតពិនិត្យអាចមើល និងចាត់តាំងការងាររបស់ពួកគេ។",supBy:"អ្នកត្រួតពិនិត្យ",pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
+Object.assign(T.km,{hoursSet:"ម៉ោងពេលបញ្ចប់",hoursAuto:"ស្វ័យប្រវត្តិ",hours_required:"ត្រូវការម៉ោង",hours_optional:"ម៉ោងស្រេចចិត្ត",hours_none:"កត់ត្រាតែប៉ុណ្ណោះ (គ្មានម៉ោង)",defPos:"តួនាទីណែនាំ",editTeam:"កែក្រុម",teamOfT:"ក្រុម",teamSaved:"បានរក្សាទុកក្រុម",noTeam:"មិនទាន់មានក្រុម",teamHelpSup:"ធីកបុគ្គលិកដែលអ្នកត្រួតពិនិត្យនេះមើលការខុសត្រូវ។ អ្នកត្រួតពិនិត្យអាចមើល និងចាត់តាំងការងាររបស់ពួកគេ។",supBy:"អ្នកត្រួតពិនិត្យ",pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
  otherStages:"ដំណាក់កាលផ្សេងទៀត",otherHelp:"កាតទាំងនេះស្ថិតក្នុងស្ថានភាពដែលតួនាទីរបស់អ្នកមិនទទួលខុសត្រូវ។ អ្នកអាចបើកមើលបាន ប៉ុន្តែមិនអាចផ្លាស់ទីបានទេ។",
  moveTo:"ផ្លាស់ទៅ…",nextStep:"ផ្លាស់ទៅស្ថានភាពបន្ទាប់",movedTo:"បានផ្លាស់ទៅ {a}",cantMove:"តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។",lastStep:"ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
  handoffT:"ប្រគល់ទៅអ្នកទទួលខុសត្រូវ {a}?",handoffHelp:"តួនាទីរបស់ {a} មិនគ្របដណ្តប់ {b} ទេ។ សូមជ្រើសរើសអ្នកបន្ត។ ពួកគេនឹងទទួលដំណឹង។",
@@ -38,7 +38,7 @@ BLOCKING.push("stEdit","ttEdit","poEdit","upos","handoff","uteam");
 const isMgr=u=>!!u&&(u.role==="admin"||u.role==="manager");
 const teamOf=uid=>users.filter(x=>x.active&&(x.supervisors||[]).includes(uid));
 /* people this user may give a task to (besides themselves) */
-function assignables(){const m=me();if(isMgr(m))return users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin");if(m.role==="supervisor")return teamOf(m.id);return []}
+function assignables(){const m=me();if(isTaskMgr(m))return users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin");if(m.role==="supervisor")return teamOf(m.id);return []}
 const STCOLORS=["gray","blue","purple","orange","yellow","pink","teal","navy","green","red"];
 
 const ST=id=>statuses.find(s=>s.id===id),TT=id=>ttypes.find(x=>x.id===id),PO=id=>positions.find(p=>p.id===id);
@@ -93,15 +93,15 @@ function vTasks(){
   list=applyF(list);
   const tab=(f,l)=>`<button data-act="filter" data-f="${f}" aria-pressed="${S.filter===f}">${l}</button>`;
   return `${head}${kpiTile(u)}${seg}
-   <div class="tabs">${tab("all",t("openTab"))}${!isMgr(u)?tab("mgr",t("fromMgr")):""}${!isMgr(u)?tab("own",t("own")):""}${tab("done",t("doneTab")+" ("+nDone+")")}</div>
+   <div class="tabs">${tab("all",t("openTab"))}${!isTaskMgr(u)?tab("mgr",t("fromMgr")):""}${!isTaskMgr(u)?tab("own",t("own")):""}${tab("done",t("doneTab")+" ("+nDone+")")}</div>
    ${filterBar()}
    <div class="list">${list.length?list.map(k=>taskCard(k)).join(""):`<p class="empty">${t(fOn2()?"noMatch":S.filter==="done"?"noneDone":"none")}</p>`}</div>`;
 }
 
 /* ---------- Kanban ---------- */
 function kCard(k,team,inOther){
-  const s=stat(k),cols=new Set(myStages().map(x=>x.id)),movable=!inOther&&cols.has(k.stage);
-  const opts=flowOf(k.type).filter(x=>x.id!==k.stage&&seesStage(x.id));
+  const s=stat(k),cols=new Set(myStages().map(x=>x.id)),movable=!inOther&&cols.has(k.stage)&&canMoveAny(k);
+  const opts=flowOf(k.type).filter(x=>x.id!==k.stage);
   const cover=coverOf(k);
   return `<article class="kcard ${s==="overdue"?"isover":""}" draggable="${movable}" data-id="${k.id}">
     ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
@@ -109,6 +109,7 @@ function kCard(k,team,inOther){
      <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
      ${team||inOther?`<span class="kwho"><span class="av">${esc(initials(U(k.to).name))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
+    ${canFinish(k)&&(k.to===S.me||!team)&&ST(k.stage)?`<button class="btn small finishmini" data-act="finish-open" data-id="${k.id}">${fill(t("finishBtn"),esc(nm(ST(k.stage))))} →</button>`:""}
   </article>`;
 }
 function vKanban(list,team){
@@ -127,9 +128,10 @@ function dTask(){
   const types=ttypes.filter(x=>myTypes().includes(x)||x.id===k.type);
   return `${taskTitle(k,s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k))}${delBanner(k)}
    <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
-   <div class="two"><label class="f">${t("status")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""} ${x.id!==k.stage&&!seesStage(x.id)?"disabled":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>
+   ${stageBlock(k)}
+   <div class="two">${canMoveAny(k)?`<label class="f">${t("moveStage")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>`:""}
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
-   ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
+   ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isTaskMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
    ${descBlock(k)}
@@ -138,23 +140,25 @@ function dTask(){
     ${k.comments.length?k.comments.map(c=>`<p class="cmt"><b>${esc(U(c.by).name)}</b><br>${esc(c.text)}</p>`).join(""):`<p class="muted cap">${t("noComments")}</p>`}
     <form class="cmtadd" data-form="comment"><input type="text" id="cm-text" maxlength="300" placeholder="${t("writeComment")}" aria-label="${t("writeComment")}" autocomplete="off"><button class="btn small">${t("addComment")}</button></form></div>
    ${reqForm()}
-   <div class="acts">${delActs(k)}<span class="spacer"></span>${k.status==="done"?`<button class="btn" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:""}<button class="btn" data-act="close">${t("close")}</button></div>`;
+   <div class="acts">${delActs(k)}<button class="btn" data-act="dup">${t("dup")}</button><span class="spacer"></span>${k.status==="done"?`<button class="btn" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:""}<button class="btn" data-act="close">${t("close")}</button></div>`;
 }
 function dNew(){
   const m=me(),canAssign=m.role!=="staff",types=myTypes();
   if(S.dlg.body===undefined){S.dlg.body="";S.dlg.autoTpl=""}
-  const ph=`<option value="" selected disabled>${t("pickOne")}</option>`;
-  const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${assignables().map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
+  if(!S.dlg.plan){S.dlg.plan={};S.dlg.estPlan={}}
+  const dp=S.dlg.dup||{},ph=v=>`<option value="" ${v?"":"selected"} disabled>${t("pickOne")}</option>`;
+  const who=false&&canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${assignables().map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
   return `<h2>${S.dlg.assign?t("assignTask"):t("addTask")}</h2><p class="err" id="nt-err" role="alert" hidden></p>
-   <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off"></label>
-   <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph}${types.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}<option value="__none">${t("noType")}</option></select></label>
-   <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel" required>${ph}${clientOpts("").replace('<option value="">','<option value="__none">')}<option value="__new">${t("newClient")}</option></select></label></div>
+   <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off" value="${esc(dp.title||"")}"></label>
+   <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph(dp.type)}${types.map(x=>`<option value="${x.id}" ${dp.type===x.id?"selected":""}>${esc(nm(x))}</option>`).join("")}<option value="__none" ${dp.type==="__none"?"selected":""}>${t("noType")}</option></select></label>
+   <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel" required>${ph(dp.client)}${clientOpts(dp.client&&dp.client!=="__none"?dp.client:"").replace('<option value="">',`<option value="__none" ${dp.client==="__none"?"selected":""}>`)}<option value="__new">${t("newClient")}</option></select></label></div>
+   ${planBlock()}
    <label class="f" id="nt-newwrap" hidden>${t("newClientName")}<input type="text" id="nt-newclient" maxlength="60" autocomplete="off"></label>
    <div class="stack" style="gap:6px"><span class="lab">${t("desc")}</span>${rtEditor("nt-body",S.dlg.body||"")}</div>
    ${attBlock(null)}
-   <div class="two">${who}<label class="f">${t("due")}<input type="date" id="nt-due" required></label>
-   <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" required></label>
-   <label class="f">${t("prio")}<select id="nt-prio" required>${ph}<option value="normal">${t("normal")}</option><option value="high">${t("high")}</option><option value="low">${t("low")}</option></select></label></div>
+   <div class="two"><label class="f">${t("due")}<input type="date" id="nt-due" required></label>
+   <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" required value="${dp.est||""}"></label>
+   <label class="f">${t("prio")}<select id="nt-prio" required>${ph(dp.prio)}${["normal","high","low"].map(v=>`<option value="${v}" ${dp.prio===v?"selected":""}>${t(v)}</option>`).join("")}</select></label></div>
    <label class="c"><input type="checkbox" id="nt-rep">${t("repeat")}</label>
    <div class="acts"><button type="button" class="btn" data-act="close">${t("cancel")}</button><button class="btn primary">${t("save")}</button></div></form>`;
 }
@@ -174,7 +178,7 @@ function dUser(){
    <form data-form="user"><label class="f">${t("name")}<input type="text" id="nu-name" maxlength="60" autocomplete="off"></label>
    <div class="two"><label class="f">${t("username")}<input type="text" id="nu-user" maxlength="30" autocomplete="off" autocapitalize="none"></label>
    <label class="f">${t("password")}<input type="password" id="nu-pw" maxlength="60" autocomplete="new-password"></label></div>
-   <div class="two"><label class="f">${t("role")}<select id="nu-role"><option value="staff">${t("staff")}</option><option value="supervisor">${t("supervisor")}</option><option value="manager">${t("manager")}</option></select></label>
+   <div class="two"><label class="f">${t("role")}<select id="nu-role"><option value="staff">${t("staff")}</option><option value="supervisor">${t("supervisor")}</option><option value="assistant">${t("assistant")}</option><option value="manager">${t("manager")}</option></select></label>
    <label class="f">${t("weeklyKpi")}<input type="number" id="nu-kpi" min="0" max="99" value="10" style="width:100%"></label>
    <label class="f">${t("weeklyHours")}<input type="number" id="nu-cap" min="1" max="80" value="44" style="width:100%"></label></div>
    <div class="stack" style="gap:4px"><span class="lab">${t("positionsF")}</span>${posChecks("nu-pos",[])}</div>
@@ -184,7 +188,7 @@ function vUsers(){
   const opt=(v,cur)=>`<option value="${v}" ${v===cur?"selected":""}>${t(v)}</option>`;
   return `<div class="head"><h1>${t("users")}</h1><button class="btn primary" data-act="newuser">${t("createUser")}</button></div><p class="muted">${t("usersHelp")}</p>
    <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br>${u.role==="supervisor"?`<span class="cap muted">${t("teamOfT")}: ${teamOf(u.id).map(x=>esc(x.name)).join(", ")||t("noTeam")}</span><br>`:""}${(u.supervisors||[]).filter(id=>U(id)).length?`<span class="cap muted">${t("supBy")}: ${(u.supervisors||[]).map(U).filter(Boolean).map(x=>esc(x.name)).join(", ")}</span><br>`:""}<span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
-    <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("supervisor",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
+    <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("supervisor",u.role)}${opt("assistant",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
      ${u.role!=="admin"?`<label class="f">${t("weeklyKpi")}<input type="number" id="kpi-${u.id}" min="0" max="99" value="${u.kpi}" data-ch="kpi" data-id="${u.id}"></label><label class="f">${t("weeklyHours")}<input type="number" id="cap-${u.id}" min="1" max="80" value="${u.cap}" data-ch="cap" data-id="${u.id}"></label>`:""}
      <label class="c"><input type="checkbox" id="act-${u.id}" data-ch="active" data-id="${u.id}" ${u.active?"checked":""} ${u.id===S.me?"disabled":""}>${t("active")}</label>
      <button class="btn small" data-act="uedit" data-id="${u.id}">${t("editUser")}</button>
@@ -202,7 +206,7 @@ function vSettings(){
   let body="";
   if(S.setTab==="statuses"){
     const list=sortedSt();
-    body=`<div class="rows">${list.map((s,i)=>`<div class="srow"><span class="kdot sc-${s.color||"gray"}"></span><span class="sname"><b>${esc(s.name)}</b>${s.name_km?` <span class="muted">· ${esc(s.name_km)}</span>`:""}<br><span class="cap muted">${s.done?`<span class="conf">${t("finishedTag")}</span> · `:""}${fill(t("usedBy"),count(k=>k.stage===s.id))}</span></span>
+    body=`<div class="rows">${list.map((s,i)=>`<div class="srow"><span class="kdot sc-${s.color||"gray"}"></span><span class="sname"><b>${esc(s.name)}</b>${s.name_km?` <span class="muted">· ${esc(s.name_km)}</span>`:""}<br><span class="cap muted">${s.done?`<span class="conf">${t("finishedTag")}</span> · `:`${t("hours_"+hoursMode(s,""))} · `}${fill(t("usedBy"),count(k=>k.stage===s.id))}</span></span>
       <span class="sacts"><button class="iconbtn sm" data-act="st-move" data-id="${s.id}" data-d="-1" ${i===0?"disabled":""} aria-label="${t("up")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button><button class="iconbtn sm" data-act="st-move" data-id="${s.id}" data-d="1" ${i===list.length-1?"disabled":""} aria-label="${t("down")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="btn small" data-act="st-edit" data-id="${s.id}">${t("editT")}</button></span></div>`).join("")}</div>
       <button class="btn primary" data-act="st-edit" data-id="" style="align-self:flex-start">${t("addStatus")}</button>`;
   }else if(S.setTab==="types"){
@@ -226,7 +230,9 @@ function checks(list,key,sel){return `<div class="ppl">${list.map(o=>`<label cla
 function sdActs(){return `<p class="err" id="sd-err" role="alert" hidden></p><div class="acts">${S.dlg.draft.id?`<button class="btn ${S.arm==="sd"?"danger":""}" data-act="sd-del">${S.arm==="sd"?t("confirmDel"):t("deleteT")}</button><span style="flex:1"></span>`:""}<button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="sd-save">${t("saveT")}</button></div>`}
 function dStEdit(){const d=S.dlg.draft;return `<h2>${d.id?t("editT"):t("addStatus")}</h2>${nameFields(d)}
   <div class="stack" style="gap:8px"><span class="lab">${t("colour")}</span><div class="sw">${STCOLORS.map(c=>`<button type="button" class="sc-${c}" data-act="sd-color" data-c="${c}" aria-pressed="${d.color===c}" aria-label="${c}"></button>`).join("")}</div></div>
-  <label class="c"><input type="checkbox" data-sd-b="done" ${d.done?"checked":""}>${t("finished")}</label>${sdActs()}`}
+  <label class="c"><input type="checkbox" data-sd-b="done" ${d.done?"checked":""}>${t("finished")}</label>
+  <div class="two"><label class="f">${t("hoursSet")}<select data-sd="hours"><option value="">${t("hoursAuto")}</option>${["required","optional","none"].map(v=>`<option value="${v}" ${d.hours===v?"selected":""}>${t("hours_"+v)}</option>`).join("")}</select></label>
+  <label class="f">${t("defPos")}<select data-sd="pos"><option value="">—</option>${positions.map(p=>`<option value="${p.id}" ${d.pos===p.id?"selected":""}>${esc(nm(p))}</option>`).join("")}</select></label></div>${sdActs()}`}
 function dTtEdit(){const d=S.dlg.draft;return `<h2>${d.id?t("editT"):t("addType")}</h2>${nameFields(d)}
   <label class="f">${t("estDefault")}<input type="number" min="0" max="99" step="0.25" data-sd="est" value="${d.est||""}" style="max-width:160px"></label>
   <div class="stack" style="gap:4px"><span class="lab">${t("workflowSteps")}</span>${checks(sortedSt(),"statuses",d.statuses)}</div>${sdActs()}`}
@@ -235,16 +241,18 @@ function dPoEdit(){const d=S.dlg.draft;return `<h2>${d.id?t("editT"):t("addPosit
   <div class="stack" style="gap:4px"><span class="lab">${t("statusesSeen")}</span>${checks(sortedSt(),"statuses",d.statuses)}</div>${sdActs()}`}
 
 /* ---------- actions ---------- */
+function canMoveAny(k){return !!k&&(isTaskMgr(me())||supervises(S.me,k.to))}
 async function moveTo(k,stageId){
   const s=ST(stageId);if(!k||!s||stageId===k.stage)return;
-  if(!seesStage(stageId)){toast(fill(t("cantMove"),nm(s)));return}
-  if(s.done){S.dlg={type:"log",id:k.id,stage:stageId};render();return}
+  const nx=nextStageOf(k);
+  if(nx&&nx.id===stageId&&canFinish(k)){S.dlg={type:"finish",id:k.id,back:!!(S.dlg&&S.dlg.type==="task")};render();return}
+  if(!canMoveAny(k)){toast(t("useFinish"));render();return}
   try{await pb.collection("tasks").update(k.id,{stage:stageId});await loadAll();
     if(!seesStage(stageId,k.to)){S.dlg={type:"handoff",id:k.id,stage:stageId}}
     render();toast(fill(t("movedTo"),nm(s)))}catch(e){fail(e);refresh(true)}
 }
 function draftFor(kind,id){
-  if(kind==="stEdit"){const s=ST(id)||{name:"",name_km:"",color:"gray",done:false};return {id:s.id||null,name:s.name,name_km:s.name_km||"",color:s.color||"gray",done:!!s.done}}
+  if(kind==="stEdit"){const s=ST(id)||{name:"",name_km:"",color:"gray",done:false};return {id:s.id||null,name:s.name,name_km:s.name_km||"",color:s.color||"gray",done:!!s.done,hours:s.hours||"",pos:s.pos||""}}
   if(kind==="ttEdit"){const x=TT(id)||{name:"",name_km:"",statuses:[],est:0};return {id:x.id||null,name:x.name,name_km:x.name_km||"",statuses:[...(x.statuses||[])],est:x.est||""}}
   const p=PO(id)||{name:"",name_km:"",types:[],statuses:[]};return {id:p.id||null,name:p.name,name_km:p.name_km||"",types:[...p.types],statuses:[...p.statuses]};
 }
@@ -253,7 +261,7 @@ async function saveDraft(){
   if(!d.name.trim()){er.textContent=t("nameReq");er.hidden=false;return}
   const col=kind==="stEdit"?"statuses":kind==="ttEdit"?"task_types":"positions";
   const data={name:d.name.trim(),name_km:(d.name_km||"").trim()};
-  if(kind==="stEdit"){data.color=d.color;data.done=!!d.done;if(!d.id)data.sort=(sortedSt().slice(-1)[0]?.sort||0)+10}
+  if(kind==="stEdit"){data.color=d.color;data.done=!!d.done;data.hours=d.hours||"";data.pos=d.pos||"";if(!d.id)data.sort=(sortedSt().slice(-1)[0]?.sort||0)+10}
   if(kind==="ttEdit"){data.statuses=sortedSt().filter(s=>d.statuses.includes(s.id)).map(s=>s.id);data.est=parseFloat(d.est)||0}
   if(kind==="poEdit"){data.types=d.types;data.statuses=d.statuses}
   try{d.id?await pb.collection(col).update(d.id,data):await pb.collection(col).create(data);S.dlg=null;S.arm=null;await refresh(true);toast(t("savedT"))}
@@ -273,7 +281,7 @@ document.addEventListener("click",async e=>{
     case "mode":stop();S.mode=b.dataset.v;try{localStorage.setItem("pc-mode",S.mode)}catch(x){}render();return;
     case "scope":stop();S.scope=b.dataset.v;render();return;
     case "clearf":S.fType="any";return;
-    case "next":{stop();const k=tasks.find(x=>x.id===id);const nx=k&&nextStageOf(k);if(!nx){toast(t("lastStep"));return}moveTo(k,nx.id);return}
+    case "next":{stop();const k=tasks.find(x=>x.id===id);const nx=k&&nextStageOf(k);if(!nx){toast(t("lastStep"));return}if(!canFinish(k)){toast(t("useFinish"));return}S.dlg={type:"finish",id:k.id};render();return}
     case "handoff":{stop();const k=tasks.find(x=>x.id===S.dlg.id),u=U(b.dataset.u);S.dlg=null;
       run(()=>pb.collection("tasks").update(k.id,{assignee:u.id}),fill(t("handedTo"),u.name));return}
     case "upos-open":stop();S.dlg={type:"upos",id};render();return;
@@ -330,7 +338,7 @@ function dUteam(){const sup=U(S.dlg.id),cands=users.filter(u=>u.active&&u.id!==s
   <div class="acts"><button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="uteam-save">${t("saveT")}</button></div>`}
 /* Team page: managers see all staff and supervisors; a supervisor sees their own team */
 function vTeam(){
-  const m=me(),staff=isMgr(m)?users.filter(u=>u.active&&u.id!==m.id&&(u.role==="staff"||u.role==="supervisor")):teamOf(m.id);
+  const m=me(),staff=isTaskMgr(m)?users.filter(u=>u.active&&u.id!==m.id&&["staff","supervisor","assistant"].includes(u.role)):teamOf(m.id);
   return `<div class="head"><h1>${t("team")}</h1>${staff.length?`<button class="btn primary" data-act="new" data-assign="1">${t("assignTask")}</button>`:""}</div>
    <p class="muted">${t("teamHelp")}</p>${filterBar()}
    <div class="rows">${staff.length?staff.map(u=>`<div>${personRow(u,null,true)}${S.expand===u.id?`<div class="sub"><div class="list">${(l=>l.length?l.map(k=>taskCard(k)).join(""):`<p class="empty">${t(fOn()?"noMatch":"noneTeam")}</p>`)(applyF(sortT(openOf(u.id))))}</div></div>`:""}</div>`).join(""):`<p class="empty">${t("noTeam")}</p>`}</div>`;

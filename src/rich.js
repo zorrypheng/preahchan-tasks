@@ -140,7 +140,7 @@ function attItem(a,canDel){
 function attBlock(taskId){
   const m=me(),list=taskId?attachments.filter(a=>a.task===taskId):[],pend=(S.dlg&&S.dlg.pend)||[];
   return `<div class="stack" style="gap:8px"><span class="lab">${t("attachments")}${list.length+pend.length?` (${list.length+pend.length})`:""}</span>
-   ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||isMgr(m))).join("")}</div>`:""}
+   ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||isTaskMgr(m))).join("")}</div>`:""}
    ${pend.length?`<div class="atts">${pend.map((p,i)=>{const rm=`<button type="button" class="btn small" data-act="att-unpend" data-i="${i}">${t("remove")}</button>`;
      if(p.kind==="link")return linkCard(p,rm);
      return `<div class="att att-pend"><span class="cap"><b>${esc(p.name)}</b> · ${fsize(p.file?p.file.size:0)}${p.before&&p.file&&p.file.size<p.before?` <span class="muted">(${fill(t("saved1"),fsize(p.before),fsize(p.file.size))})</span>`:""}</span>${rm}</div>`}).join("")}</div><p class="note-hint">${t("attPending")}</p>`:""}

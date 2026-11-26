@@ -34,7 +34,7 @@ onRecordAfterCreateSuccess((e) => {
     const pc = require(`${__hooks}/lib/pc.js`)
     const r = e.record, a = r.getString("assignee"), c = r.getString("creator")
     if (a && a !== c) pc.notify(e.app, a, "assigned", { by: c, task: r.id })
-    if (r.getString("status") === "done") pc.syncCost(e.app, r)
+    if (r.getString("status") === "done") pc.legacyLog(e.app, r, r.getString("stage"))
   } catch (err) { console.log("task create hook: " + err) }
 }, "tasks")
 
@@ -43,14 +43,17 @@ onRecordAfterUpdateSuccess((e) => {
   try {
     const pc = require(`${__hooks}/lib/pc.js`)
     const r = e.record, o = r.original()
-    // labour cost: record it when a task is done, update it if hours or details change, drop it when reopened
-    const costKeys = ["status", "spent", "assignee", "done_at", "client", "type", "title"]
-    if ((r.getString("status") === "done" || o.getString("status") === "done") && costKeys.some((f) => r.getString(f) !== o.getString(f))) {
-      try { pc.syncCost(e.app, r) } catch (err) { console.log("task cost: " + err) }
+    // an older app or the extension marked the task done with hours but no stage log: keep the hours as one log
+    if (r.getString("status") === "done" && o.getString("status") !== "done") {
+      try { pc.legacyLog(e.app, r, o.getString("stage")) } catch (err) { console.log("legacy log: " + err) }
     }
-    // reassigned: tell the new person
-    if (r.getString("assignee") !== o.getString("assignee") && r.getString("assignee") !== r.getString("creator")) {
-      pc.notify(e.app, r.getString("assignee"), "assigned", { by: r.getString("creator"), task: r.id })
+    // the task moved to the next stage and its person: "your turn"; otherwise a plain reassignment
+    if (r.getString("assignee") !== o.getString("assignee")) {
+      if (r.getString("stage") !== o.getString("stage") && o.getString("assignee")) {
+        pc.notify(e.app, r.getString("assignee"), "turn", { by: o.getString("assignee"), task: r.id, prev: o.getString("stage") })
+      } else if (r.getString("assignee") !== r.getString("creator")) {
+        pc.notify(e.app, r.getString("assignee"), "assigned", { by: r.getString("creator"), task: r.id })
+      }
     }
     // a weekly task was finished: create next week's copy
     if (r.getBool("repeat") && r.getString("status") === "done" && o.getString("status") !== "done") {
@@ -65,6 +68,10 @@ onRecordAfterUpdateSuccess((e) => {
       next.set("est", r.getFloat("est"))
       next.set("repeat", true)
       next.set("type", r.getString("type"))
+      next.set("plan", r.get("plan"))
+      next.set("est_plan", r.get("est_plan"))
+      // the copy starts again with the person planned for the first stage
+      try { const f = pc.flow(e.app, r.getString("type")); const p0 = f.length ? pc.planOf(r)[f[0].id] : ""; if (p0) next.set("assignee", p0) } catch (err) {}
       next.set("due", pc.addDays(r.getString("due") || pc.ict().date, 7))
       e.app.save(next)
       // the task no longer repeats itself; its copy carries the repeat on
@@ -79,12 +86,58 @@ onRecordDeleteRequest((e) => {
   const id = e.record.id, asker = e.record.getString("del_by"), title = e.record.getString("title")
   e.next()
   const pc = require(`${__hooks}/lib/pc.js`)
-  try { pc.removeCost(e.app, id) } catch (err) { console.log("task cost delete: " + err) }
+  try { pc.removeTaskWork(e.app, id) } catch (err) { console.log("task work delete: " + err) }
   // the person who asked for the deletion hears that it was done
   try {
     if (asker && e.auth && e.auth.collection().name === "users" && e.auth.id !== asker) pc.notify(e.app, asker, "delok", { by: e.auth.id, title: title })
   } catch (err) { console.log("delete request notice: " + err) }
 }, "tasks")
+
+// ---------- Work logs (one per finished stage) ----------
+onRecordAfterCreateSuccess((e) => {
+  e.next()
+  try { require(`${__hooks}/lib/pc.js`).syncLogCost(e.app, e.record) } catch (err) { console.log("log cost: " + err) }
+}, "work_logs")
+onRecordAfterUpdateSuccess((e) => {
+  e.next()
+  const pc = require(`${__hooks}/lib/pc.js`)
+  try { pc.syncLogCost(e.app, e.record) } catch (err) { console.log("log cost: " + err) }
+  pc.syncTaskSpent(e.app, e.record.getString("task_id"))
+}, "work_logs")
+onRecordAfterDeleteSuccess((e) => {
+  e.next()
+  const pc = require(`${__hooks}/lib/pc.js`)
+  try { pc.removeLogCost(e.app, e.record.id) } catch (err) { console.log("log cost delete: " + err) }
+  pc.syncTaskSpent(e.app, e.record.getString("task_id"))
+}, "work_logs")
+// Staff can correct their own log on the same day; managers any time
+onRecordUpdateRequest((e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  const role = e.auth && e.auth.collection().name === "users" ? e.auth.getString("role") : "admin"
+  if (role !== "admin" && role !== "manager" && e.record.original().getString("day") !== pc.ict().date) throw new ForbiddenError("You can only change a log on the day it was made. Ask a manager.")
+  const h = e.record.getFloat("hours")
+  if (h < 0 || h > 24) throw new BadRequestError("Hours must be between 0 and 24.")
+  e.next()
+}, "work_logs")
+
+// Finish the current stage: log the work and pass the task to the next person
+routerAdd("POST", "/api/pc/finish", (e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  const body = e.requestInfo().body || {}
+  const actor = e.app.findRecordById("users", e.auth.id)
+  let task
+  try { task = e.app.findRecordById("tasks", String(body.task || "")) } catch (err) { throw new NotFoundError("Task not found.") }
+  return e.json(200, pc.finishStage(e.app, actor, task, { hours: body.hours, note: body.note, to: body.to }))
+}, $apis.requireAuth("users"))
+
+// Leaderboard and KPI numbers: finished stages and hours per person
+routerAdd("GET", "/api/pc/board", (e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  const q = e.request.url.query(), ok = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d)
+  const from = String(q.get("from") || ""), to = String(q.get("to") || "")
+  if (!ok(from) || !ok(to)) throw new BadRequestError("from and to must be dates (YYYY-MM-DD).")
+  return e.json(200, pc.boardStats(e.app, from, to))
+}, $apis.requireAuth("users"))
 
 // ---------- Comments ----------
 onRecordAfterCreateSuccess((e) => {
@@ -156,7 +209,7 @@ onRecordAfterCreateSuccess((e) => {
     const pc = require(`${__hooks}/lib/pc.js`)
     const r = e.record, uid = r.getString("user")
     const owner = e.app.findRecordById("users", uid)
-    const approverRole = ["staff", "supervisor"].indexOf(owner.getString("role")) >= 0 ? "manager" : "admin"
+    const approverRole = ["staff", "supervisor", "assistant"].indexOf(owner.getString("role")) >= 0 ? "manager" : "admin"
     e.app.findRecordsByFilter("users", "active = true && role = {:r} && id != {:u}", "", 100, 0, { r: approverRole, u: uid })
       .forEach((m) => pc.notify(e.app, m.id, "rep", { by: uid, rep: r.id }))
   } catch (err) { console.log("report create hook: " + err) }
@@ -254,6 +307,13 @@ cronAdd("pc_morning", "0 * * * *", () => {
 cronAdd("pc_cleanup", "0 * * * *", () => {
   const pc = require(`${__hooks}/lib/pc.js`)
   if (pc.ict().hour === 3) pc.cleanupDone($app)
+})
+
+// 17:30 Cambodia time, Monday to Saturday: "how many hours did you log today?"
+cronAdd("pc_nudge", "30 * * * *", () => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  const now = pc.ict()
+  if (now.hour === 17 && now.dow !== 0) pc.nudge($app)
 })
 
 cronAdd("pc_note_reminders", "* * * * *", () => {

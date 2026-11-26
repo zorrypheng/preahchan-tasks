@@ -370,14 +370,14 @@ const T={en:{
  signout:"Sign out",signin:"Sign in",username:"Username",password:"Password",demo:"Demo accounts",badlogin:"No active account has that username. Check the spelling or ask your admin.",
  loginHelp:"Your admin creates your username and password.",
  todo:"To do",doing:"In progress",done:"Done",overdue:"Overdue",
- addTask:"Add task",assignTask:"Assign task",ofWeek:"tasks this week",of:"of",reached:"KPI reached",toGo:"to go",
+ addTask:"Add task",assignTask:"Assign task",ofWeek:"stages this week",of:"of",reached:"KPI reached",toGo:"to go",
  all:"All",fromMgr:"From manager",own:"My own",title:"Task title",desc:"Description",due:"Due date",prio:"Priority",
  high:"High",normal:"Normal",low:"Low",assignTo:"Assign to",me:"Me",save:"Save task",cancel:"Cancel",close:"Close",
  repeat:"Repeats every week",weekly:"Weekly",comments:"Comments",addComment:"Add comment",writeComment:"Write a comment",noComments:"No comments yet.",
  dueToday:"Due today",dueTom:"Due tomorrow",daysLate:"days overdue",dayLate:"1 day overdue",dueOn:"Due",from:"From",
  status:"Status",reassign:"Assigned to",none:"No tasks here yet. Add one to get started.",noneTeam:"No open tasks.",
  open:"open",teamKpi:"Team KPI",reachedN:"People who reached KPI",overdueN:"Overdue tasks",thisWeek:"This week",
- createUser:"Create user",name:"Full name",role:"Role",admin:"Admin",manager:"Manager",supervisor:"Supervisor",staff:"Staff",weeklyKpi:"Weekly KPI",active:"Active",
+ createUser:"Create user",name:"Full name",role:"Role",admin:"Admin",manager:"Manager",supervisor:"Supervisor",assistant:"Assistant manager",staff:"Staff",weeklyKpi:"Weekly KPI",active:"Active",
  resetPw:"Reset password",pwReset:"Password reset for",userMade:"User created",saved:"Task saved",markDone:"Mark as done",
  teamHelp:"Select a person to see their open tasks.",boardHelp:"Tasks completed this week. Only names and counts are shared.",
  usersHelp:"Set each person's role and weekly KPI target.",days:["M","T","W","T","F","S","S"],titleReq:"Enter a task title.",userReq:"Enter a name, username and password.",userDup:"That username is already taken.",
@@ -387,7 +387,7 @@ const T={en:{
  signout:"ចាកចេញ",signin:"ចូល",username:"ឈ្មោះអ្នកប្រើ",password:"ពាក្យសម្ងាត់",demo:"គណនីសាកល្បង",badlogin:"រកមិនឃើញគណនីសកម្មដែលមានឈ្មោះនេះទេ។ សូមពិនិត្យអក្ខរាវិរុទ្ធ ឬសួរអ្នកគ្រប់គ្រងប្រព័ន្ធ។",
  loginHelp:"អ្នកគ្រប់គ្រងប្រព័ន្ធបង្កើតឈ្មោះអ្នកប្រើ និងពាក្យសម្ងាត់ឱ្យអ្នក។",
  todo:"ត្រូវធ្វើ",doing:"កំពុងធ្វើ",done:"រួចរាល់",overdue:"ហួសកំណត់",
- addTask:"បន្ថែមភារកិច្ច",assignTask:"ចាត់ភារកិច្ច",ofWeek:"ភារកិច្ចសប្តាហ៍នេះ",of:"នៃ",reached:"សម្រេច KPI",toGo:"នៅសល់",
+ addTask:"បន្ថែមភារកិច្ច",assignTask:"ចាត់ភារកិច្ច",ofWeek:"ដំណាក់កាលសប្តាហ៍នេះ",of:"នៃ",reached:"សម្រេច KPI",toGo:"នៅសល់",
  all:"ទាំងអស់",fromMgr:"ពីអ្នកគ្រប់គ្រង",own:"ផ្ទាល់ខ្លួន",title:"ចំណងជើងភារកិច្ច",desc:"ការពិពណ៌នា",due:"ថ្ងៃកំណត់",prio:"អាទិភាព",
  high:"ខ្ពស់",normal:"ធម្មតា",low:"ទាប",assignTo:"ចាត់ឱ្យ",me:"ខ្ញុំ",save:"រក្សាទុក",cancel:"បោះបង់",close:"បិទ",
  repeat:"ធ្វើឡើងវិញរៀងរាល់សប្តាហ៍",weekly:"ប្រចាំសប្តាហ៍",comments:"មតិយោបល់",addComment:"បន្ថែមមតិ",writeComment:"សរសេរមតិ",noComments:"មិនទាន់មានមតិទេ។",
@@ -463,7 +463,7 @@ const clientOpts=cur=>`<option value="">${t("noClient")}</option>${clients.map(c
 const U=id=>users.find(u=>u.id===id);
 const me=()=>U(S.me);
 const stat=k=>k.status==="done"?"done":(k.due<TODAY?"overdue":k.status);
-const doneWeek=u=>tasks.filter(k=>k.to===u&&k.status==="done"&&k.doneAt>=WK0&&k.doneAt<=WK6);
+const doneWeek=u=>weekItems(u);
 const openOf=u=>tasks.filter(k=>k.to===u&&k.status!=="done");
 const people=()=>users.filter(u=>u.active&&u.role!=="admin");
 const initials=n=>n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
@@ -740,7 +740,7 @@ Object.assign(T.km,{
  bKpi:"KPI ប្រចាំសប្តាហ៍ {a}៖ អ្នកបានបញ្ចប់ {b} ភារកិច្ច។",bReached:"អ្នកបានសម្រេច KPI។",bShort:"នៅខ្វះ {a} ទៀតដើម្បីដល់គោលដៅ។",bStart:"ចាប់ផ្តើម",bOpen:"បើកក្នុងកម្មវិធី",bMarked:"បានសម្គាល់ថារួចរាល់",bStarted:"បានចាប់ផ្តើម",
  openApp:"នៅក្នុងកម្មវិធីពិត ប៊ូតុងនេះបើកភារកិច្ច។",menu:"ម៉ឺនុយ",fnTitle:"កំណត់ចំណាំរហ័ស",fnBtn:"កំណត់ចំណាំ",qnPh:"សរសេរកំណត់ចំណាំរហ័ស",qnAdd:"បន្ថែម",allNotes:"បើកកំណត់ចំណាំទាំងអស់",noteAdded:"បានបន្ថែមកំណត់ចំណាំ",fnEmpty:"មិនទាន់មានកំណត់ចំណាំទេ។ សរសេរមួយនៅខាងលើ។",bTeam:"ភារកិច្ចហួសកំណត់ក្នុងក្រុមរបស់អ្នក៖",bTeamOk:"គ្មាននរណាម្នាក់ក្នុងក្រុមមានភារកិច្ចហួសកំណត់ទេ។"
 });
-const fill=(s,a,b)=>String(s).replace("{a}",a??"").replace("{b}",b??"");
+const fill=(s,a,b,c)=>String(s).replace("{a}",a??"").replace("{b}",b??"").replace("{c}",c??"");
 /* Time tracking: estimate when created, hours spent when done, against each person's weekly hours */
 users.forEach(u=>u.cap=44);
 tasks.forEach((k,i)=>{k.est=[2,3,4,1.5,5,2.5,6,1][i%8];if(k.status==="done")k.spent=Math.max(0.5,k.est+[0,0.5,-0.5,1,0,-1][i%6])});
@@ -809,8 +809,8 @@ function buildReport(uid,wk){
     .map(k=>({title:k.title,client:k.client,est:k.est||0,spent:k.spent||0,doneAt:k.doneAt}));
   return {items,kpi:u.kpi,cap:u.cap,open:open.length,overdue:open.filter(k=>k.due<TODAY).length};
 }
-const approversOf=uid=>["staff","supervisor"].includes(U(uid).role)?users.filter(u=>u.active&&u.role==="manager").map(u=>u.id):users.filter(u=>u.active&&u.role==="admin").map(u=>u.id);
-const canDecide=r=>{const m=me();return r.uid!==S.me&&(m.role==="admin"||(m.role==="manager"&&["staff","supervisor"].includes(U(r.uid).role)))};
+const approversOf=uid=>["staff","supervisor","assistant"].includes(U(uid).role)?users.filter(u=>u.active&&u.role==="manager").map(u=>u.id):users.filter(u=>u.active&&u.role==="admin").map(u=>u.id);
+const canDecide=r=>{const m=me();return r.uid!==S.me&&(m.role==="admin"||(m.role==="manager"&&["staff","supervisor","assistant"].includes(U(r.uid).role)))};
 const pendingFor=()=>reports.filter(r=>r.status==="pending"&&canDecide(r)).length;
 users.filter(u=>u.active&&u.role!=="admin").forEach((u,ui)=>{for(let i=0;i<6;i++){const d=iso(addDays(wk0,-7+((i+ui)%5))),est=[3,4,5,6,4,3][i];
   _tpush({id:"t"+(++tid),title:POOL[(i*3+ui)%POOL.length],desc:"",to:u.id,by:i%2?"u2":u.id,due:d,prio:"normal",status:"done",doneAt:d,repeat:false,comments:[],client:["c1","c2","c3",""][(i+ui)%4],est,spent:Math.max(1,est+[0,1,-1,0.5,0,2][(i+ui)%6])})}});
@@ -909,10 +909,10 @@ async function makePdf(uid,wk,repId,btn){
   finally{holder.remove();pdfBusy=false;btn.disabled=false}
 }
 function vReports(){
-  const m=me(),mine=reports.filter(r=>r.uid!==S.me&&(m.role==="admin"||["staff","supervisor"].includes(U(r.uid).role)));
+  const m=me(),mine=reports.filter(r=>r.uid!==S.me&&(m.role==="admin"||["staff","supervisor","assistant"].includes(U(r.uid).role)));
   const tab=(v,l)=>`<button data-act="rtab" data-v="${v}" aria-pressed="${S.rTab===v}">${l} (${mine.filter(r=>r.status===v).length})</button>`;
   const list=mine.filter(r=>r.status===S.rTab).sort((a,b)=>b.at.localeCompare(a.at));
-  const need=users.filter(u=>u.active&&u.id!==S.me&&(m.role==="admin"?u.role!=="admin":["staff","supervisor"].includes(u.role))&&!reports.some(r=>r.uid===u.id&&r.wk===LWK&&r.status!=="returned"));
+  const need=users.filter(u=>u.active&&u.id!==S.me&&(m.role==="admin"?u.role!=="admin":["staff","supervisor","assistant"].includes(u.role))&&!reports.some(r=>r.uid===u.id&&r.wk===LWK&&r.status!=="returned"));
   return `<div class="head"><h1>${t("reports")}</h1></div>
    <div class="tabs">${tab("pending",t("stPending"))}${tab("approved",t("stApproved"))}${tab("returned",t("stReturned"))}</div>
    <p class="muted">${need.length?fill(t("notSubmitted"),need.map(u=>esc(u.name)).join(", ")):t("allSubmitted")}</p>
@@ -929,6 +929,7 @@ function nText(n){
    case "rep":return fill(t("nR"),"<b>"+by+"</b>");
    case "repok":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRok"),by,r?wkLabel(r.wk):"")}
    case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}
+   case "turn":return fill(t("tTurn"),by,tt,esc(nm(ST(p.prev))||""));
    case "delreq":return fill(t("tDelReq"),by,tt||"<b>"+esc(p.title||"")+"</b>");
    case "delok":return fill(t("tDelOk"),by,"<b>"+esc(p.title||"")+"</b>");
    case "delno":return fill(t("tDelNo"),by,tt||"<b>"+esc(p.title||"")+"</b>");}

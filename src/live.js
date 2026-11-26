@@ -18,8 +18,8 @@ async function loadAll(){
   const [us,cl,ts,cm,dc,nt,nf,rp,sts,tts,pos,att]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
     g("documents",{sort:"-created"}),g("notes",{sort:"-updated"}),pb.collection("notifications").getList(1,100,{sort:"-created"}).then(r=>r.items),g("reports",{sort:"created"}),
     g("statuses",{sort:"sort"}).catch(()=>[]),g("task_types",{sort:"name"}).catch(()=>[]),g("positions",{sort:"name"}).catch(()=>[]),
-    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken(),loadTemplates(),loadCosts()]);
-  statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done}));
+    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken(),loadTemplates(),loadCosts(),loadStageData()]);
+  statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done,hours:r.hours||"",pos:r.pos||""}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
   users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[],supervisors:r.supervisors||[]}));
@@ -27,7 +27,7 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||""})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null})});
   attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
@@ -237,10 +237,15 @@ document.addEventListener("submit",async e=>{
     try{let client=val("nt-client");if(client==="__none")client="";
       if(client==="__new"){const n=val("nt-newclient");if(!n){er(t("clientReq"));if(btn)btn.disabled=false;return}
         const ex=clients.find(c=>c.name.toLowerCase()===n.toLowerCase());client=ex?ex.id:(await pb.collection("clients").create({name:n,created_by:S.me})).id}
-      const type=val("nt-type")==="__none"?"":val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
+      const type=val("nt-type")==="__none"?"":val("nt-type");keepPlan();
+      // the stage plan: the first stage's person gets the task; the others get it as each stage is finished
+      const st=planStages(type),plan={},estPlan={};
+      st.forEach(s=>{const p=(S.dlg.plan||{})[s.id];if(p)plan[s.id]=p;const h=parseFloat((S.dlg.estPlan||{})[s.id]);if(h>0)estPlan[s.id]=h});
+      if(me().role==="staff"&&st[0])plan[st[0].id]=S.me;
+      const first=st[0]||null,assignee=(first&&plan[first.id])||S.me;
       const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
-      const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee:val("nt-to")||S.me,creator:S.me,client:client||"",due:val("nt-due")||off(2),
-        priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:""});
+      const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee,creator:S.me,client:client||"",due:val("nt-due")||off(2),
+        priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:"",plan,est_plan:estPlan});
       for(const p of pend){try{toast(fill(t("uploadingA"),p.name));await uploadAttachment(created.id,p)}catch(x){fail(x)}}
       S.dlg=null;await refresh(true);toast(t("saved"))}
     catch(err){if(btn)btn.disabled=false;fail(err)}return}
@@ -264,7 +269,7 @@ document.addEventListener("submit",async e=>{
 document.addEventListener("change",e=>{
   const el=e.target,c=el.dataset.ch,x=el.dataset.x;if(!S.me)return;
   if(c==="setclient"){e.stopImmediatePropagation();run(()=>pb.collection("tasks").update(S.dlg.id,{client:el.value}));return}
-  if(c==="reassign"){e.stopImmediatePropagation();run(()=>pb.collection("tasks").update(S.dlg.id,{assignee:el.value}));return}
+  if(c==="reassign"){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id);run(()=>pb.collection("tasks").update(S.dlg.id,{assignee:el.value,plan:Object.assign({},k.plan||{},k.stage?{[k.stage]:el.value}:{})}));return}
   if(["role","kpi","cap","active"].includes(c)){e.stopImmediatePropagation();const id=el.dataset.id,data={};
     if(c==="role")data.role=el.value;if(c==="kpi")data.kpi=Math.max(0,Math.min(99,+el.value||0));if(c==="cap")data.cap=Math.max(1,Math.min(80,+el.value||44));if(c==="active")data.active=el.checked;
     run(()=>pb.collection("users").update(id,data),t("kpiSaved"));return}

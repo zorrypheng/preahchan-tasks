@@ -2,9 +2,8 @@
 
 Ideas agreed to revisit after the workflow update (statuses, task types, positions, Kanban).
 
-## Decision pending
-- **Per-stage hours:** each person logs hours when moving a card out of their own stage, so hand-offs (creator → editor → coordinator)
-  give everyone accurate weekly hours and KPI can count completed stages, not only finished tasks. Today only the person who moves a card to Done logs hours.
+## Built
+- **Per-stage hours** (stage plan, Finish with hours, work logs, KPI by finished stages, timesheet, stage report, crews, timer, 17:30 nudge).
 
 ## Agency features
 1. **Client approval link:** a no-login link where the client approves or comments; approving moves the card to *Ready to post*.

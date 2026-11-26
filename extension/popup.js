@@ -1,4 +1,4 @@
-import { DEFAULT_SERVER, session, login, logout, openTasks, weekNumbers, unreadCount, finishTask, moveStage, loadWorkflow, flowOf, nextOf, canMoveTo, addTask, addNote, today, addDays, updateBadge } from "./api.js";
+import { DEFAULT_SERVER, session, login, logout, openTasks, weekNumbers, unreadCount, finishStage, hoursModeOf, loadWorkflow, flowOf, nextOf, addTask, addNote, today, addDays, updateBadge } from "./api.js";
 
 const T = {
   en: {
@@ -6,9 +6,9 @@ const T = {
     signInHelp: "Use the same username and password as the Preahchan Tasks app.", badLogin: "Wrong username or password, or the account is turned off.",
     offline: "Can't reach the server. Check your connection.", needBoth: "Enter your username and password.",
     tasks: "Tasks", add: "Add task", note: "Note", openApp: "Open the app", signOut: "Sign out",
-    week: "{a} of {b} tasks this week", hours: "{a} of {b} hours logged", unread: "{a} new notifications", unread1: "1 new notification",
+    week: "{a} of {b} stages this week", hours: "{a} of {b} hours logged", unread: "{a} new notifications", unread1: "1 new notification",
     none: "Nothing open. Add a task or enjoy the moment.", due: "Due", today: "Due today", tomorrow: "Due tomorrow", overdue: "{a} days overdue", overdue1: "1 day overdue",
-    done: "Done", next: "Next: {a}", moved: "Moved to {a}", cantMove: "Your position can't move tasks to {a}.", lastStep: "Already at the last status.", cancel: "Cancel", hoursQ: "Hours spent:", high: "High", normal: "Normal", low: "Low", est: "Est",
+    done: "Done", next: "Next: {a}", finish: "Finish: {a}", moved: "Moved to {a}", cantMove: "Your position can't move tasks to {a}.", lastStep: "Already at the last status.", cancel: "Cancel", hoursQ: "Hours spent:", high: "High", normal: "Normal", low: "Low", est: "Est",
     title: "Title", dueDate: "Due date", estH: "Estimate (h)", prio: "Priority", save: "Save task", saved: "Task added", titleReq: "Enter a title.", estReq: "Enter a time estimate in hours.",
     noteTitle: "Title", noteText: "Note", withLink: "Add this page's link", saveNote: "Save note", noteSaved: "Note saved", noteReq: "Write something first.",
     logged: "Marked as done. {a} h logged.", allTasks: "See all tasks", error: "Something went wrong. Try again."
@@ -18,9 +18,9 @@ const T = {
     signInHelp: "ប្រើឈ្មោះអ្នកប្រើ និងពាក្យសម្ងាត់ដូចក្នុងកម្មវិធី Preahchan Tasks។", badLogin: "ឈ្មោះអ្នកប្រើ ឬពាក្យសម្ងាត់មិនត្រឹមត្រូវ ឬគណនីត្រូវបានបិទ។",
     offline: "មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ។ សូមពិនិត្យអ៊ីនធឺណិត។", needBoth: "សូមបញ្ចូលឈ្មោះអ្នកប្រើ និងពាក្យសម្ងាត់។",
     tasks: "ភារកិច្ច", add: "បន្ថែមភារកិច្ច", note: "កំណត់ចំណាំ", openApp: "បើកកម្មវិធី", signOut: "ចាកចេញ",
-    week: "{a} នៃ {b} ភារកិច្ចសប្តាហ៍នេះ", hours: "បានកត់ត្រា {a} នៃ {b} ម៉ោង", unread: "ការជូនដំណឹងថ្មី {a}", unread1: "ការជូនដំណឹងថ្មី 1",
+    week: "{a} នៃ {b} ដំណាក់កាលសប្តាហ៍នេះ", hours: "បានកត់ត្រា {a} នៃ {b} ម៉ោង", unread: "ការជូនដំណឹងថ្មី {a}", unread1: "ការជូនដំណឹងថ្មី 1",
     none: "គ្មានភារកិច្ចនៅសល់ទេ។", due: "កំណត់", today: "កំណត់ថ្ងៃនេះ", tomorrow: "កំណត់ថ្ងៃស្អែក", overdue: "ហួសកំណត់ {a} ថ្ងៃ", overdue1: "ហួសកំណត់ 1 ថ្ងៃ",
-    done: "រួចរាល់", next: "បន្ទាប់៖ {a}", moved: "បានផ្លាស់ទៅ {a}", cantMove: "តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។", lastStep: "នៅស្ថានភាពចុងក្រោយហើយ។", cancel: "បោះបង់", hoursQ: "ម៉ោងបានចំណាយ៖", high: "ខ្ពស់", normal: "ធម្មតា", low: "ទាប", est: "ប៉ាន់ស្មាន",
+    done: "រួចរាល់", next: "បន្ទាប់៖ {a}", finish: "បញ្ចប់៖ {a}", moved: "បានផ្លាស់ទៅ {a}", cantMove: "តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។", lastStep: "នៅស្ថានភាពចុងក្រោយហើយ។", cancel: "បោះបង់", hoursQ: "ម៉ោងបានចំណាយ៖", high: "ខ្ពស់", normal: "ធម្មតា", low: "ទាប", est: "ប៉ាន់ស្មាន",
     title: "ចំណងជើង", dueDate: "ថ្ងៃកំណត់", estH: "ប៉ាន់ស្មាន (ម៉ោង)", prio: "អាទិភាព", save: "រក្សាទុកភារកិច្ច", saved: "បានបន្ថែមភារកិច្ច", titleReq: "សូមបញ្ចូលចំណងជើង។", estReq: "សូមបញ្ចូលរយៈពេលប៉ាន់ស្មានជាម៉ោង។",
     noteTitle: "ចំណងជើង", noteText: "កំណត់ចំណាំ", withLink: "បន្ថែមតំណទំព័រនេះ", saveNote: "រក្សាទុក", noteSaved: "បានរក្សាទុកកំណត់ចំណាំ", noteReq: "សូមសរសេរអ្វីមួយជាមុន។",
     logged: "បានសម្គាល់ថារួចរាល់។ បានកត់ត្រា {a} ម៉ោង។", allTasks: "មើលភារកិច្ចទាំងអស់", error: "មានបញ្ហា។ សូមសាកម្តងទៀត។"
@@ -115,12 +115,12 @@ const snm = (s) => (s ? (lang === "km" && s.name_km ? s.name_km : s.name) : "");
 function taskRow(k) {
   const stage = wf.statuses.find((s) => s.id === k.stage), nx = nextOf(wf, k);
   const late = k.due && k.due < today(), cl = k.expand && k.expand.client ? k.expand.client.name : "";
-  const opts = [0.5, 1, 2, 4]; if (k.est && !opts.includes(k.est)) opts.push(k.est); opts.sort((a, b) => a - b);
+  const opts = [0.5, 1, 2, 3, 4];
   return `<article class="task" data-id="${esc(k.id)}">
     <div class="top"><span class="t">${esc(k.title)}</span>
-     ${st.open === k.id ? "" : nx ? `<button class="btn small" data-next="${esc(k.id)}" title="${esc(fill(t("next"), snm(nx)))}">${esc(fill(t("next"), snm(nx)))}</button>` : ""}</div>
+     ${st.open === k.id ? "" : nx && stage ? `<button class="btn small" data-next="${esc(k.id)}" title="${esc(fill(t("finish"), snm(stage)))}">${esc(fill(t("finish"), snm(stage)))}</button>` : ""}</div>
     <div class="meta">${stage ? `<span class="stg sc-${esc(stage.color || "gray")}">${esc(snm(stage))}</span>` : ""}<span class="${late ? "late" : ""}">${esc(dueLabel(k.due))}</span><span class="pr ${esc(k.priority)}">${esc(t(k.priority))}</span>${k.est ? `<span>${t("est")} ${k.est} h</span>` : ""}${cl ? `<span>${esc(cl)}</span>` : ""}</div>
-    ${st.open === k.id ? `<div class="hours"><span class="q">${t("hoursQ")}</span>${opts.map((h) => `<button class="chip" data-h="${h}" data-id="${esc(k.id)}">${h} h</button>`).join("")}<button class="link" data-cancel="1">${t("cancel")}</button></div>` : ""}
+    ${st.open === k.id ? `<div class="hours"><span class="q">${t("hoursQ")}</span>${opts.map((h) => `<button class="chip" data-h="${h}" data-id="${esc(k.id)}">${h} h</button>`).join("")}${st.openMode === "optional" ? `<button class="chip" data-h="0" data-id="${esc(k.id)}">0 h</button>` : ""}<button class="link" data-cancel="1">${t("cancel")}</button></div>` : ""}
   </article>`;
 }
 
@@ -161,10 +161,10 @@ main.addEventListener("click", async (e) => {
   if (b.dataset.next) {
     const k = st.tasks.find((x) => x.id === b.dataset.next), nx = k && nextOf(wf, k);
     if (!nx) { toast(t("lastStep")); return; }
-    if (!canMoveTo(wf, user, nx.id)) { toast(fill(t("cantMove"), snm(nx))); return; }
-    if (nx.done) { st.open = k.id; st.openStage = nx.id; render(user); return; }
+    const cur = wf.statuses.find((s) => s.id === k.stage), mode = hoursModeOf(wf, k, cur);
+    if (mode !== "none") { st.open = k.id; st.openMode = mode; render(user); return; }
     b.disabled = true;
-    try { await moveStage(k.id, nx.id); toast(fill(t("moved"), snm(nx))); await loadAndShow(); } catch (err) { toast(errText(err)); b.disabled = false; }
+    try { await finishStage(k.id, 0); toast(fill(t("moved"), snm(nx))); await loadAndShow(); } catch (err) { toast(errText(err)); b.disabled = false; }
     return;
   }
   if (b.dataset.cancel) { st.open = null; render(user); return; }
@@ -172,7 +172,7 @@ main.addEventListener("click", async (e) => {
     const id = b.dataset.id, h = parseFloat(b.dataset.h);
     document.querySelectorAll(".chip").forEach((c) => (c.disabled = true));
     try {
-      await finishTask(id, h, st.openStage);
+      await finishStage(id, h);
       const card = document.querySelector(`.task[data-id="${CSS.escape(id)}"]`);
       if (card) card.classList.add("leaving");
       toast(fill(t("logged"), h));

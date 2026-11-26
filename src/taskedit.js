@@ -11,7 +11,7 @@ Object.assign(T.km,{rename:"ប្តូរឈ្មោះ",renameT:"ឈ្ម�
   delChip:"សុំលុប",tDelReq:"{a} សុំលុប {b}",tDelOk:"{a} បានលុប {b} តាមសំណើរបស់អ្នក",tDelNo:"{a} បានរក្សាទុក {b}; សំណើលុបរបស់អ្នកមិនត្រូវបានយល់ព្រម"});
 
 /* same rule as the server: creator, admins and managers, and the supervisor of the person doing it */
-function canDeleteTask(k){const m=me();if(!m||!k)return false;if(isMgr(m)||k.by===m.id)return true;return m.role==="supervisor"&&((U(k.to)||{}).supervisors||[]).includes(m.id)}
+function canDeleteTask(k){const m=me();if(!m||!k)return false;if(isTaskMgr(m)||k.by===m.id)return true;return m.role==="supervisor"&&((U(k.to)||{}).supervisors||[]).includes(m.id)}
 const delChip=k=>k.delBy?`<span class="delchip">${t("delChip")}</span>`:"";
 
 /* title row of the task dialog: name, rename */

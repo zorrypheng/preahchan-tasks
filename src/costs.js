@@ -9,7 +9,7 @@ Object.assign(T.en,{n_costs:"Costs",costs:"Costs",costsHelp:"Labour cost of fini
   salMonthly:"Monthly salary (USD)",salFrom:"Starts from",salNote:"Note (optional)",salSave:"Save salary",salSaved:"Salary saved",salDel:"Delete",
   salDelAsk:"Delete the salary entry from {a}?",salDeleted:"Salary entry deleted",salHist:"Salary history",salNone:"No salary entered yet.",
   salAmountReq:"Enter the monthly salary.",salDateReq:"Choose the start date.",salRateIs:"{a} per hour at {b} h a week",costLine:"Cost {a}",noType2:"No type",
-  csvHead:"Date,Person,Client,Task type,Task,Hours,Hourly cost (USD),Cost (USD)"});
+  csvHead:"Date,Person,Client,Task type,Stage,Task,Hours,Hourly cost (USD),Cost (USD)"});
 Object.assign(T.km,{n_costs:"ចំណាយ",costs:"ចំណាយ",costsHelp:"ចំណាយពលកម្មលើការងារដែលបានបញ្ចប់។ ចំណាយក្នុងមួយម៉ោង = ប្រាក់ខែ ÷ ម៉ោងបង់ប្រាក់ក្នុងមួយខែ (ម៉ោងក្នុងសប្តាហ៍ × 52 ÷ 12)។",
   costsFrom:"ចំណាយត្រូវបានកត់ត្រានៅពេលភារកិច្ចត្រូវបានសម្គាល់ថារួចរាល់។",pThisWeek:"សប្តាហ៍នេះ",pThisMonth:"ខែនេះ",pLastMonth:"ខែមុន",pCustom:"កំណត់ខ្លួនឯង",pFrom:"ពី",pTo:"ដល់",
   costLogged:"ចំណាយពលកម្មដែលបានកត់ត្រា",hoursLogged:"ម៉ោងដែលបានកត់ត្រា",paidPeriod:"ប្រាក់ខែសម្រាប់រយៈពេលនេះ",utilT:"ម៉ោងបង់ប្រាក់ដែលបានកត់ត្រា",
@@ -20,7 +20,7 @@ Object.assign(T.km,{n_costs:"ចំណាយ",costs:"ចំណាយ",costsHelp:
   salMonthly:"ប្រាក់ខែប្រចាំខែ (USD)",salFrom:"ចាប់ពី",salNote:"កំណត់ចំណាំ (ស្រេចចិត្ត)",salSave:"រក្សាទុកប្រាក់ខែ",salSaved:"បានរក្សាទុកប្រាក់ខែ",salDel:"លុប",
   salDelAsk:"លុបប្រាក់ខែចាប់ពី {a}?",salDeleted:"បានលុបប្រាក់ខែ",salHist:"ប្រវត្តិប្រាក់ខែ",salNone:"មិនទាន់បញ្ចូលប្រាក់ខែ។",
   salAmountReq:"សូមបញ្ចូលប្រាក់ខែ។",salDateReq:"សូមជ្រើសថ្ងៃចាប់ផ្តើម។",salRateIs:"{a} ក្នុងមួយម៉ោង សម្រាប់ {b} ម៉ោងក្នុងមួយសប្តាហ៍",costLine:"ចំណាយ {a}",noType2:"គ្មានប្រភេទ",
-  csvHead:"Date,Person,Client,Task type,Task,Hours,Hourly cost (USD),Cost (USD)"});
+  csvHead:"Date,Person,Client,Task type,Stage,Task,Hours,Hourly cost (USD),Cost (USD)"});
 
 const salaries=[],tcosts=[];
 NAV.admin.splice(NAV.admin.indexOf("reports")+1,0,"costs");
@@ -34,7 +34,7 @@ async function loadCosts(){
   if(!r||!["admin","manager"].includes(r.role))return;
   try{const [s,c]=await Promise.all([pb.collection("salaries").getFullList({sort:"from"}),pb.collection("task_costs").getFullList({sort:"day",batch:1000})]);
     s.forEach(x=>salaries.push({id:x.id,user:x.user,monthly:x.monthly||0,from:x.from,note:x.note||""}));
-    c.forEach(x=>tcosts.push({task:x.task,user:x.user,client:x.client||"",type:x.type||"",title:x.title||"",day:x.day,hours:x.hours||0,rate:x.rate||0,cost:x.cost||0}));
+    c.forEach(x=>tcosts.push({task:x.task,log:x.log||"",stage:x.stage||"",user:x.user,client:x.client||"",type:x.type||"",title:x.title||"",day:x.day,hours:x.hours||0,rate:x.rate||0,cost:x.cost||0}));
   }catch(e){}
 }
 const usd=n=>"$"+(Math.round((n||0)*100)/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -79,6 +79,11 @@ function vCosts(){
    <div class="tiles">${tile(t("costLogged"),usd(tot),`${rows.length} ${t("colTasks").toLowerCase()}`)}${tile(t("hoursLogged"),Math.round(hrs*10)/10,t("hrs"))}${tile(t("paidPeriod"),usd(paid),"")}${tile(t("utilT"),pct(hrsPaid,paidH),`${Math.round(hrsPaid)} / ${Math.round(paidH)} ${t("hrs")}`)}</div>
    <section class="csec"><h2>${t("byClient")}</h2>${clientRows.length?table([t("client"),t("colTasks"),t("colHours"),t("colCost"),""],clientRows.map(g=>`<tr><th scope="row">${g.k?esc(C(g.k)||"–"):`<span class="muted">${t("noClient")}</span>`}</th><td class="num">${g.n}</td><td class="num">${Math.round(g.h*100)/100}</td><td class="num"><b>${usd(g.cost)}</b></td><td>${bar(g.cost)}</td></tr>`).join("")):`<p class="empty">${t("noCosts")}</p>`}</section>
    <section class="csec"><h2>${t("byType")}</h2>${typeRows.length?table([t("type"),t("colTasks"),t("colAvgH"),t("colAvgC"),t("colCost")],typeRows.map(g=>{const x=TT(g.k);return `<tr><th scope="row">${x?esc(nm(x)):`<span class="muted">${t("noType2")}</span>`}</th><td class="num">${g.n}</td><td class="num">${Math.round(g.h/g.n*100)/100}</td><td class="num">${usd(g.cost/g.n)}</td><td class="num"><b>${usd(g.cost)}</b></td></tr>`}).join("")):`<p class="empty">${t("noCosts")}</p>`}</section>
+   <section class="csec"><h2>${t("byTask")}</h2>${(()=>{const m=new Map();rows.forEach(c=>{const g=m.get(c.task)||{title:c.title,client:c.client,rows:[],h:0,cost:0};g.rows.push(c);g.h+=c.hours;g.cost+=c.cost;m.set(c.task,g)});
+     const list=[...m.values()].sort((a,b)=>b.cost-a.cost);if(!list.length)return `<p class="empty">${t("noCosts")}</p>`;
+     return `<div class="ctasks">${list.slice(0,100).map(g=>`<details class="ctask"><summary><span><b>${esc(g.title)}</b>${g.client?` <span class="cap muted">· ${esc(C(g.client))}</span>`:""}</span><span class="num">${Math.round(g.h*100)/100} ${t("hrs")} · <b>${usd(g.cost)}</b></span></summary>
+       <table class="ctable"><thead><tr><th scope="col">${t("colStage")}</th><th scope="col">${t("colPerson")}</th><th scope="col" class="num">${t("colHours")}</th><th scope="col" class="num">${t("colRate")}</th><th scope="col" class="num">${t("colCost")}</th></tr></thead>
+       <tbody>${g.rows.map(c=>`<tr><td>${esc(nm(ST(c.stage))||"–")}</td><td>${esc((U(c.user)||{name:"?"}).name)}</td><td class="num">${Math.round(c.hours*100)/100}</td><td class="num">${c.rate?usd(c.rate):"–"}</td><td class="num">${usd(c.cost)}</td></tr>`).join("")}</tbody></table></details>`).join("")}</div>`})()}</section>
    <section class="csec"><h2>${t("byPerson")}</h2>${table([t("name"),t("colSalary"),t("colRate"),t("colPaid"),t("colHours"),t("colCost"),t("colUtil"),""],ppl.map(p=>`<tr><th scope="row">${esc(p.u.name)}<br><span class="cap muted">${t(p.u.role)} · ${p.u.cap||44} ${t("hrs")}/wk</span></th>
      <td class="num">${p.s&&p.s.monthly>0?usd(p.s.monthly):`<span class="tag warn">${t("noSalary")}</span>`}</td><td class="num">${p.rate?usd(p.rate):"–"}</td><td class="num">${usd(p.paid)}</td>
      <td class="num">${Math.round(p.h*100)/100}</td><td class="num"><b>${usd(p.cost)}</b></td><td class="num">${pct(p.h,p.paidH)}</td>
@@ -103,8 +108,8 @@ function dSalary(){
 
 /* finished tasks show their labour cost to admins and managers */
 function timeMeta(k){
-  const c=isMgr(me())&&k.status==="done"?tcosts.find(x=>x.task===k.id):null;
-  const cost=c&&c.cost>0?` · ${fill(t("costLine"),usd(c.cost))}`:"";
+  const cs=isMgr(me())?tcosts.filter(x=>x.task===k.id):[],sum=cs.reduce((a,x)=>a+x.cost,0);
+  const cost=sum>0?` · ${fill(t("costLine"),usd(sum))}`:"";
   if(k.status==="done"&&k.spent!=null)return `<span class="num">${t("spent")} ${fh(k.spent)}${k.est?` · ${t("estShort")} ${fh(k.est)}`:""}${cost}</span>`;
   return k.est?`<span class="num">${t("estShort")} ${fh(k.est)}</span>`:"";
 }
@@ -112,7 +117,7 @@ function timeMeta(k){
 function costCSV(){
   const [a,b]=costRange(),q=v=>{const s=String(v==null?"":v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
   const lines=[t("csvHead")].concat(tcosts.filter(c=>c.day>=a&&c.day<=b).map(c=>{const x=TT(c.type);
-    return [c.day,U(c.user)?U(c.user).name:c.user,c.client?C(c.client):"",x?x.name:"",c.title,c.hours,c.rate,c.cost].map(q).join(",")}));
+    return [c.day,U(c.user)?U(c.user).name:c.user,c.client?C(c.client):"",x?x.name:"",(ST(c.stage)||{name:""}).name,c.title,c.hours,c.rate,c.cost].map(q).join(",")}));
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),el=document.createElement("a");
   el.href=url;el.download=`preahchan-costs-${a}-to-${b}.csv`;document.body.appendChild(el);el.click();el.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);
 }

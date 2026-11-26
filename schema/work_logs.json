@@ -1,0 +1,100 @@
+{
+  "id": "pc_worklogs0001",
+  "name": "work_logs",
+  "type": "base",
+  "listRule": "user = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\" || @request.auth.role = \"assistant\") || (@request.auth.role = \"supervisor\" && user.supervisors.id ?= @request.auth.id) || task.assignee = @request.auth.id || task.creator = @request.auth.id",
+  "viewRule": "user = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\" || @request.auth.role = \"assistant\") || (@request.auth.role = \"supervisor\" && user.supervisors.id ?= @request.auth.id) || task.assignee = @request.auth.id || task.creator = @request.auth.id",
+  "createRule": null,
+  "updateRule": "(user = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\")) && @request.body.user:isset = false && @request.body.task:isset = false && @request.body.task_id:isset = false && @request.body.stage:isset = false && @request.body.day:isset = false && @request.body.at:isset = false",
+  "deleteRule": "(@request.auth.role = \"admin\" || @request.auth.role = \"manager\")",
+  "fields": [
+    {
+      "name": "task",
+      "type": "relation",
+      "collectionId": "pc_tasks0000001",
+      "maxSelect": 1,
+      "cascadeDelete": false,
+      "required": false
+    },
+    {
+      "name": "task_id",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "stage",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "user",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 1,
+      "cascadeDelete": false,
+      "required": false
+    },
+    {
+      "name": "by",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "hours",
+      "type": "number",
+      "min": 0,
+      "max": 24
+    },
+    {
+      "name": "note",
+      "type": "text",
+      "max": 300
+    },
+    {
+      "name": "day",
+      "type": "text",
+      "max": 10
+    },
+    {
+      "name": "at",
+      "type": "text",
+      "max": 20
+    },
+    {
+      "name": "wait_h",
+      "type": "number"
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "max": 200
+    },
+    {
+      "name": "client",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "type",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "created",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": false
+    },
+    {
+      "name": "updated",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": true
+    }
+  ],
+  "indexes": [
+    "CREATE INDEX idx_work_logs_user_day ON work_logs (user, day)",
+    "CREATE INDEX idx_work_logs_task ON work_logs (task_id)",
+    "CREATE INDEX idx_work_logs_day ON work_logs (day)"
+  ]
+}

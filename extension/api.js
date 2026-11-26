@@ -58,10 +58,11 @@ export async function openTasks(user) {
   return r.items;
 }
 
+// Finished stages with hours this week (work logs), like the app's KPI tile
 export async function weekNumbers(user) {
-  const f = `assignee='${v(user.id)}' && status='done' && done_at>='${v(weekStart())}'`;
-  const r = await api(`/api/collections/tasks/records?perPage=500&fields=id,spent&filter=${q(f)}`);
-  return { done: r.items.length, hours: Math.round(r.items.reduce((a, k) => a + (k.spent || 0), 0) * 100) / 100 };
+  const f = `user='${v(user.id)}' && day>='${v(weekStart())}' && hours>0`;
+  const r = await api(`/api/collections/work_logs/records?perPage=500&fields=id,hours&filter=${q(f)}`);
+  return { done: r.items.length, hours: Math.round(r.items.reduce((a, k) => a + (k.hours || 0), 0) * 100) / 100 };
 }
 
 export async function unreadCount(user) {
@@ -81,6 +82,16 @@ export async function recentUnread(user) {
 }
 
 export const finishTask = (id, hours, stage) => api(`/api/collections/tasks/records/${v(id)}`, { method: "PATCH", body: Object.assign({ status: "done", done_at: today(), spent: hours }, stage ? { stage } : {}) });
+// Finish the current stage: logs the hours and passes the task to the next planned person
+export const finishStage = (id, hours) => api(`/api/pc/finish`, { method: "POST", body: { task: id, hours: hours || 0 } });
+// How a stage asks for hours: required, optional or none
+export function hoursModeOf(wf, task, stage) {
+  if (!stage) return "none";
+  if (stage.hours) return stage.hours;
+  if (stage.done) return "none";
+  const f = flowOf(wf, task.type);
+  return f.length && f[0].id === stage.id ? "none" : "required";
+}
 export const moveStage = (id, stage) => api(`/api/collections/tasks/records/${v(id)}`, { method: "PATCH", body: { stage } });
 
 // Workflow: statuses, task types and positions

@@ -31,7 +31,11 @@ const TEXT = {
     unknown: "Open the Preahchan Tasks app, tap your avatar, then Connect Telegram. Send the code it shows you here.",
     badCode: "That code did not work. Open the app and tap Connect Telegram again for a new code.",
     approved: "Approved", notAllowed: "You can't do that.",
-    kpi: "This week: {n} of {kpi} tasks done · {h} of {cap} hours logged.",
+    kpi: "This week: {n} of {kpi} stages finished · {h} of {cap} hours logged.",
+    finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
+    pickInApp: "Open the app to choose who does the next stage.", finishedStage: "Finished {s} · {h} h logged", finishedRec: "Finished {s}",
+    nudge: "Today you logged {h} h across {n} stages.", nudgeNone: "You haven't logged any hours today. Anything missing?", nudgeOk: "Thanks! Anything missing? You can still log it in the app.",
+    hoursNeeded: "Enter the hours you spent.", nextNeeded: "Choose who does the next stage.", notYours: "Only the person on this stage, or a manager, can finish it.",
     next: "Next: {s}", movedTo: "Moved to {s}", cantMove: "Your position can't move tasks to {s}.", lastStep: "This task is already at its last status.",
     handoff: "<b>{title}</b> is now at {s}. Open the app to hand it to someone who handles {s}."
   },
@@ -62,7 +66,11 @@ const TEXT = {
     unknown: "បើកកម្មវិធី Preahchan Tasks ចុចរូបគណនី រួចចុច ភ្ជាប់ Telegram។ ផ្ញើលេខកូដដែលវាបង្ហាញមកទីនេះ។",
     badCode: "លេខកូដនេះមិនដំណើរការទេ។ សូមបើកកម្មវិធី ហើយចុច ភ្ជាប់ Telegram ម្តងទៀត។",
     approved: "បានអនុម័ត", notAllowed: "អ្នកមិនអាចធ្វើបែបនេះបានទេ។",
-    kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ភារកិច្ច · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
+    kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ដំណាក់កាល · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
+    finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
+    pickInApp: "បើកកម្មវិធីដើម្បីជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", finishedStage: "បានបញ្ចប់ {s} · បានកត់ត្រា {h} ម៉ោង", finishedRec: "បានបញ្ចប់ {s}",
+    nudge: "ថ្ងៃនេះអ្នកបានកត់ត្រា {h} ម៉ោង ក្នុង {n} ដំណាក់កាល។", nudgeNone: "ថ្ងៃនេះអ្នកមិនទាន់កត់ត្រាម៉ោងទេ។ មានអ្វីខ្វះទេ?", nudgeOk: "អរគុណ! មានអ្វីខ្វះទេ? អ្នកនៅតែអាចកត់ត្រាក្នុងកម្មវិធី។",
+    hoursNeeded: "សូមបញ្ចូលម៉ោងដែលអ្នកបានចំណាយ។", nextNeeded: "សូមជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", notYours: "មានតែអ្នកនៅដំណាក់កាលនេះ ឬអ្នកគ្រប់គ្រងទេ ដែលអាចបញ្ចប់វាបាន។",
     next: "បន្ទាប់៖ {s}", movedTo: "បានផ្លាស់ទៅ {s}", cantMove: "តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {s} បានទេ។", lastStep: "ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
     handoff: "<b>{title}</b> ឥឡូវនៅ {s}។ សូមបើកកម្មវិធីដើម្បីប្រគល់ទៅអ្នកទទួលខុសត្រូវ {s}។"
   }
@@ -117,11 +125,12 @@ module.exports = {
   buildSnap(app, userId, week) {
     const end = this.addDays(week, 6)
     const user = app.findRecordById("users", userId)
-    const done = app.findRecordsByFilter("tasks", "assignee = {:u} && status = 'done' && done_at >= {:a} && done_at <= {:b}", "done_at", 1000, 0, { u: userId, a: week, b: end })
+    const logs = app.findRecordsByFilter("work_logs", "user = {:u} && day >= {:a} && day <= {:b} && hours > 0", "day,at", 2000, 0, { u: userId, a: week, b: end })
     const open = app.findRecordsByFilter("tasks", "assignee = {:u} && status != 'done'", "", 1000, 0, { u: userId })
     const today = this.ict().date
+    const est = (l) => { try { const k = app.findRecordById("tasks", l.getString("task_id")); const p = jsonOf(k, "est_plan") || {}; return parseFloat(p[l.getString("stage")]) || 0 } catch (e) { return 0 } }
     return {
-      items: done.map((k) => ({ title: k.getString("title"), client: k.getString("client"), est: k.getFloat("est"), spent: k.getFloat("spent"), doneAt: k.getString("done_at") })),
+      items: logs.map((l) => ({ title: l.getString("title") + (l.getString("stage") ? " · " + this.stageName(app, l.getString("stage"), "en") : ""), client: l.getString("client"), est: est(l), spent: l.getFloat("hours"), doneAt: l.getString("day") })),
       kpi: user.getInt("kpi"), cap: user.getFloat("cap") || 44,
       open: open.length, overdue: open.filter((k) => k.getString("due") && k.getString("due") < today).length
     }
@@ -193,7 +202,111 @@ module.exports = {
   nextButton(app, task, lang) {
     if (task.getString("status") === "done") return null
     const nx = this.nextOf(app, task)
-    return nx ? [{ text: fill(this.t(lang, "next"), { s: (lang === "km" && nx.getString("name_km")) || nx.getString("name") }), callback_data: "n:" + task.id }] : null
+    if (!nx) return null
+    const cur = this.flow(app, task.getString("type")).find((s) => s.id === task.getString("stage"))
+    const name = cur ? ((lang === "km" && cur.getString("name_km")) || cur.getString("name")) : ((lang === "km" && nx.getString("name_km")) || nx.getString("name"))
+    return [{ text: fill(this.t(lang, cur ? "finish" : "next"), { s: name }), callback_data: "n:" + task.id }]
+  },
+
+  // ---------- Stage work: finishing a stage logs the work and hands the task to the next person ----------
+  // How hours are asked when a stage is finished: "required", "optional" or "none" (record who did it)
+  hoursMode(app, stage, flow) {
+    const v = stage.getString("hours")
+    if (v) return v
+    if (stage.getBool("done")) return "none"
+    return flow.length && flow[0].id === stage.id ? "none" : "required"
+  },
+  planOf(task) { return jsonOf(task, "plan") || {} },
+  // actor: the user clicking Finish. opts: { hours, note, to }
+  finishStage(app, actor, task, opts) {
+    opts = opts || {}
+    const lang = this.lang(actor)
+    const flow = this.flow(app, task.getString("type"))
+    const cur = flow.find((s) => s.id === task.getString("stage"))
+    if (!cur || cur.getBool("done") || task.getString("status") === "done") throw new BadRequestError(this.t(lang, "lastStep"))
+    const i = flow.findIndex((s) => s.id === cur.id), nx = flow[i + 1]
+    if (!nx) throw new BadRequestError(this.t(lang, "lastStep"))
+    const worker = task.getString("assignee"), role = actor.getString("role")
+    let allowed = worker === actor.id || role === "admin" || role === "manager" || role === "assistant"
+    if (!allowed && role === "supervisor") { try { allowed = app.findRecordById("users", worker).getStringSlice("supervisors").indexOf(actor.id) >= 0 } catch (e) {} }
+    if (!allowed) throw new ForbiddenError(this.t(lang, "notYours"))
+    const mode = this.hoursMode(app, cur, flow)
+    let hours = Math.round((parseFloat(opts.hours) || 0) * 100) / 100
+    if (mode === "none") hours = 0
+    if (hours < 0 || hours > 24) throw new BadRequestError(this.t(lang, "hoursNeeded"))
+    if (mode === "required" && !(hours > 0)) throw new BadRequestError(this.t(lang, "hoursNeeded"))
+    const plan = this.planOf(task)
+    let to = ""
+    if (!nx.getBool("done")) {
+      to = String(opts.to || plan[nx.id] || "")
+      if (!to) throw new BadRequestError(this.t(lang, "nextNeeded"))
+      try { const u = app.findRecordById("users", to); if (!u.getBool("active")) throw new Error("inactive") } catch (e) { throw new BadRequestError(this.t(lang, "nextNeeded")) }
+    }
+    const now = this.ict()
+    // time in this stage: since the previous finish on this task, or since the task was created
+    let since = String(task.getString("created") || "")
+    try {
+      const prev = app.findRecordsByFilter("work_logs", "task_id = {:t}", "-created", 1, 0, { t: task.id })
+      if (prev.length) since = prev[0].getString("created")
+    } catch (e) {}
+    let waitH = 0
+    try { const ms = Date.now() - new Date(since.replace(" ", "T")).getTime(); if (ms > 0) waitH = Math.round(ms / 36000) / 100 } catch (e) {}
+    const log = new Record(app.findCollectionByNameOrId("work_logs"))
+    log.set("task", task.id); log.set("task_id", task.id); log.set("stage", cur.id)
+    log.set("user", worker); log.set("by", actor.id)
+    log.set("hours", hours); log.set("note", String(opts.note || "").substring(0, 300))
+    log.set("day", now.date); log.set("at", now.stamp); log.set("wait_h", waitH)
+    log.set("title", task.getString("title").substring(0, 200)); log.set("client", task.getString("client")); log.set("type", task.getString("type"))
+    app.save(log)
+    task.set("stage", nx.id)
+    task.set("timer", null)
+    if (to) { plan[nx.id] = to; task.set("plan", plan); task.set("assignee", to) }
+    if (nx.getBool("done")) {
+      let total = 0
+      app.findRecordsByFilter("work_logs", "task_id = {:t}", "", 500, 0, { t: task.id }).forEach((l) => { total += l.getFloat("hours") })
+      task.set("spent", Math.round(total * 100) / 100)
+      task.set("done_at", now.date)
+    }
+    app.save(task)
+    return { log: log.id, stage: nx.id, stageName: (lang === "km" && nx.getString("name_km")) || nx.getString("name"), done: nx.getBool("done"), to: to, hours: hours, from: cur.id,
+      fromName: (lang === "km" && cur.getString("name_km")) || cur.getString("name") }
+  },
+
+  // Hours and finished stages per person for a date range (the leaderboard and KPI tiles); no titles, so it is safe for everyone
+  boardStats(app, from, to) {
+    const out = {}
+    app.findRecordsByFilter("work_logs", "day >= {:a} && day <= {:b} && user != ''", "day", 20000, 0, { a: from, b: to }).forEach((l) => {
+      const u = l.getString("user"); (out[u] = out[u] || []).push({ d: l.getString("day"), h: l.getFloat("hours") })
+    })
+    return out
+  },
+
+  // A log for an older client that marked a task done with hours but no stage log (extension, older app)
+  legacyLog(app, task, stageId) {
+    const n = app.findRecordsByFilter("work_logs", "task_id = {:t}", "", 1, 0, { t: task.id }).length
+    if (n || !(task.getFloat("spent") > 0)) return
+    const log = new Record(app.findCollectionByNameOrId("work_logs"))
+    log.set("task", task.id); log.set("task_id", task.id); log.set("stage", stageId || task.getString("stage"))
+    log.set("user", task.getString("assignee")); log.set("by", task.getString("assignee"))
+    log.set("hours", task.getFloat("spent")); log.set("day", task.getString("done_at") || this.ict().date); log.set("at", this.ict().stamp)
+    log.set("title", task.getString("title").substring(0, 200)); log.set("client", task.getString("client")); log.set("type", task.getString("type"))
+    app.save(log)
+  },
+
+  // Daily nudge at 17:30, Monday to Saturday
+  nudge(app) {
+    const today = this.ict().date
+    this.activeUsers(app).forEach((u) => {
+      try {
+        if (!u.getString("tg_chat") || u.getString("role") === "admin") return
+        const logs = app.findRecordsByFilter("work_logs", "user = {:u} && day = {:d}", "", 200, 0, { u: u.id, d: today })
+        const lang = this.lang(u), h = logs.reduce((a, l) => a + l.getFloat("hours"), 0)
+        const text = logs.length ? fill(this.t(lang, "nudge"), { h: round2(h), n: logs.length }) + "\n" + this.t(lang, "nudgeOk") : this.t(lang, "nudgeNone")
+        const rows = []
+        const open = this.openButton(app, lang); if (open) rows.push(open)
+        this.send(u, text, rows)
+      } catch (e) { console.log("nudge failed for " + u.id + ": " + e) }
+    })
   },
 
   // ---------- Telegram ----------
@@ -266,6 +379,10 @@ module.exports = {
       const hours = items.reduce((a, x) => a + (x.spent || 0), 0)
       text = fill(this.t(lang, kind), { by: by, week: this.weekLabel(r.getString("week")), n: items.length, h: round2(hours), comment: esc(r.getString("comment")) })
       if (kind === "rep" && r.getString("status") === "pending") rows.push([{ text: this.t(lang, "approve"), callback_data: "ra:" + r.id }])
+    } else if (kind === "turn") {
+      const k = task(); if (!k) return
+      text = fill(this.t(lang, "turn"), { by: by, prev: esc(this.stageName(app, data.prev, lang)), title: esc(k.getString("title")), s: esc(this.stageName(app, k.getString("stage"), lang)), due: this.shortDate(k.getString("due")) })
+      const nb = this.nextButton(app, k, lang); if (nb) rows.push(nb)
     } else if (kind === "delreq" || kind === "delok" || kind === "delno") {
       const k = task()
       const title = k ? k.getString("title") : (data.title || "")
@@ -306,8 +423,8 @@ module.exports = {
 
   kpiText(app, user) {
     const lang = this.lang(user), today = this.ict().date, ws = this.weekStart(today), we = this.addDays(ws, 6)
-    const done = app.findRecordsByFilter("tasks", "assignee = {:u} && status = 'done' && done_at >= {:a} && done_at <= {:b}", "", 1000, 0, { u: user.id, a: ws, b: we })
-    const h = done.reduce((a, k) => a + k.getFloat("spent"), 0)
+    const done = app.findRecordsByFilter("work_logs", "user = {:u} && day >= {:a} && day <= {:b} && hours > 0", "", 2000, 0, { u: user.id, a: ws, b: we })
+    const h = done.reduce((a, k) => a + k.getFloat("hours"), 0)
     return fill(this.t(lang, "kpi"), { n: done.length, kpi: user.getInt("kpi"), h: round2(h), cap: user.getFloat("cap") || 44 })
   },
 
@@ -327,11 +444,11 @@ module.exports = {
         const m = this.todayText(app, u)
         let text = m.text
         const role = u.getString("role")
-        if (role === "manager" || role === "admin" || role === "supervisor") {
+        if (role === "manager" || role === "admin" || role === "supervisor" || role === "assistant") {
           // managers: all late staff work; supervisors: their own team's late work
           const late = role === "supervisor"
             ? app.findRecordsByFilter("tasks", "status != 'done' && due < {:d} && assignee.active = true && assignee.supervisors.id ?= {:me}", "due", 30, 0, { d: today, me: u.id })
-            : app.findRecordsByFilter("tasks", "status != 'done' && due < {:d} && (assignee.role = 'staff' || assignee.role = 'supervisor') && assignee.active = true", "due", 30, 0, { d: today })
+            : app.findRecordsByFilter("tasks", "status != 'done' && due < {:d} && assignee.role != 'admin' && assignee.role != 'manager' && assignee.active = true", "due", 30, 0, { d: today })
           if (late.length) {
             text += "\n\n" + this.t(lang, "team")
             late.forEach((k) => { text += "\n• " + esc(this.userName(app, k.getString("assignee"))) + ": " + esc(k.getString("title")) })
@@ -365,7 +482,7 @@ module.exports = {
   // Who may delete a task: its creator, admins and managers, and a supervisor of the person doing it
   canDelete(app, user, task) {
     const role = user.getString("role")
-    if (role === "admin" || role === "manager" || task.getString("creator") === user.id) return true
+    if (role === "admin" || role === "manager" || role === "assistant" || task.getString("creator") === user.id) return true
     if (role !== "supervisor") return false
     try { return app.findRecordById("users", task.getString("assignee")).getStringSlice("supervisors").indexOf(user.id) >= 0 } catch (e) { return false }
   },
@@ -405,27 +522,38 @@ module.exports = {
     const rate = monthly > 0 ? monthly / (cap * 52 / 12) : 0
     return { monthly: monthly, rate: Math.round(rate * 10000) / 10000 }
   },
-  // Keep the task_costs row in step with a task: present while the task is done, gone otherwise
-  syncCost(app, task) {
+  // One task_costs row per work log: the log's hours at the worker's hourly cost on that day
+  syncLogCost(app, log) {
     let row = null
-    try { row = app.findFirstRecordByFilter("task_costs", "task = {:t}", { t: task.id }) } catch (e) {}
-    if (task.getString("status") !== "done") { if (row) app.delete(row); return }
-    const user = task.getString("assignee"), day = task.getString("done_at") || this.ict().date, hours = task.getFloat("spent")
+    try { row = app.findFirstRecordByFilter("task_costs", "log = {:l}", { l: log.id }) } catch (e) {}
+    const user = log.getString("user"), day = log.getString("day"), hours = log.getFloat("hours")
+    if (!user) { if (row) app.delete(row); return }
     const r = this.hourlyRate(app, user, day)
-    if (!row) { row = new Record(app.findCollectionByNameOrId("task_costs")); row.set("task", task.id) }
-    row.set("user", user)
-    row.set("client", task.getString("client"))
-    row.set("type", task.getString("type"))
-    row.set("title", task.getString("title").substring(0, 200))
-    row.set("day", day)
-    row.set("hours", hours)
-    row.set("rate", r.rate)
-    row.set("monthly", r.monthly)
+    if (!row) { row = new Record(app.findCollectionByNameOrId("task_costs")); row.set("log", log.id) }
+    row.set("task", log.getString("task_id")); row.set("stage", log.getString("stage")); row.set("user", user)
+    row.set("client", log.getString("client")); row.set("type", log.getString("type")); row.set("title", log.getString("title"))
+    row.set("day", day); row.set("hours", hours); row.set("rate", r.rate); row.set("monthly", r.monthly)
     row.set("cost", Math.round(hours * r.rate * 100) / 100)
     app.save(row)
   },
-  removeCost(app, taskId) {
-    try { app.delete(app.findFirstRecordByFilter("task_costs", "task = {:t}", { t: taskId })) } catch (e) {}
+  removeLogCost(app, logId) {
+    try { app.delete(app.findFirstRecordByFilter("task_costs", "log = {:l}", { l: logId })) } catch (e) {}
+  },
+  // A task deleted by a person: its work logs go too (each log takes its cost row with it)
+  removeTaskWork(app, taskId) {
+    app.findRecordsByFilter("work_logs", "task_id = {:t}", "", 1000, 0, { t: taskId }).forEach((l) => { try { app.delete(l) } catch (e) {} })
+    app.findRecordsByFilter("task_costs", "task = {:t}", "", 1000, 0, { t: taskId }).forEach((c) => { try { app.delete(c) } catch (e) {} })
+  },
+  // Total hours on a finished task follow its logs
+  syncTaskSpent(app, taskId) {
+    try {
+      const k = app.findRecordById("tasks", taskId)
+      if (k.getString("status") !== "done") return
+      let total = 0
+      app.findRecordsByFilter("work_logs", "task_id = {:t}", "", 500, 0, { t: taskId }).forEach((l) => { total += l.getFloat("hours") })
+      k.set("spent", Math.round(total * 100) / 100)
+      app.saveNoValidate(k)
+    } catch (e) {}
   },
 
   // ---------- Link previews (Open Graph), Pinterest-style cards ----------
@@ -571,47 +699,43 @@ module.exports = {
       answer(this.t(lang, "started"))
       return
     }
-    if (parts[0] === "n") {
+    const tryFinish = (k, hours) => {
+      try {
+        const r = this.finishStage(app, user, k, { hours: hours })
+        const done = r.hours > 0 ? fill(this.t(lang, "finishedStage"), { s: r.fromName, h: round2(r.hours) }) : fill(this.t(lang, "finishedRec"), { s: r.fromName })
+        answer(done)
+        if (chat && mid) this.tg("editMessageText", { chat_id: chat, message_id: mid, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + esc(done) + (r.done ? "" : "\n" + fill(this.t(lang, "movedTo"), { s: esc(r.stageName) })) })
+      } catch (err) { answer(String((err && err.message) || err).substring(0, 190)) }
+    }
+    if (parts[0] === "n" || parts[0] === "d") {
       const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
-      const nx = this.nextOf(app, k)
-      if (!nx || k.getString("status") === "done") { answer(this.t(lang, "lastStep")); return }
-      const nxName = (lang === "km" && nx.getString("name_km")) || nx.getString("name")
-      if (!this.userSees(app, user, nx.id)) { answer(fill(this.t(lang, "cantMove"), { s: nxName })); return }
-      if (!nx.getBool("done")) {
-        k.set("stage", nx.id); app.save(k)
-        answer(fill(this.t(lang, "movedTo"), { s: nxName }))
-        if (chat && mid) this.tg("editMessageText", { chat_id: chat, message_id: mid, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + fill(this.t(lang, "movedTo"), { s: esc(nxName) }) })
+      const flow = this.flow(app, k.getString("type")), cur = flow.find((s) => s.id === k.getString("stage")), nx = this.nextOf(app, k)
+      if (!cur || !nx || k.getString("status") === "done") { answer(this.t(lang, "lastStep")); return }
+      if (!nx.getBool("done") && !this.planOf(k)[nx.id]) {
+        answer(this.t(lang, "pickInApp"))
+        const open = this.openButton(app, lang)
+        this.tg("sendMessage", { chat_id: chat, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + this.t(lang, "pickInApp"), reply_markup: { inline_keyboard: open ? [open] : [] } })
         return
       }
-      // the next status is the finished one: ask for hours first
-      parts[0] = "d"
-    }
-    if (parts[0] === "d") {
-      const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
-      const dn = this.flow(app, k.getString("type")).find((s) => s.getBool("done"))
-      if (dn && !this.userSees(app, user, dn.id)) { answer(fill(this.t(lang, "cantMove"), { s: (lang === "km" && dn.getString("name_km")) || dn.getString("name") })); return }
-      const est = round2(k.getFloat("est"))
-      const opts = [0.5, 1, 2, 4]
+      const mode = this.hoursMode(app, cur, flow)
+      if (mode === "none") { tryFinish(k, 0); return }
+      // ask for the hours first
+      let est = 0
+      try { est = round2(parseFloat((jsonOf(k, "est_plan") || {})[cur.id]) || 0) } catch (e) {}
+      const opts = [0.5, 1, 2, 3, 4]
       if (est > 0 && opts.indexOf(est) < 0) opts.push(est)
       opts.sort((a, b) => a - b)
+      const btns = opts.map((h) => ({ text: h + " h", callback_data: "h:" + k.id + ":" + h }))
+      const kb = [btns.slice(0, 3), btns.slice(3)]
+      if (mode === "optional") kb.push([{ text: "0 h", callback_data: "h:" + k.id + ":0" }])
       answer("")
-      this.tg("sendMessage", {
-        chat_id: chat, parse_mode: "HTML",
-        text: fill(this.t(lang, "hoursQ"), { title: esc(k.getString("title")) }),
-        reply_markup: { inline_keyboard: [opts.map((h) => ({ text: h + " h", callback_data: "h:" + k.id + ":" + h }))] }
-      })
+      this.tg("sendMessage", { chat_id: chat, parse_mode: "HTML", text: fill(this.t(lang, "hoursQ"), { title: esc(k.getString("title") + " · " + ((lang === "km" && cur.getString("name_km")) || cur.getString("name"))) }), reply_markup: { inline_keyboard: kb.filter((r) => r.length) } })
       return
     }
     if (parts[0] === "h") {
       const k = ownTask(parts[1]); const h = parseFloat(parts[2])
-      if (!k || !(h > 0)) { answer(this.t(lang, "notAllowed")); return }
-      if (k.getString("status") !== "done") {
-        k.set("status", "done"); k.set("done_at", this.ict().date); k.set("spent", h)
-        app.save(k)
-      }
-      const doneText = fill(this.t(lang, "markedDone"), { h: h })
-      answer(doneText)
-      if (chat && mid) this.tg("editMessageText", { chat_id: chat, message_id: mid, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + doneText })
+      if (!k || !(h >= 0)) { answer(this.t(lang, "notAllowed")); return }
+      tryFinish(k, h)
       return
     }
     if (parts[0] === "dx" || parts[0] === "dk") {
@@ -622,8 +746,8 @@ module.exports = {
       if (!this.canDelete(app, user, k)) { answer(this.t(lang, "notAllowed")); return }
       const asker = k.getString("del_by"), title = k.getString("title")
       if (parts[0] === "dx") {
+        this.removeTaskWork(app, k.id)
         app.delete(k)
-        this.removeCost(app, k.id)
         if (asker !== user.id) this.notify(app, asker, "delok", { by: user.id, title: title })
         answer(this.t(lang, "taskDeleted"))
       } else {
@@ -641,7 +765,7 @@ module.exports = {
       const role = user.getString("role")
       let ownerRole = ""
       try { ownerRole = app.findRecordById("users", r.getString("user")).getString("role") } catch (e) {}
-      const allowed = r && r.getString("user") !== user.id && (role === "admin" || (role === "manager" && (ownerRole === "staff" || ownerRole === "supervisor")))
+      const allowed = r && r.getString("user") !== user.id && (role === "admin" || (role === "manager" && ["staff", "supervisor", "assistant"].indexOf(ownerRole) >= 0))
       if (!allowed) { answer(this.t(lang, "notAllowed")); return }
       if (r.getString("status") === "pending") {
         r.set("status", "approved"); r.set("decided_by", user.id); r.set("decided_at", this.ict().stamp); r.set("comment", "")
