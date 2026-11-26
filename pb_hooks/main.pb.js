@@ -11,8 +11,12 @@ onBootstrap((e) => {
 // ---------- Tasks ----------
 // Workflow: block moves a position isn't allowed to make (requests from the app, extension or API)
 onRecordUpdateRequest((e) => {
-  require(`${__hooks}/lib/pc.js`).checkMove(e.app, e.record, e.auth)
+  const pc = require(`${__hooks}/lib/pc.js`)
+  pc.checkMove(e.app, e.record, e.auth)
+  // asking to delete a task, or answering such a request
+  const after = pc.delRequestCheck(e.app, e.record, e.auth)
   e.next()
+  if (after) { try { after() } catch (err) { console.log("delete request notice: " + err) } }
 }, "tasks")
 // Keep the simple done/not-done status in step with the workflow status, on every save
 onRecordCreate((e) => {
@@ -72,9 +76,14 @@ onRecordAfterUpdateSuccess((e) => {
 
 // A task deleted by a person (not the 6-month clean-up) takes its cost record with it
 onRecordDeleteRequest((e) => {
-  const id = e.record.id
+  const id = e.record.id, asker = e.record.getString("del_by"), title = e.record.getString("title")
   e.next()
-  try { require(`${__hooks}/lib/pc.js`).removeCost(e.app, id) } catch (err) { console.log("task cost delete: " + err) }
+  const pc = require(`${__hooks}/lib/pc.js`)
+  try { pc.removeCost(e.app, id) } catch (err) { console.log("task cost delete: " + err) }
+  // the person who asked for the deletion hears that it was done
+  try {
+    if (asker && e.auth && e.auth.collection().name === "users" && e.auth.id !== asker) pc.notify(e.app, asker, "delok", { by: e.auth.id, title: title })
+  } catch (err) { console.log("delete request notice: " + err) }
 }, "tasks")
 
 // ---------- Comments ----------

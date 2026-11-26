@@ -928,7 +928,10 @@ function nText(n){
    case "kpi":{const u=me();return fill(t("tK"),doneWeek(u.id).length,u.kpi)}
    case "rep":return fill(t("nR"),"<b>"+by+"</b>");
    case "repok":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRok"),by,r?wkLabel(r.wk):"")}
-   case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}}
+   case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}
+   case "delreq":return fill(t("tDelReq"),by,tt||"<b>"+esc(p.title||"")+"</b>");
+   case "delok":return fill(t("tDelOk"),by,"<b>"+esc(p.title||"")+"</b>");
+   case "delno":return fill(t("tDelNo"),by,tt||"<b>"+esc(p.title||"")+"</b>");}
   return "";
 }
 const unreadCount=()=>notifs.filter(n=>n.to===S.me&&!n.read).length;

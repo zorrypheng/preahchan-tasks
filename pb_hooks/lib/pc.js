@@ -5,6 +5,10 @@ const TZ_OFFSET_HOURS = 7 // Cambodia (UTC+7, no daylight saving)
 
 const TEXT = {
   en: {
+    delreq: "{by} asks to delete the task <b>{title}</b>.{reason}",
+    delok: "{by} deleted <b>{title}</b>, as you asked.",
+    delno: "{by} kept <b>{title}</b>. Your delete request was declined.",
+    reasonL: "\nReason: {r}", btnDel: "Delete task", btnKeep: "Keep task", taskDeleted: "Task deleted", taskKept: "Task kept", delGone: "This request was already handled.",
     assigned: "New task from {by}: <b>{title}</b>\nDue {due} · Est {est} h",
     comment: "{by} commented on <b>{title}</b>:\n{text}",
     file: "{by} shared a company file: <b>{name}</b>",
@@ -32,6 +36,10 @@ const TEXT = {
     handoff: "<b>{title}</b> is now at {s}. Open the app to hand it to someone who handles {s}."
   },
   km: {
+    delreq: "{by} សុំលុបភារកិច្ច <b>{title}</b>។{reason}",
+    delok: "{by} បានលុប <b>{title}</b> តាមសំណើរបស់អ្នក។",
+    delno: "{by} បានរក្សាទុក <b>{title}</b>។ សំណើលុបរបស់អ្នកមិនត្រូវបានយល់ព្រមទេ។",
+    reasonL: "\nមូលហេតុ៖ {r}", btnDel: "លុបភារកិច្ច", btnKeep: "រក្សាទុកភារកិច្ច", taskDeleted: "បានលុបភារកិច្ច", taskKept: "បានរក្សាទុកភារកិច្ច", delGone: "សំណើនេះត្រូវបានដោះស្រាយរួចហើយ។",
     assigned: "ភារកិច្ចថ្មីពី {by}៖ <b>{title}</b>\nកំណត់ {due} · ប៉ាន់ស្មាន {est} ម៉ោង",
     comment: "{by} បានផ្តល់មតិលើ <b>{title}</b>៖\n{text}",
     file: "{by} បានចែករំលែកឯកសារក្រុមហ៊ុន៖ <b>{name}</b>",
@@ -258,6 +266,12 @@ module.exports = {
       const hours = items.reduce((a, x) => a + (x.spent || 0), 0)
       text = fill(this.t(lang, kind), { by: by, week: this.weekLabel(r.getString("week")), n: items.length, h: round2(hours), comment: esc(r.getString("comment")) })
       if (kind === "rep" && r.getString("status") === "pending") rows.push([{ text: this.t(lang, "approve"), callback_data: "ra:" + r.id }])
+    } else if (kind === "delreq" || kind === "delok" || kind === "delno") {
+      const k = task()
+      const title = k ? k.getString("title") : (data.title || "")
+      const reason = kind === "delreq" && data.reason ? fill(this.t(lang, "reasonL"), { r: esc(data.reason) }) : ""
+      text = fill(this.t(lang, kind), { by: by, title: esc(title), reason: reason })
+      if (kind === "delreq" && k && k.getString("del_by")) rows.push([{ text: this.t(lang, "btnDel"), callback_data: "dx:" + k.id }, { text: this.t(lang, "btnKeep"), callback_data: "dk:" + k.id }])
     } else if (kind === "overdue" || kind === "dueTom") {
       const k = task(); if (!k) return
       text = fill(this.t(lang, kind), { title: esc(k.getString("title")) })
@@ -345,6 +359,37 @@ module.exports = {
     }
     if (total) console.log("cleanup: deleted " + total + " finished tasks unchanged since " + cutoff)
     return total
+  },
+
+  // ---------- Delete requests ----------
+  // Who may delete a task: its creator, admins and managers, and a supervisor of the person doing it
+  canDelete(app, user, task) {
+    const role = user.getString("role")
+    if (role === "admin" || role === "manager" || task.getString("creator") === user.id) return true
+    if (role !== "supervisor") return false
+    try { return app.findRecordById("users", task.getString("assignee")).getStringSlice("supervisors").indexOf(user.id) >= 0 } catch (e) { return false }
+  },
+  // Who is asked: managers (admins if there are none) and the supervisors of the person doing the task
+  delApprovers(app, task, askerId) {
+    let ids = app.findRecordsByFilter("users", "active = true && role = 'manager'", "", 100, 0).map((u) => u.id)
+    if (!ids.length) ids = app.findRecordsByFilter("users", "active = true && role = 'admin'", "", 100, 0).map((u) => u.id)
+    try { app.findRecordById("users", task.getString("assignee")).getStringSlice("supervisors").forEach((id) => ids.push(id)) } catch (e) {}
+    return ids.filter((id, i) => id && id !== askerId && ids.indexOf(id) === i)
+  },
+  // Checks and notices for a task update that sets or clears a delete request (runs inside the request hook)
+  delRequestCheck(app, r, auth) {
+    const o = r.original(), nb = r.getString("del_by"), ob = o.getString("del_by")
+    if (nb === ob) return null
+    const me = auth && auth.collection().name === "users" ? auth : null
+    if (nb) {
+      if (me && nb !== me.id) throw new ForbiddenError("You can only ask to delete a task in your own name.")
+      r.set("del_at", this.ict().stamp)
+      return () => this.delApprovers(app, r, nb).forEach((id) => this.notify(app, id, "delreq", { by: nb, task: r.id, title: r.getString("title"), reason: r.getString("del_reason").substring(0, 300) }))
+    }
+    if (me && ob !== me.id && !this.canDelete(app, me, o)) throw new ForbiddenError("Only a manager can decline this delete request.")
+    r.set("del_reason", ""); r.set("del_at", "")
+    if (me && ob !== me.id) return () => this.notify(app, ob, "delno", { by: me.id, task: r.id, title: r.getString("title") })
+    return null
   },
 
   // ---------- Labour cost ----------
@@ -567,6 +612,27 @@ module.exports = {
       const doneText = fill(this.t(lang, "markedDone"), { h: h })
       answer(doneText)
       if (chat && mid) this.tg("editMessageText", { chat_id: chat, message_id: mid, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + doneText })
+      return
+    }
+    if (parts[0] === "dx" || parts[0] === "dk") {
+      let k = null
+      try { k = app.findRecordById("tasks", parts[1]) } catch (e) {}
+      const clear = () => { if (chat && mid) this.tg("editMessageReplyMarkup", { chat_id: chat, message_id: mid, reply_markup: { inline_keyboard: [] } }) }
+      if (!k || !k.getString("del_by")) { answer(this.t(lang, "delGone")); clear(); return }
+      if (!this.canDelete(app, user, k)) { answer(this.t(lang, "notAllowed")); return }
+      const asker = k.getString("del_by"), title = k.getString("title")
+      if (parts[0] === "dx") {
+        app.delete(k)
+        this.removeCost(app, k.id)
+        if (asker !== user.id) this.notify(app, asker, "delok", { by: user.id, title: title })
+        answer(this.t(lang, "taskDeleted"))
+      } else {
+        k.set("del_by", ""); k.set("del_reason", ""); k.set("del_at", "")
+        app.save(k)
+        if (asker !== user.id) this.notify(app, asker, "delno", { by: user.id, task: k.id, title: title })
+        answer(this.t(lang, "taskKept"))
+      }
+      clear()
       return
     }
     if (parts[0] === "ra") {

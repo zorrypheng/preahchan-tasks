@@ -134,3 +134,13 @@
 .installbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:520px){.installbtn span{display:none}.installbtn{padding:0 10px}}
 .installsteps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;line-height:22px}
+
+/* Rename and delete requests */
+.ttlr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.renamef{display:flex;flex-direction:column;gap:8px}
+.delbanner{background:var(--overdue-soft);color:var(--ink);border:1px solid #e9b48c;border-radius:var(--r-md);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.delbanner p{margin:0;line-height:22px}
+.delchip{background:var(--overdue-soft);color:var(--overdue);border-radius:var(--r-full);padding:0 8px;font-weight:700;font-size:12px}
+.reqdel{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
+.reqdel textarea{width:100%;font:inherit}
+.acts .spacer{flex:1}

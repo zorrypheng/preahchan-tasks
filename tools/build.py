@@ -35,7 +35,7 @@ rep('notifs:dNotifs,log:dLog}','notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:
 rep('&&S.view!=="account"&&S.view!=="report")S.view=NAV','&&S.view!=="account"&&S.view!=="report")S.view=NAV')
 s=s.replace('</style>\n\n<div id="app">','\n'+open('src/workflow.css',encoding='utf-8').read()+'</style>\n\n<div id="app">',1)
 live=open('src/live.js',encoding='utf-8').read()
-wf=open('src/workflow.js',encoding='utf-8').read()+'\n'+open('src/rich.js',encoding='utf-8').read()+'\n'+open('src/costs.js',encoding='utf-8').read()+'\n'+open('src/pwa.js',encoding='utf-8').read()
+wf=open('src/workflow.js',encoding='utf-8').read()+'\n'+open('src/rich.js',encoding='utf-8').read()+'\n'+open('src/costs.js',encoding='utf-8').read()+'\n'+open('src/pwa.js',encoding='utf-8').read()+'\n'+open('src/taskedit.js',encoding='utf-8').read()
 assert '/* Start */' in live
 live=live.replace('/* Start */',wf+'\n/* Start */',1)
 rep('\nrender();\n</script>','\n'+live+'\n</script>')

@@ -508,6 +508,16 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 .installbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 @media (max-width:520px){.installbtn span{display:none}.installbtn{padding:0 10px}}
 .installsteps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;line-height:22px}
+
+/* Rename and delete requests */
+.ttlr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.renamef{display:flex;flex-direction:column;gap:8px}
+.delbanner{background:var(--overdue-soft);color:var(--ink);border:1px solid #e9b48c;border-radius:var(--r-md);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.delbanner p{margin:0;line-height:22px}
+.delchip{background:var(--overdue-soft);color:var(--overdue);border-radius:var(--r-full);padding:0 8px;font-weight:700;font-size:12px}
+.reqdel{display:flex;flex-direction:column;gap:8px;border-top:1px dashed var(--line);padding-top:12px}
+.reqdel textarea{width:100%;font:inherit}
+.acts .spacer{flex:1}
 </style>
 
 </head>
@@ -1018,7 +1028,10 @@ function nText(n){
    case "noteRemind":{const nt=notes.find(x=>x.id===p.note);return fill(t("noteRemindN"),"","<b>"+esc(nt?(nt.title||t("notes")):(p.title||t("notes")))+"</b>")}
    case "rep":return fill(t("nR"),"<b>"+by+"</b>");
    case "repok":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRok"),by,r?wkLabel(r.wk):"")}
-   case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}}
+   case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}
+   case "delreq":return fill(t("tDelReq"),by,tt||"<b>"+esc(p.title||"")+"</b>");
+   case "delok":return fill(t("tDelOk"),by,"<b>"+esc(p.title||"")+"</b>");
+   case "delno":return fill(t("tDelNo"),by,tt||"<b>"+esc(p.title||"")+"</b>");}
   return "";
 }
 const unreadCount=()=>notifs.filter(n=>n.to===S.me&&!n.read).length;
@@ -1325,7 +1338,7 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||""})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||""})});
   attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
@@ -1342,11 +1355,11 @@ const BLOCKING=["new","user","note","log"];
 let stale=false;
 async function refresh(force){
   if(!S.me)return;
-  if(!force&&S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing)){stale=true;return}
+  if(!force&&S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing||S.dlg.busy)){stale=true;return}
   try{await loadAll();stale=false}catch(e){if(e&&e.status===401){signOut();return}console.error(e);if(!e||!e.status)toast(t("offline"))}
   render();
 }
-setInterval(()=>{if(stale&&!(S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing)))refresh()},1500);
+setInterval(()=>{if(stale&&!(S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing||S.dlg.busy)))refresh()},1500);
 function fail(e){
   console.error(e);let m=(e&&e.response&&e.response.message)||(e&&e.message)||"Error";
   const d=e&&e.response&&e.response.data;if(d&&typeof d==="object"){const k=Object.keys(d)[0];if(k&&d[k]&&d[k].message)m=k+": "+d[k].message}
@@ -1633,7 +1646,7 @@ function taskCard(k,showWho){
    <button class="open" data-act="open" data-id="${k.id}"><h3>${esc(k.title)}</h3>
     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>
      <span>${showWho?esc(U(k.to).name):(mine?t("own"):t("from")+" "+esc(U(k.by).name))}</span>
-     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>${t("weekly")}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
+     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>${t("weekly")}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
    ${s==="done"?`<button class="btn small" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:stageChip(k)}</article>`;
 }
 const fOn2=()=>S.fDue!=="any"||S.fPrio!=="any"||S.fClient!=="any"||S.fType!=="any";
@@ -1677,7 +1690,7 @@ function kCard(k,team,inOther){
   return `<article class="kcard ${s==="overdue"?"isover":""}" draggable="${movable}" data-id="${k.id}">
     ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
-     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
+     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
      ${team||inOther?`<span class="kwho"><span class="av">${esc(initials(U(k.to).name))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
   </article>`;
@@ -1696,7 +1709,7 @@ function vKanban(list,team){
 function dTask(){
   const k=tasks.find(x=>x.id===S.dlg.id),s=stat(k),m=me(),flow=flowOf(k.type);
   const types=ttypes.filter(x=>myTypes().includes(x)||x.id===k.type);
-  return `<div class="ttl"><h2>${esc(k.title)}</h2>${s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k)}</div>
+  return `${taskTitle(k,s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k))}${delBanner(k)}
    <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
    <div class="two"><label class="f">${t("status")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""} ${x.id!==k.stage&&!seesStage(x.id)?"disabled":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
@@ -1708,7 +1721,8 @@ function dTask(){
    <div class="stack"><span class="lab">${t("comments")}</span>
     ${k.comments.length?k.comments.map(c=>`<p class="cmt"><b>${esc(U(c.by).name)}</b><br>${esc(c.text)}</p>`).join(""):`<p class="muted cap">${t("noComments")}</p>`}
     <form class="cmtadd" data-form="comment"><input type="text" id="cm-text" maxlength="300" placeholder="${t("writeComment")}" aria-label="${t("writeComment")}" autocomplete="off"><button class="btn small">${t("addComment")}</button></form></div>
-   <div class="acts">${k.status==="done"?`<button class="btn" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:""}<button class="btn" data-act="close">${t("close")}</button></div>`;
+   ${reqForm()}
+   <div class="acts">${delActs(k)}<span class="spacer"></span>${k.status==="done"?`<button class="btn" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:""}<button class="btn" data-act="close">${t("close")}</button></div>`;
 }
 function dNew(){
   const m=me(),canAssign=m.role!=="staff",types=myTypes();
@@ -2376,6 +2390,72 @@ document.addEventListener("click",async e=>{
   if(installEvt){const ev=installEvt;installEvt=null;try{await ev.prompt();await ev.userChoice}catch(x){}render();return}
   S.dlg={type:"install"};render();
 },true);
+
+/* ---------- Rename a task, delete it, or ask a manager to delete it ---------- */
+Object.assign(T.en,{rename:"Rename",renameT:"Task name",renamed:"Task renamed",nameReq:"Enter a task name.",
+  delTask:"Delete task",delConfirm:"Click again to delete",taskDeleted:"Task deleted",reqDel:"Request delete",reqDelT:"Ask a manager to delete this task",
+  reqReason:"Why should it be deleted?",reqSend:"Send request",reqSent:"Delete request sent",reqCancel:"Cancel request",reqCancelled:"Delete request cancelled",
+  delAsked:"{a} asked to delete this task · {b}",delAskedMe:"You asked to delete this task · {b}",delWait:"Waiting for a manager to decide.",keepTask:"Keep task",kept:"Task kept",
+  delChip:"Delete requested",tDelReq:"{a} asks to delete {b}",tDelOk:"{a} deleted {b}, as you asked",tDelNo:"{a} kept {b}; your delete request was declined"});
+Object.assign(T.km,{rename:"ប្តូរឈ្មោះ",renameT:"ឈ្មោះភារកិច្ច",renamed:"បានប្តូរឈ្មោះភារកិច្ច",nameReq:"សូមបញ្ចូលឈ្មោះភារកិច្ច។",
+  delTask:"លុបភារកិច្ច",delConfirm:"ចុចម្តងទៀតដើម្បីលុប",taskDeleted:"បានលុបភារកិច្ច",reqDel:"សុំលុប",reqDelT:"សុំអ្នកគ្រប់គ្រងលុបភារកិច្ចនេះ",
+  reqReason:"ហេតុអ្វីត្រូវលុប?",reqSend:"ផ្ញើសំណើ",reqSent:"បានផ្ញើសំណើលុប",reqCancel:"បោះបង់សំណើ",reqCancelled:"បានបោះបង់សំណើលុប",
+  delAsked:"{a} សុំលុបភារកិច្ចនេះ · {b}",delAskedMe:"អ្នកបានសុំលុបភារកិច្ចនេះ · {b}",delWait:"កំពុងរង់ចាំអ្នកគ្រប់គ្រងសម្រេច។",keepTask:"រក្សាទុកភារកិច្ច",kept:"បានរក្សាទុកភារកិច្ច",
+  delChip:"សុំលុប",tDelReq:"{a} សុំលុប {b}",tDelOk:"{a} បានលុប {b} តាមសំណើរបស់អ្នក",tDelNo:"{a} បានរក្សាទុក {b}; សំណើលុបរបស់អ្នកមិនត្រូវបានយល់ព្រម"});
+
+/* same rule as the server: creator, admins and managers, and the supervisor of the person doing it */
+function canDeleteTask(k){const m=me();if(!m||!k)return false;if(isMgr(m)||k.by===m.id)return true;return m.role==="supervisor"&&((U(k.to)||{}).supervisors||[]).includes(m.id)}
+const delChip=k=>k.delBy?`<span class="delchip">${t("delChip")}</span>`:"";
+
+/* title row of the task dialog: name, rename */
+function taskTitle(k,chip){
+  if(S.dlg.renaming)return `<form class="renamef" data-form="rename"><label class="f">${t("renameT")}<input type="text" id="tk-title" maxlength="120" value="${esc(k.title)}" autocomplete="off"></label>
+    <p class="err" id="rn-err" role="alert" hidden></p><div class="acts" style="justify-content:flex-start"><button type="button" class="btn small" data-act="rn-cancel">${t("cancel")}</button><button class="btn small primary">${t("saveT")}</button></div></form>`;
+  return `<div class="ttl"><h2>${esc(k.title)}</h2><span class="ttlr">${chip}<button class="btn small" data-act="rn-open">${t("rename")}</button></span></div>`;
+}
+/* banner shown while a delete request is open */
+function delBanner(k){
+  if(!k.delBy)return "";const mine=k.delBy===S.me,can=canDeleteTask(k);
+  return `<div class="delbanner" role="status"><p><b>${(mine?fill(t("delAskedMe"),"",k.delAt?fmtAt(k.delAt):""):fill(t("delAsked"),esc((U(k.delBy)||{name:"?"}).name),k.delAt?fmtAt(k.delAt):"")).replace(/ · $/,"")}</b>${k.delReason?`<br>${esc(k.delReason)}`:""}${!can?`<br><span class="cap muted">${t("delWait")}</span>`:""}</p>
+   <div class="acts" style="justify-content:flex-start">${can?`<button class="btn small ${S.arm==="tdel"?"danger":""}" data-act="tdel">${S.arm==="tdel"?t("delConfirm"):t("delTask")}</button><button class="btn small" data-act="dreq-keep">${t("keepTask")}</button>`:""}
+   ${mine&&!can?`<button class="btn small" data-act="dreq-keep">${t("reqCancel")}</button>`:""}</div></div>`;
+}
+/* buttons at the bottom of the task dialog */
+function delActs(k){
+  if(k.delBy)return "";
+  if(canDeleteTask(k))return `<button class="btn ${S.arm==="tdel"?"danger":""}" data-act="tdel">${S.arm==="tdel"?t("delConfirm"):t("delTask")}</button>`;
+  return `<button class="btn" data-act="dreq-open">${t("reqDel")}</button>`;
+}
+function reqForm(){
+  if(!S.dlg.reqDel)return "";
+  return `<form class="reqdel" data-form="reqdel"><h3 class="lab">${t("reqDelT")}</h3><label class="f">${t("reqReason")}<textarea id="rd-reason" maxlength="300" rows="3"></textarea></label>
+    <div class="acts" style="justify-content:flex-start"><button type="button" class="btn small" data-act="dreq-close">${t("cancel")}</button><button class="btn small primary">${t("reqSend")}</button></div></form>`;
+}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-act]");if(!b||!S.dlg||S.dlg.type!=="task")return;const a=b.dataset.act;
+  if(!["rn-open","rn-cancel","tdel","dreq-open","dreq-close","dreq-keep"].includes(a))return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const k=tasks.find(x=>x.id===S.dlg.id);if(!k)return;
+  if(a==="rn-open"){S.dlg.renaming=true;S.dlg.busy=true;render();const i=document.getElementById("tk-title");if(i){i.focus();i.select()}return}
+  if(a==="rn-cancel"){S.dlg.renaming=false;S.dlg.busy=!!S.dlg.reqDel;render();return}
+  if(a==="dreq-open"){S.dlg.reqDel=true;S.dlg.busy=true;render();document.getElementById("rd-reason")?.focus();return}
+  if(a==="dreq-close"){S.dlg.reqDel=false;S.dlg.busy=!!S.dlg.renaming;render();return}
+  if(a==="tdel"){if(S.arm!=="tdel"){S.arm="tdel";render();return}S.arm=null;const id=k.id;S.dlg=null;
+    run(()=>pb.collection("tasks").delete(id),t("taskDeleted"));return}
+  if(a==="dreq-keep"){const mine=k.delBy===S.me;run(()=>pb.collection("tasks").update(k.id,{del_by:""}),t(mine&&!canDeleteTask(k)?"reqCancelled":"kept"));return}
+},true);
+document.addEventListener("submit",e=>{
+  const f=e.target.dataset&&e.target.dataset.form;if(f!=="rename"&&f!=="reqdel")return;e.preventDefault();e.stopImmediatePropagation();
+  const k=tasks.find(x=>x.id===S.dlg.id);if(!k)return;
+  if(f==="rename"){const v=val("tk-title");if(!v){const er=document.getElementById("rn-err");er.textContent=t("nameReq");er.hidden=false;return}
+    S.dlg.renaming=false;S.dlg.busy=!!S.dlg.reqDel;if(v===k.title){render();return}
+    run(()=>pb.collection("tasks").update(k.id,{title:v}),t("renamed"));return}
+  if(f==="reqdel"){const r=(document.getElementById("rd-reason").value||"").trim().slice(0,300);S.dlg.reqDel=false;S.dlg.busy=!!S.dlg.renaming;
+    run(()=>pb.collection("tasks").update(k.id,{del_by:S.me,del_reason:r}),t("reqSent"));return}
+},true);
+/* any click outside the armed delete button disarms it */
+document.addEventListener("click",e=>{if(S.arm==="tdel"&&!e.target.closest('[data-act="tdel"]')){S.arm=null}},false);
 
 /* Start */
 setTimeout(()=>{DL=dlObj();},0);

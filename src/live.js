@@ -27,7 +27,7 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||""})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||""})});
   attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
@@ -44,11 +44,11 @@ const BLOCKING=["new","user","note","log"];
 let stale=false;
 async function refresh(force){
   if(!S.me)return;
-  if(!force&&S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing)){stale=true;return}
+  if(!force&&S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing||S.dlg.busy)){stale=true;return}
   try{await loadAll();stale=false}catch(e){if(e&&e.status===401){signOut();return}console.error(e);if(!e||!e.status)toast(t("offline"))}
   render();
 }
-setInterval(()=>{if(stale&&!(S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing)))refresh()},1500);
+setInterval(()=>{if(stale&&!(S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing||S.dlg.busy)))refresh()},1500);
 function fail(e){
   console.error(e);let m=(e&&e.response&&e.response.message)||(e&&e.message)||"Error";
   const d=e&&e.response&&e.response.data;if(d&&typeof d==="object"){const k=Object.keys(d)[0];if(k&&d[k]&&d[k].message)m=k+": "+d[k].message}
