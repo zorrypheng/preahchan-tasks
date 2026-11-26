@@ -1,0 +1,6 @@
+/// <reference path="../pb_data/types.d.ts" />
+// Description templates shared with the team, optionally tied to a task type. Does nothing if the table exists; errors are logged.
+migrate((app) => {
+  try { app.findCollectionByNameOrId("templates"); return } catch (e) {}
+  try { app.importCollections([{"id": "pc_templates001", "name": "templates", "type": "base", "listRule": "@request.auth.id != \"\"", "viewRule": "@request.auth.id != \"\"", "createRule": "@request.auth.id != \"\" && @request.body.owner = @request.auth.id", "updateRule": "owner = @request.auth.id || @request.auth.role != \"staff\"", "deleteRule": "owner = @request.auth.id || @request.auth.role != \"staff\"", "fields": [{"name": "name", "type": "text", "required": true, "max": 120}, {"name": "body", "type": "editor", "maxSize": 100000, "convertURLs": false}, {"name": "type", "type": "relation", "collectionId": "pc_tasktypes001", "maxSelect": 1, "cascadeDelete": false}, {"name": "owner", "type": "relation", "collectionId": "_pb_users_auth_", "maxSelect": 1, "required": true, "cascadeDelete": false}, {"name": "created", "type": "autodate", "onCreate": true, "onUpdate": false}, {"name": "updated", "type": "autodate", "onCreate": true, "onUpdate": true}]}], false) } catch (err) { console.log("templates migration failed: " + err) }
+}, (app) => {})

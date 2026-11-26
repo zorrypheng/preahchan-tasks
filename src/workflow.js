@@ -136,6 +136,7 @@ function dTask(){
 }
 function dNew(){
   const m=me(),canAssign=m.role!=="staff",types=myTypes();
+  if(S.dlg.body===undefined){const tp=types[0]&&tplFor(types[0].id);S.dlg.body=tp?cleanHTML(tp.body):"";S.dlg.autoTpl=S.dlg.body}
   const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin").map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
   return `<h2>${S.dlg.assign?t("assignTask"):t("addTask")}</h2><p class="err" id="nt-err" role="alert" hidden></p>
    <form data-form="task"><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off"></label>
@@ -285,7 +286,9 @@ document.addEventListener("change",e=>{
   if(el.dataset.x==="stage"&&el.value){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id);moveTo(k,el.value);return}
   if(el.dataset.x==="ttype"){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id),f=flowOf(el.value);
     const data={type:el.value};if(el.value&&!f.some(s=>s.id===k.stage))data.stage=(f[0]||{}).id||"";run(()=>pb.collection("tasks").update(k.id,data));return}
-  if(el.dataset.x==="ntype"){const tp=TT(el.value),est=document.getElementById("nt-est");if(tp&&tp.est&&est&&!est.dataset.touched)est.value=tp.est;return}
+  if(el.dataset.x==="ntype"){const tp=TT(el.value),est=document.getElementById("nt-est");if(tp&&tp.est&&est&&!est.dataset.touched)est.value=tp.est;
+    const area=document.getElementById("nt-body"),tpl=tplFor(el.value),cur=area?cleanHTML(area.innerHTML):"";
+    if(area&&(!plainText(cur).trim()&&!/<table/i.test(cur)||cur===S.dlg.autoTpl)){const html=tpl?cleanHTML(tpl.body):"";area.innerHTML=html;S.dlg.body=html;S.dlg.autoTpl=cleanHTML(area.innerHTML)}return}
   if(el.dataset.sl&&S.dlg&&S.dlg.draft){const arr=S.dlg.draft[el.dataset.sl];if(el.checked){if(!arr.includes(el.value))arr.push(el.value)}else arr.splice(arr.indexOf(el.value),1);return}
   if(el.dataset.sdB&&S.dlg&&S.dlg.draft){S.dlg.draft[el.dataset.sdB]=el.checked;return}
 },true);

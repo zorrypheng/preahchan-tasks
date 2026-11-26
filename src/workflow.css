@@ -86,3 +86,16 @@
 .rt-area td:focus-within,.rt-area th:focus-within{background:var(--moon-soft)}
 .rt-view{overflow-x:auto}
 .kcover{width:calc(100% + 24px);margin:-10px -12px 0;max-height:180px;object-fit:cover;border-radius:var(--r-md) var(--r-md) 0 0;display:block;background:var(--surface)}
+
+.rtb-wide{width:auto;gap:6px;padding:0 10px;font-size:13px;font-weight:600;display:inline-flex;align-items:center}
+.rt-tpl{border-bottom:1px solid var(--line);background:var(--surface);padding:10px 12px;display:flex;flex-direction:column;gap:10px;animation:fade .15s ease}
+.tpl-head{display:flex;justify-content:space-between;align-items:center}
+.tpl-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
+.tpl-row{display:flex;gap:6px;align-items:stretch}
+.tpl-ins{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:8px 10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface-raised);cursor:pointer;font:inherit}
+.tpl-ins:hover{background:var(--moon-soft)}
+.tpl-del{min-width:36px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface-raised);font-size:18px;line-height:1;cursor:pointer;color:var(--ink-muted,inherit)}
+.tpl-del:hover{background:var(--moon-soft)}
+.tpl-save{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px dashed var(--line)}
+.tpl-form{display:flex;gap:6px;flex-wrap:wrap}
+.tpl-form input,.tpl-form select{flex:1 1 160px;min-height:36px}

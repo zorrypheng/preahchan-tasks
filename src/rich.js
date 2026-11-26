@@ -5,14 +5,14 @@ Object.assign(T.en,{formatting:"Formatting",fBold:"Bold",fItalic:"Italic",fUnder
  compressing:"Compressing {a}…",compressingV:"Compressing video {a}: {b}%",loadingFF:"Preparing the video compressor (about 30 MB, first time only)…",uploadingA:"Uploading {a}…",
  tooBigA:"{a} is still {b} after compression. The limit is 95 MB. Upload it to Google Drive or YouTube and add the link instead.",
  tooBigIn:"{a} is too big to compress in the browser (over 400 MB). Add a link instead.",compressFail:"Couldn't compress {a}. Uploading the original instead.",
- saved1:"{a} → {b}",remove:"Remove",fTable:"Insert table",addRow:"Add row",addCol:"Add column",delRow:"Delete row",delCol:"Delete column",delTable:"Delete table",colH:"Column {a}",loadingPrev:"Getting the link preview…",openLink:"Open link",editUser:"Edit name",userSaved:"Name saved",attPending:"Will be added when you save the task.",attN:"{a} attachments"});
+ saved1:"{a} → {b}",remove:"Remove",fTable:"Insert table",addRow:"Add row",addCol:"Add column",delRow:"Delete row",delCol:"Delete column",delTable:"Delete table",colH:"Column {a}",loadingPrev:"Getting the link preview…",fTpl:"Templates",tplTitle:"Description templates",tplNone:"No templates yet. Write a description, then save it as a template here.",tplSave:"Save this description as a template",tplName:"Template name",tplAny:"Any task type",tplSaveBtn:"Save template",tplSaved:"Template saved",tplUpdated:"Template updated",tplDel:"Delete template",tplDelAsk:"Delete the template “{a}”?",tplDeleted:"Template deleted",tplEmpty:"Write something in the description first.",tplNeedName:"Give the template a name.",tplTaken:"A template with this name already exists and belongs to someone else.",tplAuto:"Fills in automatically for this type",openLink:"Open link",editUser:"Edit name",userSaved:"Name saved",attPending:"Will be added when you save the task.",attN:"{a} attachments"});
 Object.assign(T.km,{formatting:"ទ្រង់ទ្រាយ",fBold:"ដិត",fItalic:"ទ្រេត",fUnder:"គូសបន្ទាត់ក្រោម",fStrike:"គូសឆូត",fHead:"ចំណងជើង",fBullets:"បញ្ជីចំណុច",fNumbers:"បញ្ជីលេខ",
  fQuote:"សម្រង់",fLink:"តំណ",fClear:"លុបទ្រង់ទ្រាយ",linkAsk:"អាសយដ្ឋានតំណ (https://…)",editDesc:"កែការពិពណ៌នា",saveDesc:"រក្សាទុកការពិពណ៌នា",descSaved:"បានរក្សាទុកការពិពណ៌នា",noDesc:"មិនទាន់មានការពិពណ៌នាទេ។",
  attachments:"ឯកសារភ្ជាប់",addMedia:"បន្ថែមរូបភាព ឬវីដេអូ",addLink:"បន្ថែមតំណ",linkPh:"https://…",badLink:"សូមបញ្ចូលតំណដែលចាប់ផ្តើមដោយ https://",attSaved:"បានបន្ថែមឯកសារភ្ជាប់",attDeleted:"បានដកឯកសារភ្ជាប់",
  compressing:"កំពុងបង្រួម {a}…",compressingV:"កំពុងបង្រួមវីដេអូ {a}៖ {b}%",loadingFF:"កំពុងរៀបចំកម្មវិធីបង្រួមវីដេអូ (ប្រហែល 30 MB តែលើកដំបូង)…",uploadingA:"កំពុងផ្ទុក {a}…",
  tooBigA:"{a} នៅតែ {b} ក្រោយបង្រួម។ ដែនកំណត់គឺ 95 MB។ សូមផ្ទុកទៅ Google Drive ឬ YouTube ហើយបន្ថែមតំណជំនួសវិញ។",
  tooBigIn:"{a} ធំពេកសម្រាប់បង្រួមក្នុងកម្មវិធីរុករក (លើស 400 MB)។ សូមបន្ថែមតំណជំនួសវិញ។",compressFail:"មិនអាចបង្រួម {a} បានទេ។ កំពុងផ្ទុកឯកសារដើមជំនួសវិញ។",
- saved1:"{a} → {b}",remove:"ដកចេញ",fTable:"បញ្ចូលតារាង",addRow:"បន្ថែមជួរដេក",addCol:"បន្ថែមជួរឈរ",delRow:"លុបជួរដេក",delCol:"លុបជួរឈរ",delTable:"លុបតារាង",colH:"ជួរឈរ {a}",loadingPrev:"កំពុងទាញយកការមើលជាមុនរបស់តំណ…",openLink:"បើកតំណ",editUser:"កែឈ្មោះ",userSaved:"បានរក្សាទុកឈ្មោះ",attPending:"នឹងបន្ថែមនៅពេលអ្នករក្សាទុកភារកិច្ច។",attN:"ឯកសារភ្ជាប់ {a}"});
+ saved1:"{a} → {b}",remove:"ដកចេញ",fTable:"បញ្ចូលតារាង",addRow:"បន្ថែមជួរដេក",addCol:"បន្ថែមជួរឈរ",delRow:"លុបជួរដេក",delCol:"លុបជួរឈរ",delTable:"លុបតារាង",colH:"ជួរឈរ {a}",loadingPrev:"កំពុងទាញយកការមើលជាមុនរបស់តំណ…",fTpl:"គំរូ",tplTitle:"គំរូការពិពណ៌នា",tplNone:"មិនទាន់មានគំរូទេ។ សរសេរការពិពណ៌នា រួចរក្សាទុកជាគំរូនៅទីនេះ។",tplSave:"រក្សាទុកការពិពណ៌នានេះជាគំរូ",tplName:"ឈ្មោះគំរូ",tplAny:"គ្រប់ប្រភេទការងារ",tplSaveBtn:"រក្សាទុកគំរូ",tplSaved:"បានរក្សាទុកគំរូ",tplUpdated:"បានធ្វើបច្ចុប្បន្នភាពគំរូ",tplDel:"លុបគំរូ",tplDelAsk:"លុបគំរូ “{a}”?",tplDeleted:"បានលុបគំរូ",tplEmpty:"សូមសរសេរអ្វីមួយក្នុងការពិពណ៌នាជាមុនសិន។",tplNeedName:"សូមដាក់ឈ្មោះគំរូ។",tplTaken:"មានគំរូឈ្មោះនេះរួចហើយ ហើយជារបស់អ្នកផ្សេង។",tplAuto:"បំពេញដោយស្វ័យប្រវត្តិសម្រាប់ប្រភេទនេះ",openLink:"បើកតំណ",editUser:"កែឈ្មោះ",userSaved:"បានរក្សាទុកឈ្មោះ",attPending:"នឹងបន្ថែមនៅពេលអ្នករក្សាទុកភារកិច្ច។",attN:"ឯកសារភ្ជាប់ {a}"});
 
 const attachments=[];
 BLOCKING.push("uedit");
@@ -44,11 +44,12 @@ const RT_ICONS={bold:'<path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1
   quote:'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>',
   link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   table:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M12 3v18"/>',
+  template:'<rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/>',
   removeFormat:'<path d="M4 7V4h16v3"/><path d="M5 20h6"/><path d="M13 4 8 20"/><path d="m15 15 5 5"/><path d="m20 15-5 5"/>'};
 function rtEditor(id,html){
   const b=(cmd,label)=>`<button type="button" class="rtb" data-rt="${cmd}" title="${t(label)}" aria-label="${t(label)}"><svg viewBox="0 0 24 24" aria-hidden="true">${RT_ICONS[cmd]}</svg></button>`;
-  return `<div class="rt"><div class="rt-bar" role="toolbar" aria-label="${t("formatting")}">${b("bold","fBold")}${b("italic","fItalic")}${b("underline","fUnder")}${b("strikeThrough","fStrike")}<span class="rtsep"></span>${b("heading","fHead")}${b("insertUnorderedList","fBullets")}${b("insertOrderedList","fNumbers")}${b("quote","fQuote")}<span class="rtsep"></span>${b("table","fTable")}${b("link","fLink")}${b("removeFormat","fClear")}
-   <span class="rt-tbl" hidden>${["addRow","addCol","delRow","delCol","delTable"].map(c=>`<button type="button" class="rtt" data-rt="${c}">${t(c)}</button>`).join("")}</span></div>
+  return `<div class="rt"><div class="rt-bar" role="toolbar" aria-label="${t("formatting")}">${b("bold","fBold")}${b("italic","fItalic")}${b("underline","fUnder")}${b("strikeThrough","fStrike")}<span class="rtsep"></span>${b("heading","fHead")}${b("insertUnorderedList","fBullets")}${b("insertOrderedList","fNumbers")}${b("quote","fQuote")}<span class="rtsep"></span>${b("table","fTable")}${b("link","fLink")}${b("removeFormat","fClear")}<span class="rtsep"></span><button type="button" class="rtb rtb-wide" data-tplopen="1" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true">${RT_ICONS.template}</svg>${t("fTpl")}</button>
+   <span class="rt-tbl" hidden>${["addRow","addCol","delRow","delCol","delTable"].map(c=>`<button type="button" class="rtt" data-rt="${c}">${t(c)}</button>`).join("")}</span></div><div class="rt-tpl" hidden></div>
    <div class="rt-area" id="${id}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${t("desc")}" data-rta="1">${cleanHTML(html)}</div></div>`;
 }
 document.addEventListener("mousedown",e=>{if(e.target.closest("[data-rt]"))e.preventDefault()});
@@ -253,3 +254,47 @@ function coverOf(k){
   const img=list.find(a=>a.kind==="image");if(img&&fileTok)return attURL(img,true);
   const ln=list.find(a=>a.kind==="link"&&previewImg(a));return ln?previewImg(ln):"";
 }
+
+/* ---------- description templates ---------- */
+const templates=[];
+let rtRange=null;
+document.addEventListener("selectionchange",()=>{const s=getSelection();if(!s||!s.rangeCount)return;let n=s.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;if(n&&n.closest&&n.closest("[data-rta]"))rtRange=s.getRangeAt(0).cloneRange()});
+function tplFor(typeId){return typeId?templates.find(x=>x.type===typeId):null}
+function canEditTpl(x){const m=me();return x.owner===m.id||m.role!=="staff"}
+function curTypeId(){const sel=document.getElementById("nt-type");if(sel)return sel.value;const k=S.dlg&&S.dlg.id&&tasks.find(x=>x.id===S.dlg.id);return k?k.type:""}
+function tplPanel(){
+  const tn=id=>{const x=ttypes.find(y=>y.id===id);return x?nm(x):""},cur=curTypeId();
+  const list=templates.length?templates.map(x=>`<div class="tpl-row"><button type="button" class="tpl-ins" data-tplins="${x.id}"><b>${esc(x.name)}</b>${x.type?`<span class="cap muted">${esc(tn(x.type))} · ${t("tplAuto")}</span>`:""}</button>
+      ${canEditTpl(x)?`<button type="button" class="tpl-del" data-tpldel="${x.id}" title="${t("tplDel")}" aria-label="${t("tplDel")}: ${esc(x.name)}">×</button>`:""}</div>`).join(""):`<p class="cap muted">${t("tplNone")}</p>`;
+  return `<div class="tpl-head"><b>${t("tplTitle")}</b><button type="button" class="tpl-del" data-tplopen="1" aria-label="${t("close")}">×</button></div><div class="tpl-list">${list}</div>
+    <div class="tpl-save"><span class="lab">${t("tplSave")}</span>
+    <div class="tpl-form"><input type="text" class="tpl-name" maxlength="120" placeholder="${t("tplName")}" aria-label="${t("tplName")}">
+    <select class="tpl-type" aria-label="${t("type")}"><option value="">${t("tplAny")}</option>${ttypes.map(x=>`<option value="${x.id}" ${x.id===cur?"selected":""}>${esc(nm(x))}</option>`).join("")}</select>
+    <button type="button" class="btn small primary" data-tplsave="1">${t("tplSaveBtn")}</button></div><p class="err tpl-err" role="alert" hidden></p></div>`;
+}
+function openTpl(rt,show){const p=rt.querySelector(".rt-tpl"),b=rt.querySelector(".rtb[data-tplopen]");if(!p)return;p.hidden=!show;if(show)p.innerHTML=tplPanel();if(b)b.setAttribute("aria-expanded",String(show))}
+async function loadTemplates(){try{const r=await pb.collection("templates").getFullList({sort:"name"});templates.length=0;r.forEach(x=>templates.push({id:x.id,name:x.name,body:x.body||"",type:x.type||"",owner:x.owner}))}catch(e){}}
+function insertTpl(area,html){
+  html=cleanHTML(html);area.focus();
+  if(!plainText(area.innerHTML).trim()&&!area.querySelector("table,img"))area.innerHTML=html;
+  else{const s=getSelection();if(rtRange&&area.contains(rtRange.startContainer)){s.removeAllRanges();s.addRange(rtRange)}else{const r=document.createRange();r.selectNodeContents(area);r.collapse(false);s.removeAllRanges();s.addRange(r)}
+    document.execCommand("insertHTML",false,"<p><br></p>"+html)}
+  area.dispatchEvent(new Event("input",{bubbles:true}));
+}
+document.addEventListener("mousedown",e=>{if(e.target.closest("[data-tplins],[data-tplopen]"))e.preventDefault()});
+document.addEventListener("click",async e=>{
+  const el=e.target.closest("[data-tplopen],[data-tplins],[data-tpldel],[data-tplsave]");if(!el)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  const rt=el.closest(".rt"),area=rt.querySelector("[data-rta]"),panel=rt.querySelector(".rt-tpl");
+  if(el.dataset.tplopen){openTpl(rt,panel.hidden);return}
+  if(el.dataset.tplins){const x=templates.find(y=>y.id===el.dataset.tplins);if(x){insertTpl(area,x.body);openTpl(rt,false)}return}
+  if(el.dataset.tpldel){const x=templates.find(y=>y.id===el.dataset.tpldel);if(!x||!confirm(fill(t("tplDelAsk"),x.name)))return;
+    try{await pb.collection("templates").delete(x.id);await loadTemplates();openTpl(rt,true);toast(t("tplDeleted"))}catch(err){fail(err)}return}
+  if(el.dataset.tplsave){const err=panel.querySelector(".tpl-err"),say=m=>{err.textContent=m;err.hidden=!m};
+    const name=panel.querySelector(".tpl-name").value.trim(),type=panel.querySelector(".tpl-type").value,body=cleanHTML(area.innerHTML);
+    if(!plainText(body).trim()&&!/<table/i.test(body))return say(t("tplEmpty"));if(!name)return say(t("tplNeedName"));
+    const same=templates.find(x=>x.name.toLowerCase()===name.toLowerCase());if(same&&!canEditTpl(same))return say(t("tplTaken"));
+    el.disabled=true;
+    try{if(same)await pb.collection("templates").update(same.id,{body,type});else await pb.collection("templates").create({name,body,type,owner:me().id});
+      await loadTemplates();openTpl(rt,true);toast(t(same?"tplUpdated":"tplSaved"))}catch(x){say(x&&x.message?x.message:t("error"))}finally{el.disabled=false}}
+},true);

@@ -18,7 +18,7 @@ async function loadAll(){
   const [us,cl,ts,cm,dc,nt,nf,rp,sts,tts,pos,att]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
     g("documents",{sort:"-created"}),g("notes",{sort:"-updated"}),pb.collection("notifications").getList(1,100,{sort:"-created"}).then(r=>r.items),g("reports",{sort:"created"}),
     g("statuses",{sort:"sort"}).catch(()=>[]),g("task_types",{sort:"name"}).catch(()=>[]),g("positions",{sort:"name"}).catch(()=>[]),
-    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken()]);
+    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken(),loadTemplates()]);
   statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
