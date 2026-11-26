@@ -32,7 +32,7 @@ const TEXT = {
     badCode: "That code did not work. Open the app and tap Connect Telegram again for a new code.",
     approved: "Approved", notAllowed: "You can't do that.",
     kpi: "This week: {n} of {kpi} stages finished · {h} of {cap} hours logged.",
-    meet: "Meeting with <b>{client}</b> today: {title}", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
+    meet: "Meeting with <b>{client}</b> today: {title}", projectsH: "Your projects:", lateN: "{n} overdue", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
     pickInApp: "Open the app to choose who does the next stage.", finishedStage: "Finished {s} · {h} h logged", finishedRec: "Finished {s}",
     nudge: "Today you logged {h} h across {n} stages.", nudgeNone: "You haven't logged any hours today. Anything missing?", nudgeOk: "Thanks! Anything missing? You can still log it in the app.",
     hoursNeeded: "Enter the hours you spent.", nextNeeded: "Choose who does the next stage.", notYours: "Only the person on this stage, or a manager, can finish it.",
@@ -67,7 +67,7 @@ const TEXT = {
     badCode: "លេខកូដនេះមិនដំណើរការទេ។ សូមបើកកម្មវិធី ហើយចុច ភ្ជាប់ Telegram ម្តងទៀត។",
     approved: "បានអនុម័ត", notAllowed: "អ្នកមិនអាចធ្វើបែបនេះបានទេ។",
     kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ដំណាក់កាល · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
-    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
+    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", projectsH: "គម្រោងរបស់អ្នក៖", lateN: "ហួសកំណត់ {n}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
     pickInApp: "បើកកម្មវិធីដើម្បីជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", finishedStage: "បានបញ្ចប់ {s} · បានកត់ត្រា {h} ម៉ោង", finishedRec: "បានបញ្ចប់ {s}",
     nudge: "ថ្ងៃនេះអ្នកបានកត់ត្រា {h} ម៉ោង ក្នុង {n} ដំណាក់កាល។", nudgeNone: "ថ្ងៃនេះអ្នកមិនទាន់កត់ត្រាម៉ោងទេ។ មានអ្វីខ្វះទេ?", nudgeOk: "អរគុណ! មានអ្វីខ្វះទេ? អ្នកនៅតែអាចកត់ត្រាក្នុងកម្មវិធី។",
     hoursNeeded: "សូមបញ្ចូលម៉ោងដែលអ្នកបានចំណាយ។", nextNeeded: "សូមជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", notYours: "មានតែអ្នកនៅដំណាក់កាលនេះ ឬអ្នកគ្រប់គ្រងទេ ដែលអាចបញ្ចប់វាបាន។",
@@ -467,6 +467,19 @@ module.exports = {
             late.forEach((k) => { text += "\n• " + esc(this.userName(app, k.getString("assignee"))) + ": " + esc(k.getString("title")) })
           }
         }
+        // project leads: progress of their active projects
+        try {
+          const mine = app.findRecordsByFilter("projects", "lead = {:u} && status = 'active'", "end", 20, 0, { u: u.id })
+          if (mine.length) {
+            text += "\n\n" + this.t(lang, "projectsH")
+            mine.forEach((p) => {
+              const ks = app.findRecordsByFilter("tasks", "project = {:p}", "", 2000, 0, { p: p.id })
+              const done = ks.filter((k) => k.getString("status") === "done").length
+              const late = ks.filter((k) => k.getString("status") !== "done" && k.getString("due") && k.getString("due") < today).length
+              text += "\n• " + esc(p.getString("name")) + ": " + (ks.length ? Math.round(done / ks.length * 100) : 0) + "%" + (late ? " · " + fill(this.t(lang, "lateN"), { n: late }) : "")
+            })
+          }
+        } catch (err) {}
         text += "\n\n" + this.kpiText(app, u)
         const rows = m.rows.slice()
         const open = this.openButton(app, lang)

@@ -7,6 +7,11 @@ Ideas agreed to revisit after the workflow update (statuses, task types, positio
 - **Monthly client report (PDF):** tasks finished, hours by stage, project progress, ready to send.
 - **Contract renewal reminder:** contract end date per client, reminder 30 days before.
 
+## Projects: next steps (agreed for later)
+- **Timeline view:** Gantt-style bars per task (start to due) with milestone markers.
+- **Weekly project update:** Monday Telegram summary to the lead and managers (progress, overdue, hours vs budget).
+- **Duplicate project:** copy a project with its tasks and stage plans, with new dates (project templates).
+
 ## Built
 - **Per-stage hours** (stage plan, Finish with hours, work logs, KPI by finished stages, timesheet, stage report, crews, timer, 17:30 nudge).
 

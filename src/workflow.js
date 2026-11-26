@@ -133,7 +133,7 @@ function dTask(){
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
    ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isTaskMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
-   ${projectField(k.client,k.project,"tk-project")}${guideBtn(k)}
+   <div class="two">${projectField(k.client,k.project,"tk-project")}${milestoneField(k.project,k.milestone,"tk-ms")}</div>${projectLink(k)}${guideBtn(k)}
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
    ${descBlock(k)}
    ${attBlock(k.id)}
@@ -153,7 +153,7 @@ function dNew(){
    <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off" value="${esc(dp.title||"")}"></label>
    <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph(dp.type)}${types.map(x=>`<option value="${x.id}" ${dp.type===x.id?"selected":""}>${esc(nm(x))}</option>`).join("")}<option value="__none" ${dp.type==="__none"?"selected":""}>${t("noType")}</option></select></label>
    <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel" required>${ph(dp.client)}${clientOpts(dp.client&&dp.client!=="__none"?dp.client:"").replace('<option value="">',`<option value="__none" ${dp.client==="__none"?"selected":""}>`)}${isMgr(me())?`<option value="__new">${t("newClient")}</option>`:""}</select></label></div>
-   ${projectField(S.dlg.pclient!==undefined?S.dlg.pclient:(dp.client||""),S.dlg.dupProject||"","nt-project")}
+   <div class="two">${projectField(S.dlg.pclient!==undefined?S.dlg.pclient:(dp.client||""),S.dlg.dupProject||"","nt-project")}${milestoneField(S.dlg.dupProject||"","","nt-ms")}</div>
    ${planBlock()}
    <label class="f" id="nt-newwrap" hidden>${t("newClientName")}<input type="text" id="nt-newclient" maxlength="60" autocomplete="off"></label>
    <div class="stack" style="gap:6px"><span class="lab">${t("desc")}</span>${rtEditor("nt-body",S.dlg.body||"")}</div>

@@ -58,7 +58,7 @@ Object.assign(S,{cq:"",cst:"active",ctab:"overview",cStage:"",cProj:"",cWho:"",c
 async function loadClientData(){
   const g=(c,o)=>pb.collection(c).getFullList(Object.assign({batch:500},o||{})).catch(()=>[]);
   const [p,m,w]=await Promise.all([g("projects",{sort:"-created"}),g("meetings",{sort:"-date,-created"}),g("wiki_pages",{sort:"-pinned,sort,title"})]);
-  projects.length=0;p.forEach(r=>projects.push({id:r.id,client:r.client,name:r.name,goal:r.goal||"",start:r.start||"",end:r.end||"",status:r.status||"active",budget:r.budget_h||0}));
+  projects.length=0;p.forEach(r=>projects.push({id:r.id,client:r.client,name:r.name,goal:r.goal||"",start:r.start||"",end:r.end||"",status:r.status||"active",budget:r.budget_h||0,lead:r.lead||"",milestones:Array.isArray(r.milestones)?r.milestones:[]}));
   meetings.length=0;m.forEach(r=>meetings.push({id:r.id,client:r.client,project:r.project||"",title:r.title,date:r.date||"",attendees:r.attendees||[],guests:r.guests||"",body:r.body||"",actions:Array.isArray(r.actions)?r.actions:[],next:r.next_date||"",private:!!r.private,by:r.created_by}));
   wiki.length=0;w.forEach(r=>wiki.push({id:r.id,client:r.client,title:r.title,section:r.section||"other",body:r.body||"",pinned:!!r.pinned,by:r.created_by,editor:r.updated_by,updated:r.updated||""}));
 }
@@ -139,13 +139,13 @@ function projStats(p){const ks=tasks.filter(k=>k.project===p.id),done=ks.filter(
   const ids=new Set(ks.map(k=>k.id)),hrs=wlogs.filter(l=>ids.has(l.task)).reduce((a,l)=>a+l.hours,0);return {ks,done,late,hrs,pct:ks.length?Math.round(done/ks.length*100):0}}
 function cProjects(c,mgr){
   const list=projects.filter(p=>p.client===c.id);
-  return `${mgr?`<div class="acts" style="justify-content:flex-start"><button class="btn primary small" data-act="pj-new">${t("newProject")}</button></div>`:""}
+  return `${canProj(me())?`<div class="acts" style="justify-content:flex-start"><button class="btn primary small" data-act="pj-new">${t("newProject")}</button></div>`:""}
    ${list.length?`<div class="projs">${list.map(p=>{const s=projStats(p),open=S.openProj===p.id;return `<section class="proj">
      <button class="projhead" data-act="pj-toggle" data-id="${p.id}" aria-expanded="${open}"><span><b>${esc(p.name)}</b> ${stChip(p.status==="done"?"done":p.status)}<br><span class="cap muted">${p.start?esc(fmt(p.start)):""}${p.end?" – "+esc(fmt(p.end)):""}${p.goal?` · ${esc(p.goal)}`:""}</span></span>
       <span class="projnums"><span class="num"><b>${s.pct}%</b></span><span class="cap muted">${fill(t("tasksOf"),s.done,s.ks.length)}${s.late?` · <span class="late">${s.late} ${t("cOverdue")}</span>`:""} · ${p.budget?fill(t("hoursOf"),Math.round(s.hrs*10)/10,p.budget):fill(t("hoursUsed"),Math.round(s.hrs*10)/10)}</span></span></button>
      <span class="lbbar ${s.pct>=100?"full":""}"><i style="width:${s.pct}%"></i></span>
      ${p.budget?`<span class="budgetbar ${s.hrs>p.budget?"over":""}"><i style="width:${Math.min(100,s.hrs/p.budget*100)}%"></i></span>`:""}
-     ${open?`<div class="list">${s.ks.length?sortT(s.ks).map(k=>taskCard(k,true)).join(""):`<p class="empty">${t("none")}</p>`}</div>${mgr?`<button class="btn small" data-act="pj-edit" data-id="${p.id}">${t("editT")}</button>`:""}`:""}</section>`}).join("")}</div>`:`<p class="empty">${t("projNone")}</p>`}`;
+     ${open?`<div class="list">${s.ks.length?sortT(s.ks).map(k=>taskCard(k,true)).join(""):`<p class="empty">${t("none")}</p>`}</div>${canProj(me())?`<button class="btn small" data-act="pj-edit" data-id="${p.id}">${t("editT")}</button>`:""}`:""}</section>`}).join("")}</div>`:`<p class="empty">${t("projNone")}</p>`}`;
 }
 function cMeetings(c,mgr){
   const list=meetings.filter(m=>m.client===c.id);
@@ -181,13 +181,19 @@ function dClient(){
    <div class="stack" style="gap:6px"><span class="lab">${t("pkgT")}</span><span class="cap muted">${t("pkgHelp")}</span>${d.package.map((x,i)=>row(d.package,i,[["label","pkgLabel"],["type","pkgType","type"],["qty","pkgQty","number"]],"cp")).join("")}<button type="button" class="btn small" data-act="cd-add" data-k="package" style="align-self:flex-start">${t("addPkg")}</button></div>
    <div class="acts"><button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="cd-save">${t("saveT")}</button></div>`;
 }
-function dProject(){const d=S.dlg.draft;
+const canProj=u=>!!u&&["admin","manager","assistant"].includes(u.role);
+function dProject(){const d=S.dlg.draft,leads=users.filter(u=>u.active);
   return `<h2>${d.id?t("editT")+": "+esc(d.name):t("newProject")}</h2><p class="err" id="pj-err" role="alert" hidden></p>
+   ${!d.id&&d.pickClient?`<label class="f">${t("client")}<select data-pd="client"><option value="">${t("pickOne")}</option>${clients.filter(c=>(c.status||"active")!=="ended").map(c=>`<option value="${c.id}" ${d.client===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></label>`:""}
    <label class="f">${t("projName")}<input type="text" data-pd="name" value="${esc(d.name)}" maxlength="120"></label>
    <label class="f">${t("projGoal")}<textarea data-pd="goal" rows="2" maxlength="1000">${esc(d.goal)}</textarea></label>
    <div class="two"><label class="f">${t("projStart")}<input type="date" data-pd="start" value="${esc(d.start)}"></label><label class="f">${t("projEnd")}<input type="date" data-pd="end" value="${esc(d.end)}"></label></div>
    <div class="two"><label class="f">${t("cStatus")}<select data-pd="status">${["active","paused","done"].map(s=>`<option value="${s}" ${d.status===s?"selected":""}>${t("st_"+s)}</option>`).join("")}</select></label>
     <label class="f">${t("projBudget")}<input type="number" min="0" step="0.5" data-pd="budget" value="${d.budget||""}"></label></div>
+   <label class="f">${t("projLead")}<select data-pd="lead"><option value="">—</option>${leads.map(u=>`<option value="${u.id}" ${d.lead===u.id?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>
+   <div class="stack" style="gap:6px"><span class="lab">${t("milestonesT")}</span><span class="cap muted">${t("milestonesHelp")}</span>
+    ${(d.milestones||[]).map((m,i)=>`<div class="arow ms"><span class="cap muted num">${i+1}</span><input type="text" data-ms="${i}:name" value="${esc(m.name||"")}" maxlength="80" placeholder="${t("msName")}" aria-label="${t("msName")}"><input type="date" data-ms="${i}:due" value="${esc(m.due||"")}" aria-label="${t("due")}"><button type="button" class="btn small" data-act="ms-rm" data-i="${i}" aria-label="${t("removeRow")}">×</button></div>`).join("")}
+    <button type="button" class="btn small" data-act="ms-add" style="align-self:flex-start">${t("addMs")}</button></div>
    <div class="acts">${d.id?`<button class="btn ${S.arm==="pjdel"?"danger":""}" data-act="pj-del">${S.arm==="pjdel"?t("delConfirm"):t("projDel")}</button><span class="spacer"></span>`:""}<button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="pj-save">${t("saveT")}</button></div>`}
 function dMeeting(){
   const d=S.dlg.draft,mgr=isMgr(me()),c=CL(d.client);
@@ -235,7 +241,7 @@ const draftClient=c=>({id:c?c.id:null,name:c?c.name:"",status:c?(c.status||"acti
   contacts:JSON.parse(JSON.stringify(c&&c.contacts||[])),package:JSON.parse(JSON.stringify(c&&c.package||[]))});
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
-  const mine=["cst","cl-new","cl-open","cl-back","cl-edit","ctab","cstage","cdone","cd-add","cd-rm","cd-save","pj-new","pj-toggle","pj-edit","pj-save","pj-del","mt-new","mt-open","mt-save","mt-del","ma-add","ma-rm","mt-maketask","mt-task",
+  const mine=["cst","cl-new","cl-open","cl-back","cl-edit","ctab","cstage","cdone","cd-add","cd-rm","cd-save","pj-new","pj-toggle","pj-edit","pj-save","pj-del","ms-add","ms-rm","mt-new","mt-open","mt-save","mt-del","ma-add","ma-rm","mt-maketask","mt-task",
     "wk-new","wk-page","wk-edit","wk-save","wk-del","wk-tpl","guide","guide-back","guide-wiki"];
   if(!mine.includes(a))return;e.preventDefault();e.stopImmediatePropagation();
   const c=CL(S.cid),id=b.dataset.id;
@@ -258,12 +264,18 @@ document.addEventListener("click",async e=>{
       if(!d.id)fd.append("created_by",S.me);
       b.disabled=true;try{const r=d.id?await pb.collection("clients").update(d.id,fd):await pb.collection("clients").create(fd);S.dlg=null;if(!d.id){S.view="client";S.cid=r.id;S.ctab="overview"}await refresh(true);toast(t("clientSaved2"))}
       catch(x){b.disabled=false;er.textContent=(x&&x.message)||t("error");er.hidden=false}return}
-    case "pj-new":S.arm=null;S.dlg={type:"project",draft:{id:null,client:S.cid,name:"",goal:"",start:TODAY,end:"",status:"active",budget:""}};render();return;
+    case "pj-new":{const fromList=S.view==="projects";S.arm=null;S.dlg={type:"project",draft:{id:null,client:fromList?"":S.cid,pickClient:fromList,name:"",goal:"",start:TODAY,end:"",status:"active",budget:"",lead:S.me,milestones:[]}};render();return}
+    case "ms-add":S.dlg.draft.milestones=S.dlg.draft.milestones||[];S.dlg.draft.milestones.push({id:"m"+Date.now().toString(36),name:"",due:""});render();return;
+    case "ms-rm":S.dlg.draft.milestones.splice(+b.dataset.i,1);render();return;
     case "pj-toggle":S.openProj=S.openProj===id?"":id;render();return;
-    case "pj-edit":{const p=projects.find(x=>x.id===id);S.arm=null;S.dlg={type:"project",draft:Object.assign({},p)};render();return}
-    case "pj-save":{const d=S.dlg.draft,er=document.getElementById("pj-err");if(!d.name.trim()){er.textContent=t("nameReq");er.hidden=false;return}
-      const data={name:d.name.trim(),goal:d.goal,start:d.start,end:d.end,status:d.status,budget_h:parseFloat(d.budget)||0};
-      S.dlg=null;run(()=>d.id?pb.collection("projects").update(d.id,data):pb.collection("projects").create(Object.assign(data,{client:d.client,created_by:S.me})),t("projSaved"));return}
+    case "pj-edit":{const p=projects.find(x=>x.id===id);S.arm=null;S.dlg={type:"project",draft:Object.assign({},p,{milestones:JSON.parse(JSON.stringify(p.milestones||[]))})};render();return}
+    case "pj-save":{const d=S.dlg.draft,er=document.getElementById("pj-err");
+      if(!d.id&&!d.client){er.textContent=t("clientReq2");er.hidden=false;return}
+      if(!d.name.trim()){er.textContent=t("projNameReq");er.hidden=false;return}
+      const data={name:d.name.trim(),goal:d.goal,start:d.start,end:d.end,status:d.status,budget_h:parseFloat(d.budget)||0,lead:d.lead||"",
+        milestones:(d.milestones||[]).filter(m=>m.name&&m.name.trim()).map(m=>({id:m.id||("m"+Math.random().toString(36).slice(2,8)),name:m.name.trim(),due:m.due||""}))};
+      const fromList=!!d.pickClient;S.dlg=null;
+      run(async()=>{const r=d.id?await pb.collection("projects").update(d.id,data):await pb.collection("projects").create(Object.assign(data,{client:d.client,created_by:S.me}));if(fromList){S.view="project";S.pid=r.id}},t("projSaved"));return}
     case "pj-del":{if(S.arm!=="pjdel"){S.arm="pjdel";render();return}S.arm=null;const pid=S.dlg.draft.id;S.dlg=null;run(()=>pb.collection("projects").delete(pid),t("projDeleted"));return}
     case "mt-new":S.arm=null;S.dlg={type:"meeting",body:t("meetTpl"),draft:{id:null,client:S.cid,project:"",title:"",date:TODAY,attendees:[S.me],guests:"",actions:[{text:"",done:false}],next:"",private:false}};render();return;
     case "mt-open":{const m=meetings.find(x=>x.id===id);S.arm=null;S.dlg={type:"meeting",body:m.body,draft:JSON.parse(JSON.stringify(m))};render();return}
@@ -299,12 +311,13 @@ document.addEventListener("input",e=>{const el=e.target;if(!S.dlg||!S.dlg.draft)
   if(el.dataset.cc){const [i,k]=el.dataset.cc.split(":");d.contacts[+i][k]=el.value;return}
   if(el.dataset.cp){const [i,k]=el.dataset.cp.split(":");d.package[+i][k]=el.value;return}
   if(el.dataset.pd){d[el.dataset.pd]=el.value;return}
+  if(el.dataset.ms){const [i,k]=el.dataset.ms.split(":");d.milestones[+i][k]=el.value;return}
   if(el.dataset.md){d[el.dataset.md]=el.value;return}
   if(el.dataset.wd){d[el.dataset.wd]=el.value;return}
 },true);
 document.addEventListener("change",e=>{const el=e.target;
   if(el.dataset.cf){e.stopImmediatePropagation();S[el.dataset.cf]=el.value;render();return}
-  if(el.dataset.x==="setproj"){e.stopImmediatePropagation();run(()=>pb.collection("tasks").update(S.dlg.id,{project:el.value}));return}
+  if(el.dataset.x==="setproj"){e.stopImmediatePropagation();run(()=>pb.collection("tasks").update(S.dlg.id,{project:el.value,milestone:""}));return}
   if(!S.dlg||!S.dlg.draft)return;const d=S.dlg.draft;
   if(el.dataset.cd){d[el.dataset.cd]=el.value;return}
   if(el.dataset.cp){const [i,k]=el.dataset.cp.split(":");d.package[+i][k]=el.value;return}

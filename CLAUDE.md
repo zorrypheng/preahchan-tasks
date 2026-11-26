@@ -6,7 +6,7 @@ Runs on PocketBase 0.26.6 (`argonptg/pocketbase:0.26.6`) on the owner's ZimaOS N
 ## Layout
 - `src/prototype.html`: the approved screens (UI, styles, Khmer and English text). Edit screens here.
 - `src/live.js`: the PocketBase data layer added on top of the screens (loading, saving, realtime, login, uploads, PDF).
-- `src/workflow.js`, `rich.js`, `costs.js`, `pwa.js`, `taskedit.js`, `stages.js`, `board.js`, `profile.js`, `clients.js`, `audit.js` (+ `workflow.css`): later features, inserted by the build in that order. `stages.js` holds the stage plan, Finish, work logs, timesheet and the Assistant manager role.
+- `src/workflow.js`, `rich.js`, `costs.js`, `pwa.js`, `taskedit.js`, `stages.js`, `board.js`, `profile.js`, `clients.js`, `audit.js`, `projects.js` (+ `workflow.css`): later features, inserted by the build in that order. `stages.js` holds the stage plan, Finish, work logs, timesheet and the Assistant manager role.
 - Hours and KPI come from `work_logs` (one row per finished stage), not from `tasks.spent`. Finishing goes through `POST /api/pc/finish` (`pc.finishStage`).
 - `tools/build.py`: builds `pb_public/index.html` from the two files above. Always run `python3 tools/build.py` after editing `src/` and commit the built file.
 - `pb_hooks/main.pb.js` + `pb_hooks/lib/pc.js`: server code (notifications, report numbers, repeating tasks, Telegram bot, 08:00 summary, note reminders). Each hook must `require()` the lib inside the handler.
