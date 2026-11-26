@@ -229,12 +229,15 @@ document.addEventListener("submit",async e=>{
   if(!S.me)return;
   if(f==="task"){stop();const title=val("nt-title"),er=m=>{const el=document.getElementById("nt-err");el.textContent=m;el.hidden=false};
     if(!title){er(t("titleReq"));return}
-    const est=parseFloat(val("nt-est"));if(!(est>0)){er(t("estReq"));document.getElementById("nt-est").focus();return}
+    const est=parseFloat(val("nt-est"));
+    const need=[["nt-type","type",!!val("nt-type")],["nt-client","client",!!val("nt-client")],["nt-due","due",!!val("nt-due")],["nt-est","est",est>0],["nt-prio","prio",!!val("nt-prio")]];
+    need.forEach(([id,,ok])=>{const el=document.getElementById(id);if(el)el.setAttribute("aria-invalid",ok?"false":"true")});
+    const miss=need.filter(x=>!x[2]);if(miss.length){er(fill(t("fillIn"),miss.map(x=>t(x[1])).join(", ")));document.getElementById(miss[0][0]).focus();return}
     const btn=e.target.querySelector(".primary");if(btn)btn.disabled=true;
-    try{let client=val("nt-client");
+    try{let client=val("nt-client");if(client==="__none")client="";
       if(client==="__new"){const n=val("nt-newclient");if(!n){er(t("clientReq"));if(btn)btn.disabled=false;return}
         const ex=clients.find(c=>c.name.toLowerCase()===n.toLowerCase());client=ex?ex.id:(await pb.collection("clients").create({name:n,created_by:S.me})).id}
-      const type=val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
+      const type=val("nt-type")==="__none"?"":val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
       const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
       const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee:val("nt-to")||S.me,creator:S.me,client:client||"",due:val("nt-due")||off(2),
         priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:""});

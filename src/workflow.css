@@ -99,3 +99,7 @@
 .tpl-save{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px dashed var(--line)}
 .tpl-form{display:flex;gap:6px;flex-wrap:wrap}
 .tpl-form input,.tpl-form select{flex:1 1 160px;min-height:36px}
+
+.dlg [aria-invalid="true"]{border-color:var(--danger,#c0392b)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--danger,#c0392b) 18%,transparent)}
+.dlg select:invalid{color:var(--ink-muted,#6b7280)}
+.dlg select option{color:var(--ink)}

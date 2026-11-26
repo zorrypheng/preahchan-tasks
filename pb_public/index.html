@@ -466,6 +466,10 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 .tpl-save{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px dashed var(--line)}
 .tpl-form{display:flex;gap:6px;flex-wrap:wrap}
 .tpl-form input,.tpl-form select{flex:1 1 160px;min-height:36px}
+
+.dlg [aria-invalid="true"]{border-color:var(--danger,#c0392b)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--danger,#c0392b) 18%,transparent)}
+.dlg select:invalid{color:var(--ink-muted,#6b7280)}
+.dlg select option{color:var(--ink)}
 </style>
 
 </head>
@@ -1485,12 +1489,15 @@ document.addEventListener("submit",async e=>{
   if(!S.me)return;
   if(f==="task"){stop();const title=val("nt-title"),er=m=>{const el=document.getElementById("nt-err");el.textContent=m;el.hidden=false};
     if(!title){er(t("titleReq"));return}
-    const est=parseFloat(val("nt-est"));if(!(est>0)){er(t("estReq"));document.getElementById("nt-est").focus();return}
+    const est=parseFloat(val("nt-est"));
+    const need=[["nt-type","type",!!val("nt-type")],["nt-client","client",!!val("nt-client")],["nt-due","due",!!val("nt-due")],["nt-est","est",est>0],["nt-prio","prio",!!val("nt-prio")]];
+    need.forEach(([id,,ok])=>{const el=document.getElementById(id);if(el)el.setAttribute("aria-invalid",ok?"false":"true")});
+    const miss=need.filter(x=>!x[2]);if(miss.length){er(fill(t("fillIn"),miss.map(x=>t(x[1])).join(", ")));document.getElementById(miss[0][0]).focus();return}
     const btn=e.target.querySelector(".primary");if(btn)btn.disabled=true;
-    try{let client=val("nt-client");
+    try{let client=val("nt-client");if(client==="__none")client="";
       if(client==="__new"){const n=val("nt-newclient");if(!n){er(t("clientReq"));if(btn)btn.disabled=false;return}
         const ex=clients.find(c=>c.name.toLowerCase()===n.toLowerCase());client=ex?ex.id:(await pb.collection("clients").create({name:n,created_by:S.me})).id}
-      const type=val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
+      const type=val("nt-type")==="__none"?"":val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
       const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
       const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee:val("nt-to")||S.me,creator:S.me,client:client||"",due:val("nt-due")||off(2),
         priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:""});
@@ -1525,7 +1532,7 @@ document.addEventListener("change",e=>{
 },true);
 
 /* ===== Workflow: statuses, task types, positions, Kanban, hand-off, Settings ===== */
-Object.assign(T.en,{listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
+Object.assign(T.en,{pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
  otherStages:"Other stages",otherHelp:"These cards are in statuses your position doesn't handle. You can open them but not move them.",
  moveTo:"Move to…",nextStep:"Move to next status",movedTo:"Moved to {a}",cantMove:"Your position can't move tasks to {a}.",lastStep:"This task is already at its last status.",
  handoffT:"Hand off to someone who handles {a}?",handoffHelp:"{a}'s position doesn't cover {b}. Choose who takes it next. They will be notified.",
@@ -1539,7 +1546,7 @@ Object.assign(T.en,{listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:
  positionsF:"Positions",noPos:"No position yet",editPos:"Edit positions",posSaved:"Positions saved",finishedWeek:"Finished this week",
  dragHint:"Drag cards between columns, or use Move to on each card.",nameReq:"Enter a name.",usedBy:"Used by {a} tasks",
  inUse:"Tasks still use this. Move them to another status or type first.",finishedTag:"Finished",stepsN:"{a} statuses",typesN:"{a} types"});
-Object.assign(T.km,{listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
+Object.assign(T.km,{pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
  otherStages:"ដំណាក់កាលផ្សេងទៀត",otherHelp:"កាតទាំងនេះស្ថិតក្នុងស្ថានភាពដែលតួនាទីរបស់អ្នកមិនទទួលខុសត្រូវ។ អ្នកអាចបើកមើលបាន ប៉ុន្តែមិនអាចផ្លាស់ទីបានទេ។",
  moveTo:"ផ្លាស់ទៅ…",nextStep:"ផ្លាស់ទៅស្ថានភាពបន្ទាប់",movedTo:"បានផ្លាស់ទៅ {a}",cantMove:"តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។",lastStep:"ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
  handoffT:"ប្រគល់ទៅអ្នកទទួលខុសត្រូវ {a}?",handoffHelp:"តួនាទីរបស់ {a} មិនគ្របដណ្តប់ {b} ទេ។ សូមជ្រើសរើសអ្នកបន្ត។ ពួកគេនឹងទទួលដំណឹង។",
@@ -1662,18 +1669,19 @@ function dTask(){
 }
 function dNew(){
   const m=me(),canAssign=m.role!=="staff",types=myTypes();
-  if(S.dlg.body===undefined){const tp=types[0]&&tplFor(types[0].id);S.dlg.body=tp?cleanHTML(tp.body):"";S.dlg.autoTpl=S.dlg.body}
+  if(S.dlg.body===undefined){S.dlg.body="";S.dlg.autoTpl=""}
+  const ph=`<option value="" selected disabled>${t("pickOne")}</option>`;
   const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin").map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
   return `<h2>${S.dlg.assign?t("assignTask"):t("addTask")}</h2><p class="err" id="nt-err" role="alert" hidden></p>
-   <form data-form="task"><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off"></label>
-   <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype">${types.map((x,i)=>`<option value="${x.id}" ${i===0?"selected":""}>${esc(nm(x))}</option>`).join("")}<option value="">${t("noType")}</option></select></label>
-   <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel">${clientOpts("")}<option value="__new">${t("newClient")}</option></select></label></div>
+   <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off"></label>
+   <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph}${types.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}<option value="__none">${t("noType")}</option></select></label>
+   <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel" required>${ph}${clientOpts("").replace('<option value="">','<option value="__none">')}<option value="__new">${t("newClient")}</option></select></label></div>
    <label class="f" id="nt-newwrap" hidden>${t("newClientName")}<input type="text" id="nt-newclient" maxlength="60" autocomplete="off"></label>
    <div class="stack" style="gap:6px"><span class="lab">${t("desc")}</span>${rtEditor("nt-body",S.dlg.body||"")}</div>
    ${attBlock(null)}
-   <div class="two">${who}<label class="f">${t("due")}<input type="date" id="nt-due" value="${off(2)}"></label>
-   <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" value="${types[0]&&types[0].est?types[0].est:""}"></label>
-   <label class="f">${t("prio")}<select id="nt-prio"><option value="normal">${t("normal")}</option><option value="high">${t("high")}</option><option value="low">${t("low")}</option></select></label></div>
+   <div class="two">${who}<label class="f">${t("due")}<input type="date" id="nt-due" required></label>
+   <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" required></label>
+   <label class="f">${t("prio")}<select id="nt-prio" required>${ph}<option value="normal">${t("normal")}</option><option value="high">${t("high")}</option><option value="low">${t("low")}</option></select></label></div>
    <label class="c"><input type="checkbox" id="nt-rep">${t("repeat")}</label>
    <div class="acts"><button type="button" class="btn" data-act="close">${t("cancel")}</button><button class="btn primary">${t("save")}</button></div></form>`;
 }
@@ -1812,7 +1820,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.x==="stage"&&el.value){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id);moveTo(k,el.value);return}
   if(el.dataset.x==="ttype"){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id),f=flowOf(el.value);
     const data={type:el.value};if(el.value&&!f.some(s=>s.id===k.stage))data.stage=(f[0]||{}).id||"";run(()=>pb.collection("tasks").update(k.id,data));return}
-  if(el.dataset.x==="ntype"){const tp=TT(el.value),est=document.getElementById("nt-est");if(tp&&tp.est&&est&&!est.dataset.touched)est.value=tp.est;
+  if(el.dataset.x==="ntype"){
     const area=document.getElementById("nt-body"),tpl=tplFor(el.value),cur=area?cleanHTML(area.innerHTML):"";
     if(area&&(!plainText(cur).trim()&&!/<table/i.test(cur)||cur===S.dlg.autoTpl)){const html=tpl?cleanHTML(tpl.body):"";area.innerHTML=html;S.dlg.body=html;S.dlg.autoTpl=cleanHTML(area.innerHTML)}return}
   if(el.dataset.sl&&S.dlg&&S.dlg.draft){const arr=S.dlg.draft[el.dataset.sl];if(el.checked){if(!arr.includes(el.value))arr.push(el.value)}else arr.splice(arr.indexOf(el.value),1);return}
@@ -1832,6 +1840,9 @@ document.addEventListener("dragover",e=>{const col=e.target.closest&&e.target.cl
 document.addEventListener("dragleave",e=>{const col=e.target.closest&&e.target.closest(".kcol");if(col&&!col.contains(e.relatedTarget))col.classList.remove("dropok")});
 document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closest(".kcol[data-stage]");if(!col||!dragId)return;e.preventDefault();
   const k=tasks.find(x=>x.id===dragId);dragId=null;col.classList.remove("dropok");moveTo(k,col.dataset.stage)});
+
+/* Add task: clear the "missing" mark once a field is filled */
+["change","input"].forEach(ev=>document.addEventListener(ev,e=>{const el=e.target;if(el&&el.getAttribute&&el.getAttribute("aria-invalid")==="true"&&el.value)el.setAttribute("aria-invalid","false")}));
 
 /* ===== Rich-text description, attachments (with compression) and renaming users ===== */
 Object.assign(T.en,{formatting:"Formatting",fBold:"Bold",fItalic:"Italic",fUnder:"Underline",fStrike:"Strikethrough",fHead:"Heading",fBullets:"Bulleted list",fNumbers:"Numbered list",
