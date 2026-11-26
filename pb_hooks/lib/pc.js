@@ -569,6 +569,97 @@ module.exports = {
     } catch (e) {}
   },
 
+  // ---------- Activity log and recycle bin (kept 30 days) ----------
+  // Private notes are not logged (managers must not read them); files themselves cannot come back.
+  AUDITED: ["tasks", "clients", "projects", "meetings", "wiki_pages", "comments", "documents", "attachments", "statuses", "task_types",
+    "positions", "users", "salaries", "work_logs", "templates", "crews", "reports"],
+  AUDIT_SKIP: ["updated", "created", "timer", "tg_code", "tg_chat", "tg_on", "lastResetSentAt", "lastVerificationSentAt"],
+  // the person behind the current request, set by the request hooks ("" for scheduled jobs)
+  setActor(id) { try { $app.store().set("pc_actor", id || "") } catch (e) {} },
+  actor() { try { return String($app.store().get("pc_actor") || "") } catch (e) { return "" } },
+  // a plain copy of a record's values (no passwords or hidden fields)
+  snap(rec) {
+    const out = { id: rec.id }
+    const fs = rec.collection().fields
+    for (let i = 0; i < fs.length; i++) {
+      const f = fs[i], n = f.getName(), ty = f.type()
+      if (n === "id" || ty === "password" || (f.getHidden && f.getHidden())) continue
+      let v
+      if (ty === "number") v = rec.getFloat(n)
+      else if (ty === "bool") v = rec.getBool(n)
+      else if (ty === "json") { try { v = JSON.parse(rec.getString(n) || "null") } catch (e) { v = null } }
+      else if (ty === "relation" || ty === "select" || ty === "file") { const sl = rec.getStringSlice(n); v = (f.maxSelect > 1) ? sl : (sl[0] || "") }
+      else v = rec.getString(n)
+      out[n] = v
+    }
+    return out
+  },
+  auditTitle(data) { return String(data.title || data.name || data.text || data.label || data.username || data.day || "").substring(0, 200) },
+  audit(app, action, rec, before) {
+    const col = rec.collection().name
+    if (this.AUDITED.indexOf(col) < 0) return
+    const after = this.snap(rec)
+    let changed = null, keep = after
+    if (action === "update") {
+      changed = Object.keys(after).filter((k) => this.AUDIT_SKIP.indexOf(k) < 0 && JSON.stringify(after[k]) !== JSON.stringify(before[k]))
+      if (!changed.length) return
+      keep = {}; changed.forEach((k) => { keep[k] = before[k] })
+      changed = changed.map((k) => ({ f: k, from: before[k], to: after[k] }))
+    } else if (action === "delete") keep = before || after
+    else keep = null
+    const a = new Record(app.findCollectionByNameOrId("audit_log"))
+    a.set("col", col); a.set("rec", rec.id); a.set("action", action); a.set("user", this.actor())
+    a.set("title", this.auditTitle(action === "delete" ? keep : after)); a.set("before", keep); a.set("changed", changed)
+    app.save(a)
+  },
+  auditCleanup(app) {
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().replace("T", " ")
+    for (let round = 0; round < 50; round++) {
+      const old = app.findRecordsByFilter("audit_log", "created < {:c}", "created", 500, 0, { c: cutoff })
+      old.forEach((r) => { try { app.delete(r) } catch (e) {} })
+      if (old.length < 500) break
+    }
+  },
+  // Put a deleted record back (same id), or undo a change; also brings back what was deleted along with it
+  restore(app, entry, actorId) {
+    const age = Date.now() - new Date(String(entry.getString("created")).replace(" ", "T")).getTime()
+    if (age > 30 * 86400000) throw new BadRequestError("This is older than 30 days and can no longer be restored.")
+    if (entry.getString("restored")) throw new BadRequestError("This was already restored.")
+    const col = entry.getString("col"), id = entry.getString("rec"), data = jsonOf(entry, "before") || {}, action = entry.getString("action")
+    const c = app.findCollectionByNameOrId(col)
+    if (c.type === "auth" && action === "delete") throw new BadRequestError("People can't be restored here. Create the account again in Users.")
+    const settable = (f) => { const ty = f.type(); return ty !== "autodate" && ty !== "file" && ty !== "password" && f.getName() !== "id" }
+    this.setActor(actorId)
+    let rec
+    if (action === "delete") {
+      let exists = false
+      try { app.findRecordById(col, id); exists = true } catch (e) {}
+      if (exists) throw new BadRequestError("This item already exists again.")
+      rec = new Record(c); rec.set("id", id)
+      const fs = c.fields
+      for (let i = 0; i < fs.length; i++) { const f = fs[i]; if (settable(f) && data[f.getName()] !== undefined) rec.set(f.getName(), data[f.getName()]) }
+    } else if (action === "update") {
+      rec = app.findRecordById(col, id)
+      const fs = c.fields
+      for (let i = 0; i < fs.length; i++) { const f = fs[i]; if (settable(f) && data[f.getName()] !== undefined) rec.set(f.getName(), data[f.getName()]) }
+    } else throw new BadRequestError("Only deleted items and changes can be restored.")
+    app.save(rec)
+    entry.set("restored", this.ict().stamp); app.save(entry)
+    let more = 0
+    if (action === "delete") {
+      // items deleted together with it (comments, attachments, work logs) within a minute
+      const t0 = new Date(String(entry.getString("created")).replace(" ", "T")).getTime()
+      const near = app.findRecordsByFilter("audit_log", "action = 'delete' && restored = '' && id != {:me}", "created", 500, 0, { me: entry.id })
+      near.forEach((e2) => {
+        const dt = Math.abs(new Date(String(e2.getString("created")).replace(" ", "T")).getTime() - t0)
+        const d2 = jsonOf(e2, "before") || {}
+        if (dt > 60000 || !Object.keys(d2).some((k) => k !== "id" && (d2[k] === id || (Array.isArray(d2[k]) && d2[k].indexOf(id) >= 0)))) return
+        try { this.restore(app, e2, actorId); more++ } catch (err) { console.log("restore related " + e2.id + ": " + err) }
+      })
+    }
+    return { col: col, id: id, also: more }
+  },
+
   // ---------- Link previews (Open Graph), Pinterest-style cards ----------
   // Refuse addresses on the local network, so a link can't make the server read internal pages
   safeURL(url) {
@@ -702,6 +793,7 @@ module.exports = {
     const answer = (s) => this.tg("answerCallbackQuery", { callback_query_id: cq.id, text: s || "" })
     const user = this.userByChat(app, cq.from && cq.from.id)
     if (!user || !user.getBool("active")) { answer(this.t("en", "unknown")); return }
+    this.setActor(user.id)
     const lang = this.lang(user), data = String(cq.data || ""), parts = data.split(":")
     const msg = cq.message || {}, chat = msg.chat ? msg.chat.id : null, mid = msg.message_id
     const ownTask = (id) => { try { const k = app.findRecordById("tasks", id); return k.getString("assignee") === user.id ? k : null } catch (e) { return null } }

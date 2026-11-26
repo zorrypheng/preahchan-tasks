@@ -1,0 +1,7 @@
+/// <reference path="../pb_data/types.d.ts" />
+// Activity log and recycle bin: every create, change and delete (kept 30 days), readable by admins and managers only.
+// Written by the server hooks; skips if it exists; errors are logged.
+migrate((app) => {
+  try { app.findCollectionByNameOrId("audit_log"); return } catch (e) {}
+  try { app.importCollections([{"id": "pc_auditlog0001", "name": "audit_log", "type": "base", "listRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"", "viewRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"", "createRule": null, "updateRule": null, "deleteRule": null, "fields": [{"name": "col", "type": "text", "max": 40}, {"name": "rec", "type": "text", "max": 30}, {"name": "action", "type": "select", "values": ["create", "update", "delete", "restore"], "maxSelect": 1}, {"name": "user", "type": "relation", "collectionId": "_pb_users_auth_", "maxSelect": 1, "cascadeDelete": false}, {"name": "title", "type": "text", "max": 200}, {"name": "before", "type": "json", "maxSize": 2000000}, {"name": "changed", "type": "json", "maxSize": 200000}, {"name": "restored", "type": "text", "max": 30}, {"name": "created", "type": "autodate", "onCreate": true, "onUpdate": false}, {"name": "updated", "type": "autodate", "onCreate": true, "onUpdate": true}], "indexes": ["CREATE INDEX idx_audit_created ON audit_log (created)", "CREATE INDEX idx_audit_rec ON audit_log (col, rec)"]}], false) } catch (err) { console.log("audit log migration failed: " + err) }
+}, (app) => {})

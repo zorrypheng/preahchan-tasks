@@ -360,3 +360,16 @@
 .ccnums>span{display:flex;flex-direction:column;line-height:18px;color:var(--ink-muted)}
 .ccnums b{color:var(--ink);font-size:20px;line-height:26px}
 .ccnums .late b{color:var(--overdue)}
+
+/* Activity log and recycle bin */
+.arows{display:flex;flex-direction:column;background:var(--surface-raised);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+.arow2{display:grid;grid-template-columns:36px minmax(0,1fr) auto;grid-template-areas:"av who btn" "av title btn" "av when btn" "av chg chg";column-gap:12px;row-gap:2px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.arow2:first-child{border-top:0}
+.arow2>.av{grid-area:av;align-self:start}
+.arow2 .awho{grid-area:who;font-size:14px}
+.arow2 .atitle{grid-area:title;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.arow2>.cap{grid-area:when}
+.arow2>.btn{grid-area:btn}
+.achgs{grid-area:chg;display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:13px}
+.achg{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:2px 8px}
+.filters .f input[type=search]{min-height:44px;border:1px solid var(--line-strong);border-radius:12px;padding:0 14px;background:var(--surface-raised);color:var(--ink);font:inherit;width:100%}

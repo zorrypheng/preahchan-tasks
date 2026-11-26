@@ -2,6 +2,46 @@
 // Preahchan Tasks: server rules that the browser can't be trusted with,
 // in-app notifications, the Telegram bot, and scheduled jobs.
 
+// ---------- Activity log (all collections; pc.audit keeps only the ones listed in pc.AUDITED) ----------
+// Request hooks remember who is acting; model hooks write the log, so changes made by the server
+// (finishing a stage, cascades, clean-ups) are logged too.
+onRecordCreateRequest((e) => { const pc = require(`${__hooks}/lib/pc.js`); pc.setActor(e.auth && e.auth.collection().name === "users" ? e.auth.id : ""); try { e.next() } finally { pc.setActor("") } })
+onRecordUpdateRequest((e) => { const pc = require(`${__hooks}/lib/pc.js`); pc.setActor(e.auth && e.auth.collection().name === "users" ? e.auth.id : ""); try { e.next() } finally { pc.setActor("") } })
+onRecordDeleteRequest((e) => { const pc = require(`${__hooks}/lib/pc.js`); pc.setActor(e.auth && e.auth.collection().name === "users" ? e.auth.id : ""); try { e.next() } finally { pc.setActor("") } })
+onRecordCreate((e) => {
+  e.next()
+  try { require(`${__hooks}/lib/pc.js`).audit(e.app, "create", e.record, null) } catch (err) { console.log("audit create: " + err) }
+})
+onRecordUpdate((e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  let before = null
+  try { if (pc.AUDITED.indexOf(e.record.collection().name) >= 0) before = pc.snap(e.record.original()) } catch (err) {}
+  e.next()
+  if (before) { try { pc.audit(e.app, "update", e.record, before) } catch (err) { console.log("audit update: " + err) } }
+})
+onRecordDelete((e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  let before = null
+  try { if (pc.AUDITED.indexOf(e.record.collection().name) >= 0) before = pc.snap(e.record) } catch (err) {}
+  e.next()
+  if (before) { try { pc.audit(e.app, "delete", e.record, before) } catch (err) { console.log("audit delete: " + err) } }
+})
+// Restore a deleted item or undo a change (admins and managers, within 30 days)
+routerAdd("POST", "/api/pc/audit/restore", (e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  const role = e.auth.getString("role")
+  if (role !== "admin" && role !== "manager") throw new ForbiddenError("Only admins and managers can restore.")
+  const body = e.requestInfo().body || {}
+  let entry
+  try { entry = e.app.findRecordById("audit_log", String(body.id || "")) } catch (err) { throw new NotFoundError("Log entry not found.") }
+  try { return e.json(200, pc.restore(e.app, entry, e.auth.id)) } finally { pc.setActor("") }
+}, $apis.requireAuth("users"))
+// Keep the log for 30 days
+cronAdd("pc_audit_cleanup", "0 * * * *", () => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  if (pc.ict().hour === 4) pc.auditCleanup($app)
+})
+
 // ---------- Startup: connect the Telegram webhook ----------
 onBootstrap((e) => {
   e.next()
@@ -127,7 +167,8 @@ routerAdd("POST", "/api/pc/finish", (e) => {
   const actor = e.app.findRecordById("users", e.auth.id)
   let task
   try { task = e.app.findRecordById("tasks", String(body.task || "")) } catch (err) { throw new NotFoundError("Task not found.") }
-  return e.json(200, pc.finishStage(e.app, actor, task, { hours: body.hours, note: body.note, to: body.to }))
+  pc.setActor(actor.id)
+  try { return e.json(200, pc.finishStage(e.app, actor, task, { hours: body.hours, note: body.note, to: body.to })) } finally { pc.setActor("") }
 }, $apis.requireAuth("users"))
 
 // Leaderboard and KPI numbers: finished stages and hours per person
@@ -286,7 +327,7 @@ routerAdd("POST", "/api/pc/tg/hook/{secret}", (e) => {
   const pc = require(`${__hooks}/lib/pc.js`)
   const secret = pc.hookSecret()
   if (!secret || e.request.pathValue("secret") !== secret) return e.json(403, { ok: false })
-  try { pc.handleUpdate(e.app, e.requestInfo().body) } catch (err) { console.log("telegram update failed: " + err) }
+  try { pc.handleUpdate(e.app, e.requestInfo().body) } catch (err) { console.log("telegram update failed: " + err) } finally { pc.setActor("") }
   return e.json(200, { ok: true })
 })
 
