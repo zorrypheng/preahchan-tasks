@@ -344,6 +344,84 @@ module.exports = {
     return total
   },
 
+  // ---------- Link previews (Open Graph), Pinterest-style cards ----------
+  // Refuse addresses on the local network, so a link can't make the server read internal pages
+  safeURL(url) {
+    let m = String(url || "").match(/^(https?):\/\/([^\/?#:]+)(:\d+)?([\/?#].*)?$/i)
+    if (!m) return false
+    const host = m[2].toLowerCase()
+    if (host === "localhost" || host.indexOf(".") < 0 || /\.(local|lan|internal|home|arpa)$/.test(host)) return false
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
+      const o = host.split(".").map(Number)
+      if (o[0] === 10 || o[0] === 127 || o[0] === 0 || (o[0] === 169 && o[1] === 254) || (o[0] === 172 && o[1] >= 16 && o[1] <= 31) || (o[0] === 192 && o[1] === 168) || (o[0] === 100 && o[1] >= 64 && o[1] <= 127)) return false
+    }
+    if (host.indexOf("[") >= 0 || host.indexOf(":") >= 0) return false
+    return true
+  },
+  absURL(base, u) {
+    if (!u) return ""
+    u = String(u).trim().replace(/&amp;/g, "&")
+    if (/^https?:\/\//i.test(u)) return u
+    if (u.indexOf("//") === 0) return "https:" + u
+    const m = String(base).match(/^(https?:\/\/[^\/]+)(\/[^?#]*)?/i)
+    if (!m) return ""
+    if (u.charAt(0) === "/") return m[1] + u
+    const dir = (m[2] || "/").replace(/[^\/]*$/, "")
+    return m[1] + dir + u
+  },
+  linkPreview(url) {
+    const out = { title: "", image: "", site: "" }
+    if (!this.safeURL(url)) return out
+    try { out.site = String(url).match(/^https?:\/\/([^\/?#:]+)/i)[1].replace(/^www\./, "") } catch (e) {}
+    // YouTube: the thumbnail address is known without fetching the page
+    const yt = String(url).match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/)
+    if (yt) out.image = "https://img.youtube.com/vi/" + yt[1] + "/hqdefault.jpg"
+    let html = ""
+    try {
+      const res = $http.send({ url: url, method: "GET", timeout: 8, headers: {
+        "user-agent": "Mozilla/5.0 (compatible; PreahchanTasksLinkPreview/1.0; +https://d.preahchan.com)",
+        "accept": "text/html,application/xhtml+xml", "accept-language": "en,km;q=0.8" } })
+      if (res.statusCode >= 200 && res.statusCode < 400) {
+        try { html = toString(res.body) } catch (e) { html = res.raw || "" }
+      }
+    } catch (e) { console.log("link preview fetch failed for " + url + ": " + e) }
+    if (html) {
+      html = html.substring(0, 400000)
+      const meta = (keys) => {
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i].replace(/[:]/g, "\\:")
+          let m = html.match(new RegExp('<meta[^>]+(?:property|name)=["\']' + k + '["\'][^>]*content=["\']([^"\']+)["\']', "i"))
+          if (!m) m = html.match(new RegExp('<meta[^>]+content=["\']([^"\']+)["\'][^>]*(?:property|name)=["\']' + k + '["\']', "i"))
+          if (m && m[1]) return m[1]
+        }
+        return ""
+      }
+      const decode = (t) => String(t || "").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim()
+      out.title = decode(meta(["og:title", "twitter:title"]) || ((html.match(/<title[^>]*>([^<]{1,300})<\/title>/i) || [])[1] || "")).substring(0, 300)
+      if (!out.image) out.image = this.absURL(url, meta(["og:image:secure_url", "og:image", "og:image:url", "twitter:image", "twitter:image:src"]))
+      const site = decode(meta(["og:site_name"]))
+      if (site) out.site = site.substring(0, 120)
+    }
+    if (out.image && !this.safeURL(out.image)) out.image = ""
+    return out
+  },
+  // Save the preview on a link attachment: title, site and a copy of the image
+  storePreview(app, att) {
+    if (att.getString("kind") !== "link" || !att.getString("url")) return
+    const p = this.linkPreview(att.getString("url"))
+    if (p.title) att.set("preview_title", p.title)
+    if (p.site) att.set("preview_site", p.site)
+    if (p.image) {
+      att.set("preview_url", p.image)
+      try { att.set("preview_image", $filesystem.fileFromURL(p.image, 10)) } catch (e) { console.log("preview image download failed: " + e) }
+    }
+    try { app.save(att) } catch (e) {
+      // the image may be too big or not really an image: keep the title and the remote address
+      console.log("saving preview failed, retrying without the image copy: " + e)
+      try { att.set("preview_image", null); app.save(att) } catch (e2) { console.log("saving preview failed: " + e2) }
+    }
+  },
+
   noteReminders(app) {
     const now = this.ict().stamp
     const due = app.findRecordsByFilter("notes", "remind != '' && remind <= {:n} && reminded = false", "remind", 200, 0, { n: now })

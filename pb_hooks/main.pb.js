@@ -164,6 +164,20 @@ onRecordAfterUpdateSuccess((e) => {
   } catch (err) { console.log("report update hook: " + err) }
 }, "reports")
 
+// ---------- Link previews ----------
+// A new link attachment gets its preview image and title
+onRecordAfterCreateSuccess((e) => {
+  e.next()
+  try { require(`${__hooks}/lib/pc.js`).storePreview(e.app, e.record) } catch (err) { console.log("link preview: " + err) }
+}, "attachments")
+// Preview a link before it is saved (used by the Add task form)
+routerAdd("GET", "/api/pc/preview", (e) => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  const url = String(e.request.url.query().get("url") || "")
+  if (!pc.safeURL(url)) return e.json(200, { title: "", image: "", site: "" })
+  return e.json(200, pc.linkPreview(url))
+}, $apis.requireAuth("users"))
+
 // ---------- Every new notification also goes to Telegram ----------
 onRecordAfterCreateSuccess((e) => {
   e.next()

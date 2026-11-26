@@ -422,13 +422,15 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 .rt-area a,.rt-view a{color:var(--done);text-decoration:underline}
 .rt-view{background:var(--surface);border-radius:var(--r-md);padding:10px 12px;overflow-wrap:anywhere;font-size:15px;line-height:24px}
 .row-acts{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
-.atts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.atts{columns:2 170px;column-gap:8px}
+.atts>.att{break-inside:avoid;margin-bottom:8px}
 .att{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;min-width:0}
-.att img,.att video{width:100%;height:120px;object-fit:cover;display:block;background:#000}
+.att img{width:100%;height:auto;max-height:420px;object-fit:cover;display:block;background:var(--surface)}
+.att video{width:100%;height:160px;object-fit:cover;display:block;background:#000}
 .attmeta{display:flex;flex-direction:column;gap:2px;padding:6px 8px;min-width:0}
 .attmeta .cap{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .attmeta .btn{align-self:flex-start;margin-top:4px}
-.att-link,.att-pend{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px;padding:8px 10px;flex-wrap:wrap}
+.att-pend{flex-direction:row;align-items:center;gap:8px;padding:8px 10px;flex-wrap:wrap}
 .att-link svg{width:18px;height:18px;fill:none;stroke:var(--done);stroke-width:2;stroke-linecap:round;flex:none}
 .att-link a{color:var(--done);font-weight:600;overflow-wrap:anywhere;flex:1;min-width:0}
 .att-pend .cap{flex:1;min-width:0;overflow-wrap:anywhere}
@@ -436,6 +438,21 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 .attadd label.btn{display:inline-flex;align-items:center;cursor:pointer}
 .attadd input[type=url]{flex:1;min-width:160px;min-height:36px;border:1px solid var(--line-strong);border-radius:var(--r-md);padding:6px 10px;font-size:14px;background:var(--surface-raised)}
 .attc{display:inline-flex;align-items:center;gap:2px}.attc svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
+.att-card .ptitle{font-weight:600;font-size:13px;line-height:18px;color:var(--ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.att-card .ptitle:hover{text-decoration:underline}
+.att-card .psite{display:flex;align-items:center;gap:4px}
+.att-card .psite svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;flex:none}
+.att-card .pcover{display:block}
+.rt-tbl{display:flex;flex-wrap:wrap;gap:2px;width:100%;padding-top:4px;border-top:1px dashed var(--line)}
+.rtt{min-height:30px;padding:0 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface-raised);font-size:12px;font-weight:600;cursor:pointer}
+.rtt:hover{background:var(--moon-soft)}
+.rt-area table,.rt-view table{border-collapse:collapse;margin:8px 0;min-width:60%;font-size:14px;line-height:20px}
+.rt-area th,.rt-area td,.rt-view th,.rt-view td{border:1px solid var(--line-strong);padding:6px 10px;text-align:left;vertical-align:top;min-width:60px}
+.rt-area th,.rt-view th{background:var(--surface);font-weight:700}
+.rt-area td:focus-within,.rt-area th:focus-within{background:var(--moon-soft)}
+.rt-view{overflow-x:auto}
+.kcover{width:calc(100% + 24px);margin:-10px -12px 0;max-height:180px;object-fit:cover;border-radius:var(--r-md) var(--r-md) 0 0;display:block;background:var(--surface)}
 </style>
 
 </head>
@@ -1593,7 +1610,9 @@ function vTasks(){
 function kCard(k,team,inOther){
   const s=stat(k),cols=new Set(myStages().map(x=>x.id)),movable=!inOther&&cols.has(k.stage);
   const opts=flowOf(k.type).filter(x=>x.id!==k.stage&&seesStage(x.id));
+  const cover=coverOf(k);
   return `<article class="kcard ${s==="overdue"?"isover":""}" draggable="${movable}" data-id="${k.id}">
+    ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
      <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
      ${team||inOther?`<span class="kwho"><span class="av">${esc(initials(U(k.to).name))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
@@ -1805,21 +1824,21 @@ Object.assign(T.en,{formatting:"Formatting",fBold:"Bold",fItalic:"Italic",fUnder
  compressing:"Compressing {a}…",compressingV:"Compressing video {a}: {b}%",loadingFF:"Preparing the video compressor (about 30 MB, first time only)…",uploadingA:"Uploading {a}…",
  tooBigA:"{a} is still {b} after compression. The limit is 95 MB. Upload it to Google Drive or YouTube and add the link instead.",
  tooBigIn:"{a} is too big to compress in the browser (over 400 MB). Add a link instead.",compressFail:"Couldn't compress {a}. Uploading the original instead.",
- saved1:"{a} → {b}",remove:"Remove",openLink:"Open link",editUser:"Edit name",userSaved:"Name saved",attPending:"Will be added when you save the task.",attN:"{a} attachments"});
+ saved1:"{a} → {b}",remove:"Remove",fTable:"Insert table",addRow:"Add row",addCol:"Add column",delRow:"Delete row",delCol:"Delete column",delTable:"Delete table",colH:"Column {a}",loadingPrev:"Getting the link preview…",openLink:"Open link",editUser:"Edit name",userSaved:"Name saved",attPending:"Will be added when you save the task.",attN:"{a} attachments"});
 Object.assign(T.km,{formatting:"ទ្រង់ទ្រាយ",fBold:"ដិត",fItalic:"ទ្រេត",fUnder:"គូសបន្ទាត់ក្រោម",fStrike:"គូសឆូត",fHead:"ចំណងជើង",fBullets:"បញ្ជីចំណុច",fNumbers:"បញ្ជីលេខ",
  fQuote:"សម្រង់",fLink:"តំណ",fClear:"លុបទ្រង់ទ្រាយ",linkAsk:"អាសយដ្ឋានតំណ (https://…)",editDesc:"កែការពិពណ៌នា",saveDesc:"រក្សាទុកការពិពណ៌នា",descSaved:"បានរក្សាទុកការពិពណ៌នា",noDesc:"មិនទាន់មានការពិពណ៌នាទេ។",
  attachments:"ឯកសារភ្ជាប់",addMedia:"បន្ថែមរូបភាព ឬវីដេអូ",addLink:"បន្ថែមតំណ",linkPh:"https://…",badLink:"សូមបញ្ចូលតំណដែលចាប់ផ្តើមដោយ https://",attSaved:"បានបន្ថែមឯកសារភ្ជាប់",attDeleted:"បានដកឯកសារភ្ជាប់",
  compressing:"កំពុងបង្រួម {a}…",compressingV:"កំពុងបង្រួមវីដេអូ {a}៖ {b}%",loadingFF:"កំពុងរៀបចំកម្មវិធីបង្រួមវីដេអូ (ប្រហែល 30 MB តែលើកដំបូង)…",uploadingA:"កំពុងផ្ទុក {a}…",
  tooBigA:"{a} នៅតែ {b} ក្រោយបង្រួម។ ដែនកំណត់គឺ 95 MB។ សូមផ្ទុកទៅ Google Drive ឬ YouTube ហើយបន្ថែមតំណជំនួសវិញ។",
  tooBigIn:"{a} ធំពេកសម្រាប់បង្រួមក្នុងកម្មវិធីរុករក (លើស 400 MB)។ សូមបន្ថែមតំណជំនួសវិញ។",compressFail:"មិនអាចបង្រួម {a} បានទេ។ កំពុងផ្ទុកឯកសារដើមជំនួសវិញ។",
- saved1:"{a} → {b}",remove:"ដកចេញ",openLink:"បើកតំណ",editUser:"កែឈ្មោះ",userSaved:"បានរក្សាទុកឈ្មោះ",attPending:"នឹងបន្ថែមនៅពេលអ្នករក្សាទុកភារកិច្ច។",attN:"ឯកសារភ្ជាប់ {a}"});
+ saved1:"{a} → {b}",remove:"ដកចេញ",fTable:"បញ្ចូលតារាង",addRow:"បន្ថែមជួរដេក",addCol:"បន្ថែមជួរឈរ",delRow:"លុបជួរដេក",delCol:"លុបជួរឈរ",delTable:"លុបតារាង",colH:"ជួរឈរ {a}",loadingPrev:"កំពុងទាញយកការមើលជាមុនរបស់តំណ…",openLink:"បើកតំណ",editUser:"កែឈ្មោះ",userSaved:"បានរក្សាទុកឈ្មោះ",attPending:"នឹងបន្ថែមនៅពេលអ្នករក្សាទុកភារកិច្ច។",attN:"ឯកសារភ្ជាប់ {a}"});
 
 const attachments=[];
 BLOCKING.push("uedit");
 const UPLOAD_MAX=95*MB,COMPRESS_IN_MAX=400*MB,VIDEO_MIN=15*MB;
 
 /* ---------- rich text ---------- */
-const RT_KEEP={P:1,BR:1,B:1,STRONG:1,I:1,EM:1,U:1,S:1,STRIKE:1,UL:1,OL:1,LI:1,H3:1,H4:1,BLOCKQUOTE:1,A:1,DIV:1,CODE:1};
+const RT_KEEP={P:1,BR:1,B:1,STRONG:1,I:1,EM:1,U:1,S:1,STRIKE:1,UL:1,OL:1,LI:1,H3:1,H4:1,BLOCKQUOTE:1,A:1,DIV:1,CODE:1,TABLE:1,THEAD:1,TBODY:1,TR:1,TH:1,TD:1};
 const RT_DROP={SCRIPT:1,STYLE:1,IFRAME:1,OBJECT:1,EMBED:1,SVG:1,MATH:1,TEMPLATE:1,FORM:1,INPUT:1,BUTTON:1,TEXTAREA:1,SELECT:1,IMG:1,VIDEO:1,AUDIO:1,LINK:1,META:1};
 function cleanHTML(html){
   if(!html)return "";
@@ -1843,10 +1862,12 @@ const RT_ICONS={bold:'<path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1
   insertOrderedList:'<line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/><line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>',
   quote:'<path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/>',
   link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  table:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M12 3v18"/>',
   removeFormat:'<path d="M4 7V4h16v3"/><path d="M5 20h6"/><path d="M13 4 8 20"/><path d="m15 15 5 5"/><path d="m20 15-5 5"/>'};
 function rtEditor(id,html){
   const b=(cmd,label)=>`<button type="button" class="rtb" data-rt="${cmd}" title="${t(label)}" aria-label="${t(label)}"><svg viewBox="0 0 24 24" aria-hidden="true">${RT_ICONS[cmd]}</svg></button>`;
-  return `<div class="rt"><div class="rt-bar" role="toolbar" aria-label="${t("formatting")}">${b("bold","fBold")}${b("italic","fItalic")}${b("underline","fUnder")}${b("strikeThrough","fStrike")}<span class="rtsep"></span>${b("heading","fHead")}${b("insertUnorderedList","fBullets")}${b("insertOrderedList","fNumbers")}${b("quote","fQuote")}<span class="rtsep"></span>${b("link","fLink")}${b("removeFormat","fClear")}</div>
+  return `<div class="rt"><div class="rt-bar" role="toolbar" aria-label="${t("formatting")}">${b("bold","fBold")}${b("italic","fItalic")}${b("underline","fUnder")}${b("strikeThrough","fStrike")}<span class="rtsep"></span>${b("heading","fHead")}${b("insertUnorderedList","fBullets")}${b("insertOrderedList","fNumbers")}${b("quote","fQuote")}<span class="rtsep"></span>${b("table","fTable")}${b("link","fLink")}${b("removeFormat","fClear")}
+   <span class="rt-tbl" hidden>${["addRow","addCol","delRow","delCol","delTable"].map(c=>`<button type="button" class="rtt" data-rt="${c}">${t(c)}</button>`).join("")}</span></div>
    <div class="rt-area" id="${id}" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${t("desc")}" data-rta="1">${cleanHTML(html)}</div></div>`;
 }
 document.addEventListener("mousedown",e=>{if(e.target.closest("[data-rt]"))e.preventDefault()});
@@ -1858,6 +1879,10 @@ document.addEventListener("click",e=>{
   else if(cmd==="quote"){const cur=(document.queryCommandValue("formatBlock")||"").toLowerCase();document.execCommand("formatBlock",false,cur==="blockquote"?"p":"blockquote")}
   else if(cmd==="link"){const u=window.prompt(t("linkAsk"),"https://");if(u&&/^https?:\/\/\S+$/i.test(u.trim()))document.execCommand("createLink",false,u.trim())}
   else if(cmd==="removeFormat"){document.execCommand("removeFormat");document.execCommand("unlink");document.execCommand("formatBlock",false,"p")}
+  else if(cmd==="table"){const cols=[1,2,3].map(i=>`<th>${esc(fill(t("colH"),i))}</th>`).join(""),row=`<tr>${"<td><br></td>".repeat(3)}</tr>`;
+    document.execCommand("insertHTML",false,`<table data-new="1"><thead><tr>${cols}</tr></thead><tbody>${row}${row}</tbody></table><p><br></p>`);
+    const nt=document.querySelector("table[data-new]");if(nt){nt.removeAttribute("data-new");placeIn(nt.tBodies[0].rows[0].cells[0])}tblTools()}
+  else if(["addRow","addCol","delRow","delCol","delTable"].includes(cmd)){tableOp(cmd);tblTools()}
   else document.execCommand(cmd);
   area.dispatchEvent(new Event("input",{bubbles:true}));
 },true);
@@ -1924,8 +1949,7 @@ async function ensureFileToken(){if(!fileTok||Date.now()-fileTokAt>100000){try{f
 function attURL(a,thumb){const q={token:fileTok||""};if(thumb)q.thumb="400x0";return pb.files.getURL(a.rec,a.rec.file,q)}
 function attItem(a,canDel){
   const del=canDel?`<button class="btn small" data-act="att-del" data-id="${a.id}">${t("remove")}</button>`:"";
-  if(a.kind==="link"){let host="";try{host=new URL(a.url).hostname}catch(e){}
-    return `<div class="att att-link"><svg viewBox="0 0 24 24" aria-hidden="true">${RT_ICONS.link}</svg><a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(a.name||host||a.url)}</a><span class="cap muted">${esc(host)}</span>${del}</div>`}
+  if(a.kind==="link")return linkCard(a,del);
   const url=attURL(a);
   const media=a.kind==="image"?`<a href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(attURL(a,true))}" alt="${esc(a.name)}" loading="lazy"></a>`
     :a.kind==="video"?`<video src="${esc(url)}" controls preload="metadata"></video>`:`<a href="${esc(url)}" target="_blank" rel="noopener">${esc(a.name)}</a>`;
@@ -1935,7 +1959,9 @@ function attBlock(taskId){
   const m=me(),list=taskId?attachments.filter(a=>a.task===taskId):[],pend=(S.dlg&&S.dlg.pend)||[];
   return `<div class="stack" style="gap:8px"><span class="lab">${t("attachments")}${list.length+pend.length?` (${list.length+pend.length})`:""}</span>
    ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||m.role!=="staff")).join("")}</div>`:""}
-   ${pend.length?`<div class="atts">${pend.map((p,i)=>`<div class="att att-pend"><span class="cap"><b>${esc(p.name)}</b> · ${p.kind==="link"?esc(p.url):fsize(p.file?p.file.size:0)}${p.before&&p.file&&p.file.size<p.before?` <span class="muted">(${fill(t("saved1"),fsize(p.before),fsize(p.file.size))})</span>`:""}</span><button type="button" class="btn small" data-act="att-unpend" data-i="${i}">${t("remove")}</button></div>`).join("")}<p class="note-hint">${t("attPending")}</p></div>`:""}
+   ${pend.length?`<div class="atts">${pend.map((p,i)=>{const rm=`<button type="button" class="btn small" data-act="att-unpend" data-i="${i}">${t("remove")}</button>`;
+     if(p.kind==="link")return linkCard(p,rm);
+     return `<div class="att att-pend"><span class="cap"><b>${esc(p.name)}</b> · ${fsize(p.file?p.file.size:0)}${p.before&&p.file&&p.file.size<p.before?` <span class="muted">(${fill(t("saved1"),fsize(p.before),fsize(p.file.size))})</span>`:""}</span>${rm}</div>`}).join("")}</div><p class="note-hint">${t("attPending")}</p>`:""}
    <p class="note-hint" id="att-status" role="status" aria-live="polite"></p>
    <div class="attadd"><label class="btn small">${t("addMedia")}<input type="file" accept="image/*,video/*" multiple data-x="attfile" data-task="${taskId||""}" hidden></label>
     <input type="url" id="att-url" placeholder="${t("linkPh")}" aria-label="${t("addLink")}" autocomplete="off"><button type="button" class="btn small" data-act="att-link" data-task="${taskId||""}">${t("addLink")}</button></div></div>`;
@@ -1971,9 +1997,10 @@ document.addEventListener("click",async e=>{
   if(a==="att-link"){stop();const el=document.getElementById("att-url"),u=(el.value||"").trim();
     if(!/^https?:\/\/[^\s]+\.[^\s]+/i.test(u)){toast(t("badLink"));el.focus();return}
     let host=u;try{host=new URL(u).hostname}catch(x){}
-    const p={kind:"link",url:u,name:host};
-    if(b.dataset.task){try{await uploadAttachment(b.dataset.task,p);await loadAll();render();toast(t("attSaved"))}catch(x){fail(x)}}
-    else{S.dlg.pend=S.dlg.pend||[];S.dlg.pend.push(p);el.value="";rerenderKeep()}return}
+    const p={kind:"link",url:u,name:host};b.disabled=true;setAttStatus(t("loadingPrev"));
+    if(b.dataset.task){try{await uploadAttachment(b.dataset.task,p);el.value="";await new Promise(r=>setTimeout(r,600));await loadAll();render();toast(t("attSaved"))}catch(x){fail(x)}finally{b.disabled=false;setAttStatus("")}}
+    else{const pv=await fetchPreview(u);Object.assign(p,{preview_title:pv.title,preview_url:pv.image,preview_site:pv.site});if(pv.title)p.name=pv.title.slice(0,240);
+      S.dlg.pend=S.dlg.pend||[];S.dlg.pend.push(p);el.value="";b.disabled=false;rerenderKeep()}return}
   if(a==="att-unpend"){stop();S.dlg.pend.splice(+b.dataset.i,1);rerenderKeep();return}
   if(a==="att-del"){stop();if(S.arm!=="att"+b.dataset.id){S.arm="att"+b.dataset.id;b.textContent=t("confirmDel");b.classList.add("danger");return}
     S.arm=null;run(()=>pb.collection("attachments").delete(b.dataset.id),t("attDeleted"));return}
@@ -2003,6 +2030,48 @@ function dUedit(){const u=U(S.dlg.id);return `<h2>${t("editUser")}</h2><p class=
   <div class="acts"><button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="uedit-save">${t("saveT")}</button></div>`}
 
 function attCount(k){const n=attachments.filter(a=>a.task===k.id).length;return n?`<span class="attc" title="${esc(fill(t("attN"),n))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${n}</span>`:""}
+
+/* ---------- table tools ---------- */
+function cellCtx(){
+  const sel=getSelection();if(!sel||!sel.rangeCount)return null;
+  let n=sel.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;
+  const cell=n&&n.closest&&n.closest("td,th"),area=cell&&cell.closest("[data-rta]");
+  return cell&&area?{cell,row:cell.parentElement,table:cell.closest("table"),area}:null;
+}
+function placeIn(cell){if(!cell)return;const r=document.createRange();r.selectNodeContents(cell);r.collapse(true);const s=getSelection();s.removeAllRanges();s.addRange(r)}
+function tableOp(cmd){
+  const c=cellCtx();if(!c)return;const {cell,row,table}=c,idx=cell.cellIndex;
+  if(cmd==="addRow"){const body=table.tBodies[0]||table.createTBody(),nr=document.createElement("tr");
+    for(let i=0;i<row.cells.length;i++){const td=document.createElement("td");td.innerHTML="<br>";nr.appendChild(td)}
+    if(row.parentElement.tagName==="THEAD")body.insertBefore(nr,body.firstChild);else row.after(nr);placeIn(nr.cells[Math.min(idx,nr.cells.length-1)])}
+  if(cmd==="addCol"){[...table.rows].forEach(tr=>{const head=tr.parentElement.tagName==="THEAD",nc=document.createElement(head?"th":"td");nc.innerHTML="<br>";tr.insertBefore(nc,tr.cells[idx+1]||null)});placeIn(row.cells[idx+1])}
+  if(cmd==="delRow"){if(table.rows.length<=1){table.remove();return}const next=row.nextElementSibling||row.previousElementSibling;row.remove();if(next)placeIn(next.cells[0])}
+  if(cmd==="delCol"){if(row.cells.length<=1){table.remove();return}[...table.rows].forEach(tr=>{if(tr.cells[idx])tr.cells[idx].remove()});placeIn(row.cells[Math.max(0,idx-1)])}
+  if(cmd==="delTable")table.remove();
+}
+function tblTools(){const c=cellCtx();document.querySelectorAll(".rt").forEach(r=>{const tools=r.querySelector(".rt-tbl");if(tools)tools.hidden=!(c&&r.contains(c.area))})}
+document.addEventListener("selectionchange",tblTools);
+
+/* ---------- link previews ---------- */
+function previewImg(a){
+  const r=a.rec||{};
+  if(r.preview_image&&fileTok)return pb.files.getURL(r,r.preview_image,{token:fileTok,thumb:"400x0"});
+  return r.preview_url||a.preview_url||"";
+}
+function linkCard(a,del){
+  let host="";try{host=new URL(a.url).hostname.replace(/^www\./,"")}catch(e){}
+  const r=a.rec||a,img=previewImg(a),title=r.preview_title||a.preview_title||a.name||host,site=r.preview_site||a.preview_site||host;
+  return `<div class="att att-card">${img?`<a class="pcover" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer"><img src="${esc(img)}" alt="" loading="lazy" referrerpolicy="no-referrer" data-hideonerror="1"></a>`:""}
+    <span class="attmeta"><a class="ptitle" href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">${esc(title)}</a><span class="cap muted psite"><svg viewBox="0 0 24 24" aria-hidden="true">${RT_ICONS.link}</svg>${esc(site)}</span>${del||""}</span></div>`;
+}
+document.addEventListener("error",e=>{const el=e.target;if(el&&el.tagName==="IMG"&&el.dataset.hideonerror){const a=el.closest(".pcover");if(a)a.remove()}},true);
+async function fetchPreview(url){try{return await pb.send("/api/pc/preview",{query:{url}})}catch(e){return {title:"",image:"",site:""}}}
+/* card cover for the Kanban board: first photo, otherwise first link preview */
+function coverOf(k){
+  const list=attachments.filter(a=>a.task===k.id);
+  const img=list.find(a=>a.kind==="image");if(img&&fileTok)return attURL(img,true);
+  const ln=list.find(a=>a.kind==="link"&&previewImg(a));return ln?previewImg(ln):"";
+}
 
 /* Start */
 setTimeout(()=>{DL=dlObj();},0);
