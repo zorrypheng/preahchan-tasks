@@ -347,6 +347,42 @@ module.exports = {
     return total
   },
 
+  // ---------- Labour cost ----------
+  // Hourly cost = monthly salary / paid hours a month (weekly hours x 52 / 12),
+  // using the salary in force on the day the task was finished.
+  hourlyRate(app, userId, day) {
+    let monthly = 0, cap = 44
+    try { cap = app.findRecordById("users", userId).getFloat("cap") || 44 } catch (e) {}
+    try {
+      const s = app.findRecordsByFilter("salaries", "user = {:u} && from <= {:d}", "-from,-created", 1, 0, { u: userId, d: day })
+      if (s.length) monthly = s[0].getFloat("monthly")
+    } catch (e) {}
+    const rate = monthly > 0 ? monthly / (cap * 52 / 12) : 0
+    return { monthly: monthly, rate: Math.round(rate * 10000) / 10000 }
+  },
+  // Keep the task_costs row in step with a task: present while the task is done, gone otherwise
+  syncCost(app, task) {
+    let row = null
+    try { row = app.findFirstRecordByFilter("task_costs", "task = {:t}", { t: task.id }) } catch (e) {}
+    if (task.getString("status") !== "done") { if (row) app.delete(row); return }
+    const user = task.getString("assignee"), day = task.getString("done_at") || this.ict().date, hours = task.getFloat("spent")
+    const r = this.hourlyRate(app, user, day)
+    if (!row) { row = new Record(app.findCollectionByNameOrId("task_costs")); row.set("task", task.id) }
+    row.set("user", user)
+    row.set("client", task.getString("client"))
+    row.set("type", task.getString("type"))
+    row.set("title", task.getString("title").substring(0, 200))
+    row.set("day", day)
+    row.set("hours", hours)
+    row.set("rate", r.rate)
+    row.set("monthly", r.monthly)
+    row.set("cost", Math.round(hours * r.rate * 100) / 100)
+    app.save(row)
+  },
+  removeCost(app, taskId) {
+    try { app.delete(app.findFirstRecordByFilter("task_costs", "task = {:t}", { t: taskId })) } catch (e) {}
+  },
+
   // ---------- Link previews (Open Graph), Pinterest-style cards ----------
   // Refuse addresses on the local network, so a link can't make the server read internal pages
   safeURL(url) {

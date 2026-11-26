@@ -1,0 +1,60 @@
+{
+  "id": "pc_salaries0001",
+  "name": "salaries",
+  "type": "base",
+  "listRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "viewRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "createRule": "(@request.auth.role = \"admin\" || @request.auth.role = \"manager\") && @request.body.created_by = @request.auth.id",
+  "updateRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "deleteRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "fields": [
+    {
+      "name": "user",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 1,
+      "required": true,
+      "cascadeDelete": true
+    },
+    {
+      "name": "monthly",
+      "type": "number",
+      "min": 0,
+      "max": 1000000
+    },
+    {
+      "name": "from",
+      "type": "text",
+      "required": true,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "max": 10
+    },
+    {
+      "name": "note",
+      "type": "text",
+      "max": 200
+    },
+    {
+      "name": "created_by",
+      "type": "relation",
+      "collectionId": "_pb_users_auth_",
+      "maxSelect": 1,
+      "cascadeDelete": false
+    },
+    {
+      "name": "created",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": false
+    },
+    {
+      "name": "updated",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": true
+    }
+  ],
+  "indexes": [
+    "CREATE INDEX idx_salaries_user ON salaries (user, `from`)"
+  ]
+}

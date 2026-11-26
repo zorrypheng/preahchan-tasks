@@ -1,0 +1,75 @@
+{
+  "id": "pc_taskcosts001",
+  "name": "task_costs",
+  "type": "base",
+  "listRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "viewRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+  "createRule": null,
+  "updateRule": null,
+  "deleteRule": null,
+  "fields": [
+    {
+      "name": "task",
+      "type": "text",
+      "required": true,
+      "max": 30
+    },
+    {
+      "name": "user",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "client",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "type",
+      "type": "text",
+      "max": 30
+    },
+    {
+      "name": "title",
+      "type": "text",
+      "max": 200
+    },
+    {
+      "name": "day",
+      "type": "text",
+      "max": 10
+    },
+    {
+      "name": "hours",
+      "type": "number"
+    },
+    {
+      "name": "rate",
+      "type": "number"
+    },
+    {
+      "name": "cost",
+      "type": "number"
+    },
+    {
+      "name": "monthly",
+      "type": "number"
+    },
+    {
+      "name": "created",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": false
+    },
+    {
+      "name": "updated",
+      "type": "autodate",
+      "onCreate": true,
+      "onUpdate": true
+    }
+  ],
+  "indexes": [
+    "CREATE UNIQUE INDEX idx_task_costs_task ON task_costs (task)",
+    "CREATE INDEX idx_task_costs_day ON task_costs (day)"
+  ]
+}

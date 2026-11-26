@@ -30,6 +30,7 @@ onRecordAfterCreateSuccess((e) => {
     const pc = require(`${__hooks}/lib/pc.js`)
     const r = e.record, a = r.getString("assignee"), c = r.getString("creator")
     if (a && a !== c) pc.notify(e.app, a, "assigned", { by: c, task: r.id })
+    if (r.getString("status") === "done") pc.syncCost(e.app, r)
   } catch (err) { console.log("task create hook: " + err) }
 }, "tasks")
 
@@ -38,6 +39,11 @@ onRecordAfterUpdateSuccess((e) => {
   try {
     const pc = require(`${__hooks}/lib/pc.js`)
     const r = e.record, o = r.original()
+    // labour cost: record it when a task is done, update it if hours or details change, drop it when reopened
+    const costKeys = ["status", "spent", "assignee", "done_at", "client", "type", "title"]
+    if ((r.getString("status") === "done" || o.getString("status") === "done") && costKeys.some((f) => r.getString(f) !== o.getString(f))) {
+      try { pc.syncCost(e.app, r) } catch (err) { console.log("task cost: " + err) }
+    }
     // reassigned: tell the new person
     if (r.getString("assignee") !== o.getString("assignee") && r.getString("assignee") !== r.getString("creator")) {
       pc.notify(e.app, r.getString("assignee"), "assigned", { by: r.getString("creator"), task: r.id })
@@ -62,6 +68,13 @@ onRecordAfterUpdateSuccess((e) => {
       e.app.saveNoValidate(r)
     }
   } catch (err) { console.log("task update hook: " + err) }
+}, "tasks")
+
+// A task deleted by a person (not the 6-month clean-up) takes its cost record with it
+onRecordDeleteRequest((e) => {
+  const id = e.record.id
+  e.next()
+  try { require(`${__hooks}/lib/pc.js`).removeCost(e.app, id) } catch (err) { console.log("task cost delete: " + err) }
 }, "tasks")
 
 // ---------- Comments ----------

@@ -15,3 +15,10 @@ Ideas agreed to revisit after the workflow update (statuses, task types, positio
 6. **Brief template per task type:** required fields (size, platform, caption, references, deadline).
 7. **Final files on the card:** attach the final design or video, preview on the Kanban card.
 8. **Monthly client report (PDF):** what was delivered for each client that month.
+
+## Costs: next steps (agreed for later)
+Salaries, hourly cost and the Costs page (by client, task type and person, CSV export) are built. Later:
+- **Client price → profit:** enter what a client pays per month or per job; show profit = price − labour cost.
+- **Estimated cost when creating a task:** time estimate × the assignee's hourly cost, shown in Add task.
+- **Budget alert per client:** a monthly hour or cost budget; managers are notified at 80%.
+- **Overtime:** hours beyond a person's weekly hours, counted at a chosen rate (for example 1.5×).
