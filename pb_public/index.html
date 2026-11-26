@@ -470,6 +470,14 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 .dlg [aria-invalid="true"]{border-color:var(--danger,#c0392b)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--danger,#c0392b) 18%,transparent)}
 .dlg select:invalid{color:var(--ink-muted,#6b7280)}
 .dlg select option{color:var(--ink)}
+
+/* Users: keep the name column readable; the controls wrap instead of squeezing it */
+@media (min-width:700px){.urow{grid-template-columns:minmax(220px,1fr) minmax(0,auto)}}
+@media (min-width:700px) and (max-width:1100px){.urow{grid-template-columns:minmax(0,1fr)}}
+.urow .nm b,.urow .nm .cap{overflow-wrap:anywhere;word-break:normal}
+.urow .pchips{display:inline-flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.urow .pchips .tag{white-space:nowrap}
+.urow .ctl{justify-content:flex-start}
 </style>
 
 </head>
