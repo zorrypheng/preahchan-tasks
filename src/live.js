@@ -22,7 +22,7 @@ async function loadAll(){
   statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
-  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[]}));
+  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[],supervisors:r.supervisors||[]}));
   clients.length=0;cl.forEach(r=>clients.push({id:r.id,name:r.name,by:r.created_by}));
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;

@@ -30,7 +30,7 @@ rep('${clickable?` · <span class="${kpiConf[u.id]?"conf":""}">${kpiConf[u.id]?t
 rep('   case "kpi":{const u=me();return fill(t("tK"),doneWeek(u.id).length,u.kpi)}','   case "kpi":{const u=me();return fill(t("tK"),doneWeek(u.id).length,u.kpi)}\n   case "noteRemind":{const nt=notes.find(x=>x.id===p.note);return fill(t("noteRemindN"),"","<b>"+esc(nt?(nt.title||t("notes")):(p.title||t("notes")))+"</b>")}')
 rep('<div id="app"></div>','<div id="app"></div>\n<script src="pocketbase.umd.js"></script>')
 rep('account:vAccount,report:vReport,reports:vReports}','account:vAccount,report:vReport,reports:vReports,settings:vSettings}')
-rep('notifs:dNotifs,log:dLog}','notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos,uedit:dUedit}')
+rep('notifs:dNotifs,log:dLog}','notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos,uedit:dUedit,uteam:dUteam}')
 rep('&&S.view!=="account"&&S.view!=="report")S.view=NAV','&&S.view!=="account"&&S.view!=="report")S.view=NAV')
 s=s.replace('</style>\n\n<div id="app">','\n'+open('src/workflow.css',encoding='utf-8').read()+'</style>\n\n<div id="app">',1)
 live=open('src/live.js',encoding='utf-8').read()

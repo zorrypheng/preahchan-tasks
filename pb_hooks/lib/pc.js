@@ -313,8 +313,11 @@ module.exports = {
         const m = this.todayText(app, u)
         let text = m.text
         const role = u.getString("role")
-        if (role === "manager" || role === "admin") {
-          const late = app.findRecordsByFilter("tasks", "status != 'done' && due < {:d} && assignee.role = 'staff' && assignee.active = true", "due", 30, 0, { d: today })
+        if (role === "manager" || role === "admin" || role === "supervisor") {
+          // managers: all late staff work; supervisors: their own team's late work
+          const late = role === "supervisor"
+            ? app.findRecordsByFilter("tasks", "status != 'done' && due < {:d} && assignee.active = true && assignee.supervisors.id ?= {:me}", "due", 30, 0, { d: today, me: u.id })
+            : app.findRecordsByFilter("tasks", "status != 'done' && due < {:d} && (assignee.role = 'staff' || assignee.role = 'supervisor') && assignee.active = true", "due", 30, 0, { d: today })
           if (late.length) {
             text += "\n\n" + this.t(lang, "team")
             late.forEach((k) => { text += "\n• " + esc(this.userName(app, k.getString("assignee"))) + ": " + esc(k.getString("title")) })
@@ -536,7 +539,7 @@ module.exports = {
       const role = user.getString("role")
       let ownerRole = ""
       try { ownerRole = app.findRecordById("users", r.getString("user")).getString("role") } catch (e) {}
-      const allowed = r && r.getString("user") !== user.id && (role === "admin" || (role === "manager" && ownerRole === "staff"))
+      const allowed = r && r.getString("user") !== user.id && (role === "admin" || (role === "manager" && (ownerRole === "staff" || ownerRole === "supervisor")))
       if (!allowed) { answer(this.t(lang, "notAllowed")); return }
       if (r.getString("status") === "pending") {
         r.set("status", "approved"); r.set("decided_by", user.id); r.set("decided_at", this.ict().stamp); r.set("comment", "")

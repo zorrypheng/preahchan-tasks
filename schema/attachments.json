@@ -1,81 +1,172 @@
 {
   "id": "pc_attachments1",
+  "listRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && task.assignee.supervisors.id ?= @request.auth.id)",
+  "viewRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && task.assignee.supervisors.id ?= @request.auth.id)",
+  "createRule": "@request.body.owner = @request.auth.id && (@request.body.task.assignee = @request.auth.id || @request.body.task.creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && @request.body.task.assignee.supervisors.id ?= @request.auth.id))",
+  "updateRule": null,
+  "deleteRule": "owner = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\")",
   "name": "attachments",
   "type": "base",
-  "listRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"",
-  "viewRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"",
-  "createRule": "@request.body.owner = @request.auth.id && (@request.body.task.assignee = @request.auth.id || @request.body.task.creator = @request.auth.id || @request.auth.role != \"staff\")",
-  "updateRule": null,
-  "deleteRule": "owner = @request.auth.id || @request.auth.role != \"staff\"",
   "fields": [
     {
-      "name": "task",
-      "type": "relation",
+      "autogeneratePattern": "[a-z0-9]{15}",
+      "hidden": false,
+      "id": "text3208210256",
+      "max": 15,
+      "min": 15,
+      "name": "id",
+      "pattern": "^[a-z0-9]+$",
+      "presentable": false,
+      "primaryKey": true,
+      "required": true,
+      "system": true,
+      "type": "text"
+    },
+    {
+      "cascadeDelete": true,
       "collectionId": "pc_tasks0000001",
+      "hidden": false,
+      "id": "relation1384045349",
       "maxSelect": 1,
+      "minSelect": 0,
+      "name": "task",
+      "presentable": false,
       "required": true,
-      "cascadeDelete": true
+      "system": false,
+      "type": "relation"
     },
     {
-      "name": "owner",
-      "type": "relation",
+      "cascadeDelete": false,
       "collectionId": "_pb_users_auth_",
+      "hidden": false,
+      "id": "relation3479234172",
       "maxSelect": 1,
+      "minSelect": 0,
+      "name": "owner",
+      "presentable": false,
       "required": true,
-      "cascadeDelete": false
+      "system": false,
+      "type": "relation"
     },
     {
+      "hidden": false,
+      "id": "select1002749145",
+      "maxSelect": 1,
       "name": "kind",
+      "presentable": false,
+      "required": true,
+      "system": false,
       "type": "select",
       "values": [
         "image",
         "video",
         "link",
         "file"
-      ],
-      "maxSelect": 1,
-      "required": true
+      ]
     },
     {
+      "exceptDomains": null,
+      "hidden": false,
+      "id": "url4101391790",
       "name": "url",
-      "type": "url",
       "onlyDomains": null,
-      "exceptDomains": null
-    },
-    {
-      "name": "name",
-      "type": "text",
-      "max": 240
-    },
-    {
-      "name": "size",
-      "type": "number",
-      "min": 0
-    },
-    {
-      "name": "file",
-      "type": "file",
-      "maxSelect": 1,
-      "maxSize": 104857600,
-      "protected": true
-    },
-    {
-      "name": "preview_title",
-      "type": "text",
-      "max": 300
-    },
-    {
-      "name": "preview_site",
-      "type": "text",
-      "max": 120
-    },
-    {
-      "name": "preview_url",
+      "presentable": false,
+      "required": false,
+      "system": false,
       "type": "url"
     },
     {
-      "name": "preview_image",
-      "type": "file",
+      "autogeneratePattern": "",
+      "hidden": false,
+      "id": "text1579384326",
+      "max": 240,
+      "min": 0,
+      "name": "name",
+      "pattern": "",
+      "presentable": false,
+      "primaryKey": false,
+      "required": false,
+      "system": false,
+      "type": "text"
+    },
+    {
+      "hidden": false,
+      "id": "number4156564586",
+      "max": null,
+      "min": 0,
+      "name": "size",
+      "onlyInt": false,
+      "presentable": false,
+      "required": false,
+      "system": false,
+      "type": "number"
+    },
+    {
+      "hidden": false,
+      "id": "file2359244304",
+      "maxSelect": 1,
+      "maxSize": 104857600,
+      "mimeTypes": null,
+      "name": "file",
+      "presentable": false,
+      "protected": true,
+      "required": false,
+      "system": false,
+      "thumbs": null,
+      "type": "file"
+    },
+    {
+      "hidden": false,
+      "id": "autodate2990389176",
+      "name": "created",
+      "onCreate": true,
+      "onUpdate": false,
+      "presentable": false,
+      "system": false,
+      "type": "autodate"
+    },
+    {
+      "autogeneratePattern": "",
+      "hidden": false,
+      "id": "text4142770201",
+      "max": 300,
+      "min": 0,
+      "name": "preview_title",
+      "pattern": "",
+      "presentable": false,
+      "primaryKey": false,
+      "required": false,
+      "system": false,
+      "type": "text"
+    },
+    {
+      "autogeneratePattern": "",
+      "hidden": false,
+      "id": "text3220157067",
+      "max": 120,
+      "min": 0,
+      "name": "preview_site",
+      "pattern": "",
+      "presentable": false,
+      "primaryKey": false,
+      "required": false,
+      "system": false,
+      "type": "text"
+    },
+    {
+      "exceptDomains": null,
+      "hidden": false,
+      "id": "url2389623310",
+      "name": "preview_url",
+      "onlyDomains": null,
+      "presentable": false,
+      "required": false,
+      "system": false,
+      "type": "url"
+    },
+    {
+      "hidden": false,
+      "id": "file417780781",
       "maxSelect": 1,
       "maxSize": 8388608,
       "mimeTypes": [
@@ -84,19 +175,19 @@
         "image/webp",
         "image/gif"
       ],
+      "name": "preview_image",
+      "presentable": false,
+      "protected": true,
+      "required": false,
+      "system": false,
       "thumbs": [
         "400x0"
       ],
-      "protected": true
-    },
-    {
-      "name": "created",
-      "type": "autodate",
-      "onCreate": true,
-      "onUpdate": false
+      "type": "file"
     }
   ],
   "indexes": [
     "CREATE INDEX idx_attachments_task ON attachments (task)"
-  ]
+  ],
+  "system": false
 }

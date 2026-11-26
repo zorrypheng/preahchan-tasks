@@ -1,5 +1,5 @@
 /* ===== Workflow: statuses, task types, positions, Kanban, hand-off, Settings ===== */
-Object.assign(T.en,{pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
+Object.assign(T.en,{editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",noTeam:"No team yet",teamHelpSup:"Tick the staff this supervisor looks after. The supervisor can see and assign their tasks.",supBy:"Supervisor",pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
  otherStages:"Other stages",otherHelp:"These cards are in statuses your position doesn't handle. You can open them but not move them.",
  moveTo:"Move to…",nextStep:"Move to next status",movedTo:"Moved to {a}",cantMove:"Your position can't move tasks to {a}.",lastStep:"This task is already at its last status.",
  handoffT:"Hand off to someone who handles {a}?",handoffHelp:"{a}'s position doesn't cover {b}. Choose who takes it next. They will be notified.",
@@ -13,7 +13,7 @@ Object.assign(T.en,{pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"Lis
  positionsF:"Positions",noPos:"No position yet",editPos:"Edit positions",posSaved:"Positions saved",finishedWeek:"Finished this week",
  dragHint:"Drag cards between columns, or use Move to on each card.",nameReq:"Enter a name.",usedBy:"Used by {a} tasks",
  inUse:"Tasks still use this. Move them to another status or type first.",finishedTag:"Finished",stepsN:"{a} statuses",typesN:"{a} types"});
-Object.assign(T.km,{pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
+Object.assign(T.km,{editTeam:"កែក្រុម",teamOfT:"ក្រុម",teamSaved:"បានរក្សាទុកក្រុម",noTeam:"មិនទាន់មានក្រុម",teamHelpSup:"ធីកបុគ្គលិកដែលអ្នកត្រួតពិនិត្យនេះមើលការខុសត្រូវ។ អ្នកត្រួតពិនិត្យអាចមើល និងចាត់តាំងការងាររបស់ពួកគេ។",supBy:"អ្នកត្រួតពិនិត្យ",pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
  otherStages:"ដំណាក់កាលផ្សេងទៀត",otherHelp:"កាតទាំងនេះស្ថិតក្នុងស្ថានភាពដែលតួនាទីរបស់អ្នកមិនទទួលខុសត្រូវ។ អ្នកអាចបើកមើលបាន ប៉ុន្តែមិនអាចផ្លាស់ទីបានទេ។",
  moveTo:"ផ្លាស់ទៅ…",nextStep:"ផ្លាស់ទៅស្ថានភាពបន្ទាប់",movedTo:"បានផ្លាស់ទៅ {a}",cantMove:"តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។",lastStep:"ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
  handoffT:"ប្រគល់ទៅអ្នកទទួលខុសត្រូវ {a}?",handoffHelp:"តួនាទីរបស់ {a} មិនគ្របដណ្តប់ {b} ទេ។ សូមជ្រើសរើសអ្នកបន្ត។ ពួកគេនឹងទទួលដំណឹង។",
@@ -33,7 +33,12 @@ Object.assign(S,{mode:"list",scope:"mine",fType:"any",setTab:"statuses"});
 try{const m=localStorage.getItem("pc-mode");if(m==="kanban"||m==="list")S.mode=m}catch(e){}
 NAV.admin.push("settings");
 NI.settings='<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>';
-BLOCKING.push("stEdit","ttEdit","poEdit","upos","handoff");
+BLOCKING.push("stEdit","ttEdit","poEdit","upos","handoff","uteam");
+/* Roles: admin and manager see everyone; a supervisor sees the staff the admin put in their team */
+const isMgr=u=>!!u&&(u.role==="admin"||u.role==="manager");
+const teamOf=uid=>users.filter(x=>x.active&&(x.supervisors||[]).includes(uid));
+/* people this user may give a task to (besides themselves) */
+function assignables(){const m=me();if(isMgr(m))return users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin");if(m.role==="supervisor")return teamOf(m.id);return []}
 const STCOLORS=["gray","blue","purple","orange","yellow","pink","teal","navy","green","red"];
 
 const ST=id=>statuses.find(s=>s.id===id),TT=id=>ttypes.find(x=>x.id===id),PO=id=>positions.find(p=>p.id===id);
@@ -88,7 +93,7 @@ function vTasks(){
   list=applyF(list);
   const tab=(f,l)=>`<button data-act="filter" data-f="${f}" aria-pressed="${S.filter===f}">${l}</button>`;
   return `${head}${kpiTile(u)}${seg}
-   <div class="tabs">${tab("all",t("openTab"))}${u.role==="staff"?tab("mgr",t("fromMgr")):""}${u.role==="staff"?tab("own",t("own")):""}${tab("done",t("doneTab")+" ("+nDone+")")}</div>
+   <div class="tabs">${tab("all",t("openTab"))}${!isMgr(u)?tab("mgr",t("fromMgr")):""}${!isMgr(u)?tab("own",t("own")):""}${tab("done",t("doneTab")+" ("+nDone+")")}</div>
    ${filterBar()}
    <div class="list">${list.length?list.map(k=>taskCard(k)).join(""):`<p class="empty">${t(fOn2()?"noMatch":S.filter==="done"?"noneDone":"none")}</p>`}</div>`;
 }
@@ -124,7 +129,7 @@ function dTask(){
    <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
    <div class="two"><label class="f">${t("status")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""} ${x.id!==k.stage&&!seesStage(x.id)?"disabled":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
-   ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${people().map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
+   ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
    ${descBlock(k)}
@@ -138,7 +143,7 @@ function dNew(){
   const m=me(),canAssign=m.role!=="staff",types=myTypes();
   if(S.dlg.body===undefined){S.dlg.body="";S.dlg.autoTpl=""}
   const ph=`<option value="" selected disabled>${t("pickOne")}</option>`;
-  const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin").map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
+  const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${assignables().map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
   return `<h2>${S.dlg.assign?t("assignTask"):t("addTask")}</h2><p class="err" id="nt-err" role="alert" hidden></p>
    <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off"></label>
    <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph}${types.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}<option value="__none">${t("noType")}</option></select></label>
@@ -168,7 +173,7 @@ function dUser(){
    <form data-form="user"><label class="f">${t("name")}<input type="text" id="nu-name" maxlength="60" autocomplete="off"></label>
    <div class="two"><label class="f">${t("username")}<input type="text" id="nu-user" maxlength="30" autocomplete="off" autocapitalize="none"></label>
    <label class="f">${t("password")}<input type="password" id="nu-pw" maxlength="60" autocomplete="new-password"></label></div>
-   <div class="two"><label class="f">${t("role")}<select id="nu-role"><option value="staff">${t("staff")}</option><option value="manager">${t("manager")}</option></select></label>
+   <div class="two"><label class="f">${t("role")}<select id="nu-role"><option value="staff">${t("staff")}</option><option value="supervisor">${t("supervisor")}</option><option value="manager">${t("manager")}</option></select></label>
    <label class="f">${t("weeklyKpi")}<input type="number" id="nu-kpi" min="0" max="99" value="10" style="width:100%"></label>
    <label class="f">${t("weeklyHours")}<input type="number" id="nu-cap" min="1" max="80" value="44" style="width:100%"></label></div>
    <div class="stack" style="gap:4px"><span class="lab">${t("positionsF")}</span>${posChecks("nu-pos",[])}</div>
@@ -177,12 +182,13 @@ function dUser(){
 function vUsers(){
   const opt=(v,cur)=>`<option value="${v}" ${v===cur?"selected":""}>${t(v)}</option>`;
   return `<div class="head"><h1>${t("users")}</h1><button class="btn primary" data-act="newuser">${t("createUser")}</button></div><p class="muted">${t("usersHelp")}</p>
-   <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br><span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
-    <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
+   <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br>${u.role==="supervisor"?`<span class="cap muted">${t("teamOfT")}: ${teamOf(u.id).map(x=>esc(x.name)).join(", ")||t("noTeam")}</span><br>`:""}${(u.supervisors||[]).filter(id=>U(id)).length?`<span class="cap muted">${t("supBy")}: ${(u.supervisors||[]).map(U).filter(Boolean).map(x=>esc(x.name)).join(", ")}</span><br>`:""}<span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
+    <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("supervisor",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
      ${u.role!=="admin"?`<label class="f">${t("weeklyKpi")}<input type="number" id="kpi-${u.id}" min="0" max="99" value="${u.kpi}" data-ch="kpi" data-id="${u.id}"></label><label class="f">${t("weeklyHours")}<input type="number" id="cap-${u.id}" min="1" max="80" value="${u.cap}" data-ch="cap" data-id="${u.id}"></label>`:""}
      <label class="c"><input type="checkbox" id="act-${u.id}" data-ch="active" data-id="${u.id}" ${u.active?"checked":""} ${u.id===S.me?"disabled":""}>${t("active")}</label>
      <button class="btn small" data-act="uedit" data-id="${u.id}">${t("editUser")}</button>
      <button class="btn small" data-act="upos-open" data-id="${u.id}">${t("editPos")}</button>
+     ${u.role==="supervisor"?`<button class="btn small" data-act="uteam-open" data-id="${u.id}">${t("editTeam")}</button>`:""}
      <button class="btn small" data-act="resetpw" data-id="${u.id}">${t("resetPw")}</button></div></div>`).join("")}</div>`;
 }
 function dUpos(){const u=U(S.dlg.id);return `<h2>${t("editPos")}: ${esc(u.name)}</h2>${posChecks("up-pos",u.positions||[])}
@@ -270,6 +276,11 @@ document.addEventListener("click",async e=>{
     case "handoff":{stop();const k=tasks.find(x=>x.id===S.dlg.id),u=U(b.dataset.u);S.dlg=null;
       run(()=>pb.collection("tasks").update(k.id,{assignee:u.id}),fill(t("handedTo"),u.name));return}
     case "upos-open":stop();S.dlg={type:"upos",id};render();return;
+    case "uteam-open":stop();S.dlg={type:"uteam",id};render();return;
+    case "uteam-save":{stop();const sid=S.dlg.id,on=new Set([...document.querySelectorAll('input[name="ut-staff"]:checked')].map(x=>x.value));S.dlg=null;
+      const changes=users.filter(u=>u.id!==sid&&on.has(u.id)!==(u.supervisors||[]).includes(sid))
+        .map(u=>pb.collection("users").update(u.id,{supervisors:on.has(u.id)?[...(u.supervisors||[]),sid]:(u.supervisors||[]).filter(x=>x!==sid)}));
+      run(()=>Promise.all(changes),t("teamSaved"));return}
     case "upos-save":{stop();const uid=S.dlg.id,ids=[...document.querySelectorAll('input[name="up-pos"]:checked')].map(x=>x.value);S.dlg=null;
       run(()=>pb.collection("users").update(uid,{positions:ids}),t("posSaved"));return}
     case "set-tab":stop();S.setTab=b.dataset.v;render();return;
@@ -310,3 +321,16 @@ document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closes
 
 /* Add task: clear the "missing" mark once a field is filled */
 ["change","input"].forEach(ev=>document.addEventListener(ev,e=>{const el=e.target;if(el&&el.getAttribute&&el.getAttribute("aria-invalid")==="true"&&el.value)el.setAttribute("aria-invalid","false")}));
+
+/* ---------- Supervisor team (admin) ---------- */
+function dUteam(){const sup=U(S.dlg.id),cands=users.filter(u=>u.active&&u.id!==sup.id&&(u.role==="staff"||u.role==="supervisor"));
+  return `<h2>${t("editTeam")}: ${esc(sup.name)}</h2><p class="muted">${t("teamHelpSup")}</p>
+  <div class="ppl">${cands.map(u=>`<label class="c"><input type="checkbox" name="ut-staff" value="${u.id}" ${(u.supervisors||[]).includes(sup.id)?"checked":""}>${esc(u.name)}</label>`).join("")}</div>
+  <div class="acts"><button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="uteam-save">${t("saveT")}</button></div>`}
+/* Team page: managers see all staff and supervisors; a supervisor sees their own team */
+function vTeam(){
+  const m=me(),staff=isMgr(m)?users.filter(u=>u.active&&u.id!==m.id&&(u.role==="staff"||u.role==="supervisor")):teamOf(m.id);
+  return `<div class="head"><h1>${t("team")}</h1>${staff.length?`<button class="btn primary" data-act="new" data-assign="1">${t("assignTask")}</button>`:""}</div>
+   <p class="muted">${t("teamHelp")}</p>${filterBar()}
+   <div class="rows">${staff.length?staff.map(u=>`<div>${personRow(u,null,true)}${S.expand===u.id?`<div class="sub"><div class="list">${(l=>l.length?l.map(k=>taskCard(k)).join(""):`<p class="empty">${t(fOn()?"noMatch":"noneTeam")}</p>`)(applyF(sortT(openOf(u.id))))}</div></div>`:""}</div>`).join(""):`<p class="empty">${t("noTeam")}</p>`}</div>`;
+}

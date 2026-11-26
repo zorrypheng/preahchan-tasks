@@ -140,7 +140,7 @@ function attItem(a,canDel){
 function attBlock(taskId){
   const m=me(),list=taskId?attachments.filter(a=>a.task===taskId):[],pend=(S.dlg&&S.dlg.pend)||[];
   return `<div class="stack" style="gap:8px"><span class="lab">${t("attachments")}${list.length+pend.length?` (${list.length+pend.length})`:""}</span>
-   ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||m.role!=="staff")).join("")}</div>`:""}
+   ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||isMgr(m))).join("")}</div>`:""}
    ${pend.length?`<div class="atts">${pend.map((p,i)=>{const rm=`<button type="button" class="btn small" data-act="att-unpend" data-i="${i}">${t("remove")}</button>`;
      if(p.kind==="link")return linkCard(p,rm);
      return `<div class="att att-pend"><span class="cap"><b>${esc(p.name)}</b> · ${fsize(p.file?p.file.size:0)}${p.before&&p.file&&p.file.size<p.before?` <span class="muted">(${fill(t("saved1"),fsize(p.before),fsize(p.file.size))})</span>`:""}</span>${rm}</div>`}).join("")}</div><p class="note-hint">${t("attPending")}</p>`:""}
@@ -260,7 +260,7 @@ const templates=[];
 let rtRange=null;
 document.addEventListener("selectionchange",()=>{const s=getSelection();if(!s||!s.rangeCount)return;let n=s.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;if(n&&n.closest&&n.closest("[data-rta]"))rtRange=s.getRangeAt(0).cloneRange()});
 function tplFor(typeId){return typeId?templates.find(x=>x.type===typeId):null}
-function canEditTpl(x){const m=me();return x.owner===m.id||m.role!=="staff"}
+function canEditTpl(x){const m=me();return x.owner===m.id||isMgr(m)}
 function curTypeId(){const sel=document.getElementById("nt-type");if(sel)return sel.value;const k=S.dlg&&S.dlg.id&&tasks.find(x=>x.id===S.dlg.id);return k?k.type:""}
 function tplPanel(){
   const tn=id=>{const x=ttypes.find(y=>y.id===id);return x?nm(x):""},cur=curTypeId();

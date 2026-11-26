@@ -500,7 +500,7 @@ const T={en:{
  dueToday:"Due today",dueTom:"Due tomorrow",daysLate:"days overdue",dayLate:"1 day overdue",dueOn:"Due",from:"From",
  status:"Status",reassign:"Assigned to",none:"No tasks here yet. Add one to get started.",noneTeam:"No open tasks.",
  open:"open",teamKpi:"Team KPI",reachedN:"People who reached KPI",overdueN:"Overdue tasks",thisWeek:"This week",
- createUser:"Create user",name:"Full name",role:"Role",admin:"Admin",manager:"Manager",staff:"Staff",weeklyKpi:"Weekly KPI",active:"Active",
+ createUser:"Create user",name:"Full name",role:"Role",admin:"Admin",manager:"Manager",supervisor:"Supervisor",staff:"Staff",weeklyKpi:"Weekly KPI",active:"Active",
  resetPw:"Reset password",pwReset:"Password reset for",userMade:"User created",saved:"Task saved",markDone:"Mark as done",
  teamHelp:"Select a person to see their open tasks.",boardHelp:"Tasks completed this week. Only names and counts are shared.",
  usersHelp:"Set each person's role and weekly KPI target.",days:["M","T","W","T","F","S","S"],titleReq:"Enter a task title.",userReq:"Enter a name, username and password.",userDup:"That username is already taken.",
@@ -517,7 +517,7 @@ const T={en:{
  dueToday:"កំណត់ថ្ងៃនេះ",dueTom:"កំណត់ថ្ងៃស្អែក",daysLate:"ថ្ងៃ ហួសកំណត់",dayLate:"ហួសកំណត់ ១ ថ្ងៃ",dueOn:"កំណត់",from:"ពី",
  status:"ស្ថានភាព",reassign:"ចាត់ឱ្យ",none:"មិនទាន់មានភារកិច្ចទេ។ សូមបន្ថែមមួយដើម្បីចាប់ផ្តើម។",noneTeam:"គ្មានភារកិច្ចនៅសល់ទេ។",
  open:"នៅសល់",teamKpi:"KPI ក្រុម",reachedN:"អ្នកដែលសម្រេច KPI",overdueN:"ភារកិច្ចហួសកំណត់",thisWeek:"សប្តាហ៍នេះ",
- createUser:"បង្កើតអ្នកប្រើ",name:"ឈ្មោះពេញ",role:"តួនាទី",admin:"អ្នកគ្រប់គ្រងប្រព័ន្ធ",manager:"អ្នកគ្រប់គ្រង",staff:"បុគ្គលិក",weeklyKpi:"KPI ប្រចាំសប្តាហ៍",active:"សកម្ម",
+ createUser:"បង្កើតអ្នកប្រើ",name:"ឈ្មោះពេញ",role:"តួនាទី",admin:"អ្នកគ្រប់គ្រងប្រព័ន្ធ",manager:"អ្នកគ្រប់គ្រង",supervisor:"អ្នកត្រួតពិនិត្យ",staff:"បុគ្គលិក",weeklyKpi:"KPI ប្រចាំសប្តាហ៍",active:"សកម្ម",
  resetPw:"កំណត់ពាក្យសម្ងាត់ឡើងវិញ",pwReset:"បានកំណត់ពាក្យសម្ងាត់ឡើងវិញសម្រាប់",userMade:"បានបង្កើតអ្នកប្រើ",saved:"បានរក្សាទុកភារកិច្ច",markDone:"សម្គាល់ថារួចរាល់",
  teamHelp:"ជ្រើសរើសបុគ្គលិកម្នាក់ ដើម្បីមើលភារកិច្ចដែលនៅសល់។",boardHelp:"ភារកិច្ចដែលបានបញ្ចប់ក្នុងសប្តាហ៍នេះ។ បង្ហាញតែឈ្មោះ និងចំនួនប៉ុណ្ណោះ។",
  usersHelp:"កំណត់តួនាទី និង KPI ប្រចាំសប្តាហ៍សម្រាប់ម្នាក់ៗ។",days:["ច","អ","ព","ព្រ","សុ","ស","អា"],titleReq:"សូមបញ្ចូលចំណងជើងភារកិច្ច។",userReq:"សូមបញ្ចូលឈ្មោះ ឈ្មោះអ្នកប្រើ និងពាក្យសម្ងាត់។",userDup:"ឈ្មោះអ្នកប្រើនេះមានរួចហើយ។",
@@ -703,7 +703,7 @@ function vLogin(){
    <div class="demo"><span class="lab muted">${t("demo")}</span>${demo.map(([u,r])=>`<button class="btn" data-act="demo" data-u="${u}"><span>${u}</span><span class="muted">${t(r)}</span></button>`).join("")}</div>
    <button class="btn small" data-act="lang" style="align-self:flex-start">${S.lang==="en"?"ភាសាខ្មែរ":"English"}</button></div></div>`;
 }
-const NAV={staff:["tasks","notes","docs","board"],manager:["tasks","team","reports","notes","docs","board"],admin:["dash","users","reports","docs","notes","board"]};
+const NAV={staff:["tasks","notes","docs","board"],supervisor:["tasks","team","notes","docs","board"],manager:["tasks","team","reports","notes","docs","board"],admin:["dash","users","reports","docs","notes","board"]};
 const R={};
 const NI={tasks:'<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
  team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -722,7 +722,7 @@ function render(){
   const menter=!!S.menu&&!R.m;R.m=!!S.menu;R.fe=!!S.fn&&!R.f;R.f=!!S.fn;
   const m=me();if(!NAV[m.role].includes(S.view)&&S.view!=="account"&&S.view!=="report")S.view=NAV[m.role][0];
   const V={tasks:vTasks,team:vTeam,board:vBoard,dash:vDash,users:vUsers,clients:vClients,notes:vNotes,docs:vDocs,account:vAccount,report:vReport,reports:vReports,settings:vSettings}[S.view]();
-  const D=S.dlg?`<div class="scrim ${denter?"enter":""}" data-act="scrim"><div class="dlg" role="dialog" aria-modal="true">${{new:dNew,task:dTask,user:dUser,note:dNote,notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos,uedit:dUedit}[S.dlg.type]()}</div></div>`:"";
+  const D=S.dlg?`<div class="scrim ${denter?"enter":""}" data-act="scrim"><div class="dlg" role="dialog" aria-modal="true">${{new:dNew,task:dTask,user:dUser,note:dNote,notifs:dNotifs,log:dLog,handoff:dHandoff,stEdit:dStEdit,ttEdit:dTtEdit,poEdit:dPoEdit,upos:dUpos,uedit:dUedit,uteam:dUteam}[S.dlg.type]()}</div></div>`:"";
   app.innerHTML=`<div class="shell ${S.view==="tasks"?"hasfab":""} ${S.view==="tasks"&&S.fn?"fnopen":""}"><header class="top"><button class="iconbtn menubtn" data-act="menu" aria-expanded="${!!S.menu}" aria-controls="mainnav" aria-label="${t("menu")}"><svg viewBox="0 0 24 24" aria-hidden="true">${S.menu?'<path d="M6 6l12 12M18 6L6 18"/>':'<path d="M4 7h16M4 12h16M4 17h16"/>'}</svg></button><img src="${LOGO}" alt="Preahchan Digital"><span class="sp"></span>
     ${(c=>`<button class="iconbtn" data-act="bell" aria-label="${t("notifs")}${c?`, ${c} ${t("unread")}`:""}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>${c?`<span class="count num">${c}</span>`:""}</button>`)(unreadCount())}
     <button class="avbtn" data-act="account" aria-label="${t("account")}: ${esc(m.name)}" ${S.view==="account"?'aria-current="page"':""}><span class="av">${esc(initials(m.name))}</span></button></header>
@@ -875,8 +875,8 @@ function buildReport(uid,wk){
     .map(k=>({title:k.title,client:k.client,est:k.est||0,spent:k.spent||0,doneAt:k.doneAt}));
   return {items,kpi:u.kpi,cap:u.cap,open:open.length,overdue:open.filter(k=>k.due<TODAY).length};
 }
-const approversOf=uid=>U(uid).role==="staff"?users.filter(u=>u.active&&u.role==="manager").map(u=>u.id):users.filter(u=>u.active&&u.role==="admin").map(u=>u.id);
-const canDecide=r=>{const m=me();return r.uid!==S.me&&(m.role==="admin"||(m.role==="manager"&&U(r.uid).role==="staff"))};
+const approversOf=uid=>["staff","supervisor"].includes(U(uid).role)?users.filter(u=>u.active&&u.role==="manager").map(u=>u.id):users.filter(u=>u.active&&u.role==="admin").map(u=>u.id);
+const canDecide=r=>{const m=me();return r.uid!==S.me&&(m.role==="admin"||(m.role==="manager"&&["staff","supervisor"].includes(U(r.uid).role)))};
 const pendingFor=()=>reports.filter(r=>r.status==="pending"&&canDecide(r)).length;
 let rid=0;const reports=[];
 const chipOf=st=>st==="approved"?"done":st==="returned"?"overdue":"doing";
@@ -968,10 +968,10 @@ async function makePdf(uid,wk,repId,btn){
   finally{holder.remove();pdfBusy=false;btn.disabled=false}
 }
 function vReports(){
-  const m=me(),mine=reports.filter(r=>r.uid!==S.me&&(m.role==="admin"||U(r.uid).role==="staff"));
+  const m=me(),mine=reports.filter(r=>r.uid!==S.me&&(m.role==="admin"||["staff","supervisor"].includes(U(r.uid).role)));
   const tab=(v,l)=>`<button data-act="rtab" data-v="${v}" aria-pressed="${S.rTab===v}">${l} (${mine.filter(r=>r.status===v).length})</button>`;
   const list=mine.filter(r=>r.status===S.rTab).sort((a,b)=>b.at.localeCompare(a.at));
-  const need=users.filter(u=>u.active&&u.id!==S.me&&(m.role==="admin"?u.role!=="admin":u.role==="staff")&&!reports.some(r=>r.uid===u.id&&r.wk===LWK&&r.status!=="returned"));
+  const need=users.filter(u=>u.active&&u.id!==S.me&&(m.role==="admin"?u.role!=="admin":["staff","supervisor"].includes(u.role))&&!reports.some(r=>r.uid===u.id&&r.wk===LWK&&r.status!=="returned"));
   return `<div class="head"><h1>${t("reports")}</h1></div>
    <div class="tabs">${tab("pending",t("stPending"))}${tab("approved",t("stApproved"))}${tab("returned",t("stReturned"))}</div>
    <p class="muted">${need.length?fill(t("notSubmitted"),need.map(u=>esc(u.name)).join(", ")):t("allSubmitted")}</p>
@@ -1004,7 +1004,7 @@ function dNotifs(){
 }
 
 function vDocs(){
-  const staff=me().role==="staff";
+  const staff=!["admin","manager"].includes(me().role);
   let list=docs.filter(d=>S.dTab==="company"?d.area==="company":S.dTab==="clients"?d.area==="client"&&(S.dClient==="all"||d.client===S.dClient):d.area==="mine"&&d.by===S.me);
   if(S.dq)list=list.filter(d=>d.name.toLowerCase().includes(S.dq.toLowerCase()));
   if(S.dType!=="any")list=list.filter(d=>kindOf(d.name)===S.dType);
@@ -1140,7 +1140,7 @@ function chat(){
       kpiConf[S.me]?"":`<button data-act="kpi-confirm">${t("confirmKpi")}</button>`))}
   const day=open.filter(k=>k.due<=TODAY).sort((a,b)=>a.due.localeCompare(b.due));
   out.push(msg(fmt(TODAY)+", 08:00",`<p>${fill(t("bMorning"),esc(m.name))}</p>${day.length?`<ul>${day.map(k=>`<li>${esc(k.title)}${k.due<TODAY?` <span class="late">(${t("overdue")})</span>`:""}</li>`).join("")}</ul>`:`<p>${t("bNothing")}</p>`}`,`<button data-act="tg-open">${t("bOpen")}</button>`));
-  if(m.role!=="staff"){const late=tasks.filter(k=>k.status!=="done"&&k.due<TODAY&&U(k.to).role==="staff"&&U(k.to).active);
+  if(m.role!=="staff"){const late=tasks.filter(k=>k.status!=="done"&&k.due<TODAY&&k.to!==S.me&&U(k.to).role!=="admin"&&U(k.to).active);
     out.push(msg(fmt(TODAY)+", 08:05",late.length?`<p>${t("bTeam")}</p><ul>${late.map(k=>`<li>${esc(U(k.to).name)}: ${esc(k.title)}</li>`).join("")}</ul>`:`<p>${t("bTeamOk")}</p>`,""))}
   if(!tgPick[S.me]){const nk=mine.filter(k=>k.by!==S.me&&k.status!=="done").slice(-1)[0],rk=open.find(k=>k.due===off(1)&&k!==nk);tgPick[S.me]={nk:nk?.id,rk:rk?.id}}
   const nk=tasks.find(k=>k.id===tgPick[S.me].nk),rk=tasks.find(k=>k.id===tgPick[S.me].rk);
@@ -1290,7 +1290,7 @@ async function loadAll(){
   statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
-  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[]}));
+  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[],supervisors:r.supervisors||[]}));
   clients.length=0;cl.forEach(r=>clients.push({id:r.id,name:r.name,by:r.created_by}));
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
@@ -1540,7 +1540,7 @@ document.addEventListener("change",e=>{
 },true);
 
 /* ===== Workflow: statuses, task types, positions, Kanban, hand-off, Settings ===== */
-Object.assign(T.en,{pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
+Object.assign(T.en,{editTeam:"Edit team",teamOfT:"Team",teamSaved:"Team saved",noTeam:"No team yet",teamHelpSup:"Tick the staff this supervisor looks after. The supervisor can see and assign their tasks.",supBy:"Supervisor",pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"List",kanbanV:"Kanban",mine:"Mine",teamV:"Team",type:"Type",anyType:"Any type",noType:"No type",
  otherStages:"Other stages",otherHelp:"These cards are in statuses your position doesn't handle. You can open them but not move them.",
  moveTo:"Move to…",nextStep:"Move to next status",movedTo:"Moved to {a}",cantMove:"Your position can't move tasks to {a}.",lastStep:"This task is already at its last status.",
  handoffT:"Hand off to someone who handles {a}?",handoffHelp:"{a}'s position doesn't cover {b}. Choose who takes it next. They will be notified.",
@@ -1554,7 +1554,7 @@ Object.assign(T.en,{pickOne:"Choose…",fillIn:"Please fill in: {a}.",listV:"Lis
  positionsF:"Positions",noPos:"No position yet",editPos:"Edit positions",posSaved:"Positions saved",finishedWeek:"Finished this week",
  dragHint:"Drag cards between columns, or use Move to on each card.",nameReq:"Enter a name.",usedBy:"Used by {a} tasks",
  inUse:"Tasks still use this. Move them to another status or type first.",finishedTag:"Finished",stepsN:"{a} statuses",typesN:"{a} types"});
-Object.assign(T.km,{pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
+Object.assign(T.km,{editTeam:"កែក្រុម",teamOfT:"ក្រុម",teamSaved:"បានរក្សាទុកក្រុម",noTeam:"មិនទាន់មានក្រុម",teamHelpSup:"ធីកបុគ្គលិកដែលអ្នកត្រួតពិនិត្យនេះមើលការខុសត្រូវ។ អ្នកត្រួតពិនិត្យអាចមើល និងចាត់តាំងការងាររបស់ពួកគេ។",supBy:"អ្នកត្រួតពិនិត្យ",pickOne:"សូមជ្រើសរើស…",fillIn:"សូមបំពេញ៖ {a}។",listV:"បញ្ជី",kanbanV:"Kanban",mine:"របស់ខ្ញុំ",teamV:"ក្រុម",type:"ប្រភេទ",anyType:"គ្រប់ប្រភេទ",noType:"គ្មានប្រភេទ",
  otherStages:"ដំណាក់កាលផ្សេងទៀត",otherHelp:"កាតទាំងនេះស្ថិតក្នុងស្ថានភាពដែលតួនាទីរបស់អ្នកមិនទទួលខុសត្រូវ។ អ្នកអាចបើកមើលបាន ប៉ុន្តែមិនអាចផ្លាស់ទីបានទេ។",
  moveTo:"ផ្លាស់ទៅ…",nextStep:"ផ្លាស់ទៅស្ថានភាពបន្ទាប់",movedTo:"បានផ្លាស់ទៅ {a}",cantMove:"តួនាទីរបស់អ្នកមិនអាចផ្លាស់ភារកិច្ចទៅ {a} បានទេ។",lastStep:"ភារកិច្ចនេះនៅស្ថានភាពចុងក្រោយហើយ។",
  handoffT:"ប្រគល់ទៅអ្នកទទួលខុសត្រូវ {a}?",handoffHelp:"តួនាទីរបស់ {a} មិនគ្របដណ្តប់ {b} ទេ។ សូមជ្រើសរើសអ្នកបន្ត។ ពួកគេនឹងទទួលដំណឹង។",
@@ -1574,7 +1574,12 @@ Object.assign(S,{mode:"list",scope:"mine",fType:"any",setTab:"statuses"});
 try{const m=localStorage.getItem("pc-mode");if(m==="kanban"||m==="list")S.mode=m}catch(e){}
 NAV.admin.push("settings");
 NI.settings='<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>';
-BLOCKING.push("stEdit","ttEdit","poEdit","upos","handoff");
+BLOCKING.push("stEdit","ttEdit","poEdit","upos","handoff","uteam");
+/* Roles: admin and manager see everyone; a supervisor sees the staff the admin put in their team */
+const isMgr=u=>!!u&&(u.role==="admin"||u.role==="manager");
+const teamOf=uid=>users.filter(x=>x.active&&(x.supervisors||[]).includes(uid));
+/* people this user may give a task to (besides themselves) */
+function assignables(){const m=me();if(isMgr(m))return users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin");if(m.role==="supervisor")return teamOf(m.id);return []}
 const STCOLORS=["gray","blue","purple","orange","yellow","pink","teal","navy","green","red"];
 
 const ST=id=>statuses.find(s=>s.id===id),TT=id=>ttypes.find(x=>x.id===id),PO=id=>positions.find(p=>p.id===id);
@@ -1629,7 +1634,7 @@ function vTasks(){
   list=applyF(list);
   const tab=(f,l)=>`<button data-act="filter" data-f="${f}" aria-pressed="${S.filter===f}">${l}</button>`;
   return `${head}${kpiTile(u)}${seg}
-   <div class="tabs">${tab("all",t("openTab"))}${u.role==="staff"?tab("mgr",t("fromMgr")):""}${u.role==="staff"?tab("own",t("own")):""}${tab("done",t("doneTab")+" ("+nDone+")")}</div>
+   <div class="tabs">${tab("all",t("openTab"))}${!isMgr(u)?tab("mgr",t("fromMgr")):""}${!isMgr(u)?tab("own",t("own")):""}${tab("done",t("doneTab")+" ("+nDone+")")}</div>
    ${filterBar()}
    <div class="list">${list.length?list.map(k=>taskCard(k)).join(""):`<p class="empty">${t(fOn2()?"noMatch":S.filter==="done"?"noneDone":"none")}</p>`}</div>`;
 }
@@ -1665,7 +1670,7 @@ function dTask(){
    <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
    <div class="two"><label class="f">${t("status")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""} ${x.id!==k.stage&&!seesStage(x.id)?"disabled":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
-   ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${people().map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
+   ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
    ${descBlock(k)}
@@ -1679,7 +1684,7 @@ function dNew(){
   const m=me(),canAssign=m.role!=="staff",types=myTypes();
   if(S.dlg.body===undefined){S.dlg.body="";S.dlg.autoTpl=""}
   const ph=`<option value="" selected disabled>${t("pickOne")}</option>`;
-  const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${users.filter(u=>u.active&&u.id!==m.id&&u.role!=="admin").map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
+  const who=canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${assignables().map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
   return `<h2>${S.dlg.assign?t("assignTask"):t("addTask")}</h2><p class="err" id="nt-err" role="alert" hidden></p>
    <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off"></label>
    <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph}${types.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}<option value="__none">${t("noType")}</option></select></label>
@@ -1709,7 +1714,7 @@ function dUser(){
    <form data-form="user"><label class="f">${t("name")}<input type="text" id="nu-name" maxlength="60" autocomplete="off"></label>
    <div class="two"><label class="f">${t("username")}<input type="text" id="nu-user" maxlength="30" autocomplete="off" autocapitalize="none"></label>
    <label class="f">${t("password")}<input type="password" id="nu-pw" maxlength="60" autocomplete="new-password"></label></div>
-   <div class="two"><label class="f">${t("role")}<select id="nu-role"><option value="staff">${t("staff")}</option><option value="manager">${t("manager")}</option></select></label>
+   <div class="two"><label class="f">${t("role")}<select id="nu-role"><option value="staff">${t("staff")}</option><option value="supervisor">${t("supervisor")}</option><option value="manager">${t("manager")}</option></select></label>
    <label class="f">${t("weeklyKpi")}<input type="number" id="nu-kpi" min="0" max="99" value="10" style="width:100%"></label>
    <label class="f">${t("weeklyHours")}<input type="number" id="nu-cap" min="1" max="80" value="44" style="width:100%"></label></div>
    <div class="stack" style="gap:4px"><span class="lab">${t("positionsF")}</span>${posChecks("nu-pos",[])}</div>
@@ -1718,12 +1723,13 @@ function dUser(){
 function vUsers(){
   const opt=(v,cur)=>`<option value="${v}" ${v===cur?"selected":""}>${t(v)}</option>`;
   return `<div class="head"><h1>${t("users")}</h1><button class="btn primary" data-act="newuser">${t("createUser")}</button></div><p class="muted">${t("usersHelp")}</p>
-   <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br><span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
-    <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
+   <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br>${u.role==="supervisor"?`<span class="cap muted">${t("teamOfT")}: ${teamOf(u.id).map(x=>esc(x.name)).join(", ")||t("noTeam")}</span><br>`:""}${(u.supervisors||[]).filter(id=>U(id)).length?`<span class="cap muted">${t("supBy")}: ${(u.supervisors||[]).map(U).filter(Boolean).map(x=>esc(x.name)).join(", ")}</span><br>`:""}<span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
+    <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("supervisor",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
      ${u.role!=="admin"?`<label class="f">${t("weeklyKpi")}<input type="number" id="kpi-${u.id}" min="0" max="99" value="${u.kpi}" data-ch="kpi" data-id="${u.id}"></label><label class="f">${t("weeklyHours")}<input type="number" id="cap-${u.id}" min="1" max="80" value="${u.cap}" data-ch="cap" data-id="${u.id}"></label>`:""}
      <label class="c"><input type="checkbox" id="act-${u.id}" data-ch="active" data-id="${u.id}" ${u.active?"checked":""} ${u.id===S.me?"disabled":""}>${t("active")}</label>
      <button class="btn small" data-act="uedit" data-id="${u.id}">${t("editUser")}</button>
      <button class="btn small" data-act="upos-open" data-id="${u.id}">${t("editPos")}</button>
+     ${u.role==="supervisor"?`<button class="btn small" data-act="uteam-open" data-id="${u.id}">${t("editTeam")}</button>`:""}
      <button class="btn small" data-act="resetpw" data-id="${u.id}">${t("resetPw")}</button></div></div>`).join("")}</div>`;
 }
 function dUpos(){const u=U(S.dlg.id);return `<h2>${t("editPos")}: ${esc(u.name)}</h2>${posChecks("up-pos",u.positions||[])}
@@ -1811,6 +1817,11 @@ document.addEventListener("click",async e=>{
     case "handoff":{stop();const k=tasks.find(x=>x.id===S.dlg.id),u=U(b.dataset.u);S.dlg=null;
       run(()=>pb.collection("tasks").update(k.id,{assignee:u.id}),fill(t("handedTo"),u.name));return}
     case "upos-open":stop();S.dlg={type:"upos",id};render();return;
+    case "uteam-open":stop();S.dlg={type:"uteam",id};render();return;
+    case "uteam-save":{stop();const sid=S.dlg.id,on=new Set([...document.querySelectorAll('input[name="ut-staff"]:checked')].map(x=>x.value));S.dlg=null;
+      const changes=users.filter(u=>u.id!==sid&&on.has(u.id)!==(u.supervisors||[]).includes(sid))
+        .map(u=>pb.collection("users").update(u.id,{supervisors:on.has(u.id)?[...(u.supervisors||[]),sid]:(u.supervisors||[]).filter(x=>x!==sid)}));
+      run(()=>Promise.all(changes),t("teamSaved"));return}
     case "upos-save":{stop();const uid=S.dlg.id,ids=[...document.querySelectorAll('input[name="up-pos"]:checked')].map(x=>x.value);S.dlg=null;
       run(()=>pb.collection("users").update(uid,{positions:ids}),t("posSaved"));return}
     case "set-tab":stop();S.setTab=b.dataset.v;render();return;
@@ -1851,6 +1862,19 @@ document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closes
 
 /* Add task: clear the "missing" mark once a field is filled */
 ["change","input"].forEach(ev=>document.addEventListener(ev,e=>{const el=e.target;if(el&&el.getAttribute&&el.getAttribute("aria-invalid")==="true"&&el.value)el.setAttribute("aria-invalid","false")}));
+
+/* ---------- Supervisor team (admin) ---------- */
+function dUteam(){const sup=U(S.dlg.id),cands=users.filter(u=>u.active&&u.id!==sup.id&&(u.role==="staff"||u.role==="supervisor"));
+  return `<h2>${t("editTeam")}: ${esc(sup.name)}</h2><p class="muted">${t("teamHelpSup")}</p>
+  <div class="ppl">${cands.map(u=>`<label class="c"><input type="checkbox" name="ut-staff" value="${u.id}" ${(u.supervisors||[]).includes(sup.id)?"checked":""}>${esc(u.name)}</label>`).join("")}</div>
+  <div class="acts"><button class="btn" data-act="close">${t("cancel")}</button><button class="btn primary" data-act="uteam-save">${t("saveT")}</button></div>`}
+/* Team page: managers see all staff and supervisors; a supervisor sees their own team */
+function vTeam(){
+  const m=me(),staff=isMgr(m)?users.filter(u=>u.active&&u.id!==m.id&&(u.role==="staff"||u.role==="supervisor")):teamOf(m.id);
+  return `<div class="head"><h1>${t("team")}</h1>${staff.length?`<button class="btn primary" data-act="new" data-assign="1">${t("assignTask")}</button>`:""}</div>
+   <p class="muted">${t("teamHelp")}</p>${filterBar()}
+   <div class="rows">${staff.length?staff.map(u=>`<div>${personRow(u,null,true)}${S.expand===u.id?`<div class="sub"><div class="list">${(l=>l.length?l.map(k=>taskCard(k)).join(""):`<p class="empty">${t(fOn()?"noMatch":"noneTeam")}</p>`)(applyF(sortT(openOf(u.id))))}</div></div>`:""}</div>`).join(""):`<p class="empty">${t("noTeam")}</p>`}</div>`;
+}
 
 /* ===== Rich-text description, attachments (with compression) and renaming users ===== */
 Object.assign(T.en,{formatting:"Formatting",fBold:"Bold",fItalic:"Italic",fUnder:"Underline",fStrike:"Strikethrough",fHead:"Heading",fBullets:"Bulleted list",fNumbers:"Numbered list",
@@ -1994,7 +2018,7 @@ function attItem(a,canDel){
 function attBlock(taskId){
   const m=me(),list=taskId?attachments.filter(a=>a.task===taskId):[],pend=(S.dlg&&S.dlg.pend)||[];
   return `<div class="stack" style="gap:8px"><span class="lab">${t("attachments")}${list.length+pend.length?` (${list.length+pend.length})`:""}</span>
-   ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||m.role!=="staff")).join("")}</div>`:""}
+   ${list.length?`<div class="atts">${list.map(a=>attItem(a,a.owner===S.me||isMgr(m))).join("")}</div>`:""}
    ${pend.length?`<div class="atts">${pend.map((p,i)=>{const rm=`<button type="button" class="btn small" data-act="att-unpend" data-i="${i}">${t("remove")}</button>`;
      if(p.kind==="link")return linkCard(p,rm);
      return `<div class="att att-pend"><span class="cap"><b>${esc(p.name)}</b> · ${fsize(p.file?p.file.size:0)}${p.before&&p.file&&p.file.size<p.before?` <span class="muted">(${fill(t("saved1"),fsize(p.before),fsize(p.file.size))})</span>`:""}</span>${rm}</div>`}).join("")}</div><p class="note-hint">${t("attPending")}</p>`:""}
@@ -2114,7 +2138,7 @@ const templates=[];
 let rtRange=null;
 document.addEventListener("selectionchange",()=>{const s=getSelection();if(!s||!s.rangeCount)return;let n=s.anchorNode;if(n&&n.nodeType===3)n=n.parentNode;if(n&&n.closest&&n.closest("[data-rta]"))rtRange=s.getRangeAt(0).cloneRange()});
 function tplFor(typeId){return typeId?templates.find(x=>x.type===typeId):null}
-function canEditTpl(x){const m=me();return x.owner===m.id||m.role!=="staff"}
+function canEditTpl(x){const m=me();return x.owner===m.id||isMgr(m)}
 function curTypeId(){const sel=document.getElementById("nt-type");if(sel)return sel.value;const k=S.dlg&&S.dlg.id&&tasks.find(x=>x.id===S.dlg.id);return k?k.type:""}
 function tplPanel(){
   const tn=id=>{const x=ttypes.find(y=>y.id===id);return x?nm(x):""},cur=curTypeId();

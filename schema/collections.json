@@ -1,336 +1,646 @@
 [
   {
     "id": "pc_clients00001",
-    "name": "clients",
-    "type": "base",
     "listRule": "@request.auth.id != \"\"",
     "viewRule": "@request.auth.id != \"\"",
     "createRule": "@request.auth.id != \"\" && @request.body.created_by = @request.auth.id",
     "updateRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
     "deleteRule": "@request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
+    "name": "clients",
+    "type": "base",
     "fields": [
       {
-        "name": "name",
-        "type": "text",
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
         "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1579384326",
+        "max": 80,
         "min": 1,
-        "max": 80
+        "name": "name",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
       },
       {
-        "name": "created_by",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation3725765462",
         "maxSelect": 1,
-        "cascadeDelete": false
+        "minSelect": 0,
+        "name": "created_by",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       },
       {
+        "hidden": false,
+        "id": "autodate3332085495",
         "name": "updated",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": true
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       }
     ],
     "indexes": [
       "CREATE UNIQUE INDEX idx_clients_name ON clients (name COLLATE NOCASE)"
-    ]
+    ],
+    "system": false
   },
   {
     "id": "pc_tasks0000001",
+    "listRule": "assignee = @request.auth.id || creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && assignee.supervisors.id ?= @request.auth.id)",
+    "viewRule": "assignee = @request.auth.id || creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && assignee.supervisors.id ?= @request.auth.id)",
+    "createRule": "@request.auth.id != \"\" && @request.body.creator = @request.auth.id && (@request.body.assignee = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && @request.body.assignee.supervisors.id ?= @request.auth.id))",
+    "updateRule": "(assignee = @request.auth.id || creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && assignee.supervisors.id ?= @request.auth.id)) && @request.body.creator:isset = false",
+    "deleteRule": "creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && assignee.supervisors.id ?= @request.auth.id)",
     "name": "tasks",
     "type": "base",
-    "listRule": "assignee = @request.auth.id || creator = @request.auth.id || @request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
-    "viewRule": "assignee = @request.auth.id || creator = @request.auth.id || @request.auth.role = \"admin\" || @request.auth.role = \"manager\"",
-    "createRule": "@request.auth.id != \"\" && @request.body.creator = @request.auth.id && (@request.body.assignee = @request.auth.id || @request.auth.role != \"staff\")",
-    "updateRule": "(assignee = @request.auth.id || creator = @request.auth.id || @request.auth.role != \"staff\") && @request.body.creator:isset = false",
-    "deleteRule": "creator = @request.auth.id || @request.auth.role != \"staff\"",
     "fields": [
       {
-        "name": "title",
-        "type": "text",
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
         "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text724990059",
+        "max": 200,
         "min": 1,
-        "max": 200
+        "name": "title",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text196455508",
+        "max": 2000,
+        "min": 0,
         "name": "desc",
-        "type": "text",
-        "max": 2000
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "cascadeDelete": false,
+        "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation2090728460",
+        "maxSelect": 1,
+        "minSelect": 0,
         "name": "assignee",
-        "type": "relation",
-        "collectionId": "_pb_users_auth_",
-        "maxSelect": 1,
+        "presentable": false,
         "required": true,
-        "cascadeDelete": false
+        "system": false,
+        "type": "relation"
       },
       {
+        "cascadeDelete": false,
+        "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation3154569827",
+        "maxSelect": 1,
+        "minSelect": 0,
         "name": "creator",
-        "type": "relation",
-        "collectionId": "_pb_users_auth_",
-        "maxSelect": 1,
+        "presentable": false,
         "required": true,
-        "cascadeDelete": false
+        "system": false,
+        "type": "relation"
       },
       {
-        "name": "client",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "pc_clients00001",
+        "hidden": false,
+        "id": "relation3343123541",
         "maxSelect": 1,
-        "cascadeDelete": false
+        "minSelect": 0,
+        "name": "client",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text3742343818",
+        "max": 10,
+        "min": 0,
         "name": "due",
-        "type": "text",
         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-        "max": 10
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "select1655102503",
+        "maxSelect": 1,
         "name": "priority",
+        "presentable": false,
+        "required": true,
+        "system": false,
         "type": "select",
         "values": [
           "high",
           "normal",
           "low"
-        ],
-        "maxSelect": 1,
-        "required": true
+        ]
       },
       {
+        "hidden": false,
+        "id": "select2063623452",
+        "maxSelect": 1,
         "name": "status",
+        "presentable": false,
+        "required": true,
+        "system": false,
         "type": "select",
         "values": [
           "todo",
           "doing",
           "done"
-        ],
-        "maxSelect": 1,
-        "required": true
+        ]
       },
       {
+        "hidden": false,
+        "id": "number3794227145",
+        "max": 99,
+        "min": 0,
         "name": "est",
-        "type": "number",
-        "min": 0,
-        "max": 99
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
       },
       {
+        "hidden": false,
+        "id": "number4049942361",
+        "max": 99,
+        "min": 0,
         "name": "spent",
-        "type": "number",
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text2107851348",
+        "max": 10,
         "min": 0,
-        "max": 99
-      },
-      {
         "name": "done_at",
-        "type": "text",
         "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$",
-        "max": 10
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "bool2824319936",
         "name": "repeat",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "bool"
       },
       {
-        "name": "type",
-        "type": "relation",
-        "collectionId": "pc_tasktypes001",
-        "maxSelect": 1,
-        "cascadeDelete": false
-      },
-      {
-        "name": "stage",
-        "type": "relation",
-        "collectionId": "pc_statuses0001",
-        "maxSelect": 1,
-        "cascadeDelete": false
-      },
-      {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       },
       {
+        "hidden": false,
+        "id": "autodate3332085495",
         "name": "updated",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": true
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
+      },
+      {
+        "cascadeDelete": false,
+        "collectionId": "pc_tasktypes001",
+        "hidden": false,
+        "id": "relation2363381545",
+        "maxSelect": 1,
+        "minSelect": 0,
+        "name": "type",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
+      },
+      {
+        "cascadeDelete": false,
+        "collectionId": "pc_statuses0001",
+        "hidden": false,
+        "id": "relation3262944105",
+        "maxSelect": 1,
+        "minSelect": 0,
+        "name": "stage",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
+      },
+      {
+        "convertURLs": false,
+        "hidden": false,
+        "id": "editor3685223346",
+        "maxSize": 100000,
+        "name": "body",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "editor"
       }
     ],
     "indexes": [
       "CREATE INDEX idx_tasks_assignee ON tasks (assignee, status)",
       "CREATE INDEX idx_tasks_done ON tasks (done_at)"
-    ]
+    ],
+    "system": false
   },
   {
     "id": "pc_comments0001",
-    "name": "comments",
-    "type": "base",
-    "listRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"",
-    "viewRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"",
-    "createRule": "@request.body.author = @request.auth.id && (@request.body.task.assignee = @request.auth.id || @request.body.task.creator = @request.auth.id || @request.auth.role != \"staff\")",
+    "listRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && task.assignee.supervisors.id ?= @request.auth.id)",
+    "viewRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && task.assignee.supervisors.id ?= @request.auth.id)",
+    "createRule": "@request.body.author = @request.auth.id && (@request.body.task.assignee = @request.auth.id || @request.body.task.creator = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\") || (@request.auth.role = \"supervisor\" && @request.body.task.assignee.supervisors.id ?= @request.auth.id))",
     "updateRule": null,
     "deleteRule": "author = @request.auth.id",
+    "name": "comments",
+    "type": "base",
     "fields": [
       {
-        "name": "task",
-        "type": "relation",
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "cascadeDelete": true,
         "collectionId": "pc_tasks0000001",
+        "hidden": false,
+        "id": "relation1384045349",
         "maxSelect": 1,
+        "minSelect": 0,
+        "name": "task",
+        "presentable": false,
         "required": true,
-        "cascadeDelete": true
+        "system": false,
+        "type": "relation"
       },
       {
-        "name": "author",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation3182418120",
         "maxSelect": 1,
+        "minSelect": 0,
+        "name": "author",
+        "presentable": false,
         "required": true,
-        "cascadeDelete": false
+        "system": false,
+        "type": "relation"
       },
       {
-        "name": "text",
-        "type": "text",
-        "required": true,
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text999008199",
+        "max": 1000,
         "min": 1,
-        "max": 1000
+        "name": "text",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       }
     ],
     "indexes": [
       "CREATE INDEX idx_comments_task ON comments (task)"
-    ]
+    ],
+    "system": false
   },
   {
     "id": "pc_documents001",
-    "name": "documents",
-    "type": "base",
     "listRule": "area = \"company\" || area = \"client\" || owner = @request.auth.id",
     "viewRule": "area = \"company\" || area = \"client\" || owner = @request.auth.id",
-    "createRule": "@request.body.owner = @request.auth.id && (@request.body.area != \"company\" || @request.auth.role != \"staff\") && (@request.body.area != \"client\" || @request.body.client != \"\")",
-    "updateRule": "owner = @request.auth.id || @request.auth.role != \"staff\"",
-    "deleteRule": "owner = @request.auth.id || @request.auth.role != \"staff\"",
+    "createRule": "@request.body.owner = @request.auth.id && (@request.body.area != \"company\" || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\")) && (@request.body.area != \"client\" || @request.body.client != \"\")",
+    "updateRule": "owner = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\")",
+    "deleteRule": "owner = @request.auth.id || (@request.auth.role = \"admin\" || @request.auth.role = \"manager\")",
+    "name": "documents",
+    "type": "base",
     "fields": [
       {
-        "name": "name",
-        "type": "text",
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
         "required": true,
-        "min": 1,
-        "max": 240
+        "system": true,
+        "type": "text"
       },
       {
-        "name": "file",
-        "type": "file",
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1579384326",
+        "max": 240,
+        "min": 1,
+        "name": "name",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
         "required": true,
+        "system": false,
+        "type": "text"
+      },
+      {
+        "hidden": false,
+        "id": "file2359244304",
         "maxSelect": 1,
         "maxSize": 2147483648,
-        "protected": true
+        "mimeTypes": null,
+        "name": "file",
+        "presentable": false,
+        "protected": true,
+        "required": true,
+        "system": false,
+        "thumbs": null,
+        "type": "file"
       },
       {
+        "hidden": false,
+        "id": "select3616816488",
+        "maxSelect": 1,
         "name": "area",
+        "presentable": false,
+        "required": true,
+        "system": false,
         "type": "select",
         "values": [
           "company",
           "client",
           "mine"
-        ],
-        "maxSelect": 1,
-        "required": true
+        ]
       },
       {
-        "name": "client",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "pc_clients00001",
+        "hidden": false,
+        "id": "relation3343123541",
         "maxSelect": 1,
-        "cascadeDelete": false
+        "minSelect": 0,
+        "name": "client",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
-        "name": "task",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "pc_tasks0000001",
+        "hidden": false,
+        "id": "relation1384045349",
         "maxSelect": 1,
-        "cascadeDelete": false
+        "minSelect": 0,
+        "name": "task",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
-        "name": "owner",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation3479234172",
         "maxSelect": 1,
+        "minSelect": 0,
+        "name": "owner",
+        "presentable": false,
         "required": true,
-        "cascadeDelete": false
+        "system": false,
+        "type": "relation"
       },
       {
+        "hidden": false,
+        "id": "number3206337475",
+        "max": null,
+        "min": 1,
         "name": "version",
-        "type": "number",
-        "min": 1
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
       },
       {
+        "hidden": false,
+        "id": "number4156564586",
+        "max": null,
+        "min": 0,
         "name": "size",
-        "type": "number",
-        "min": 0
+        "onlyInt": false,
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "number"
       },
       {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       },
       {
+        "hidden": false,
+        "id": "autodate3332085495",
         "name": "updated",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": true
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       }
     ],
     "indexes": [
       "CREATE INDEX idx_documents_area ON documents (area, client)"
-    ]
+    ],
+    "system": false
   },
   {
     "id": "pc_notes0000001",
-    "name": "notes",
-    "type": "base",
     "listRule": "owner = @request.auth.id || share = \"team\" || (share = \"people\" && people.id ?= @request.auth.id)",
     "viewRule": "owner = @request.auth.id || share = \"team\" || (share = \"people\" && people.id ?= @request.auth.id)",
     "createRule": "@request.body.owner = @request.auth.id",
     "updateRule": "owner = @request.auth.id || ((share = \"team\" || (share = \"people\" && people.id ?= @request.auth.id)) && @request.body.owner:isset = false && @request.body.share:isset = false && @request.body.people:isset = false)",
     "deleteRule": "owner = @request.auth.id",
+    "name": "notes",
+    "type": "base",
     "fields": [
       {
-        "name": "owner",
-        "type": "relation",
-        "collectionId": "_pb_users_auth_",
-        "maxSelect": 1,
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
         "required": true,
-        "cascadeDelete": true
+        "system": true,
+        "type": "text"
       },
       {
+        "cascadeDelete": true,
+        "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation3479234172",
+        "maxSelect": 1,
+        "minSelect": 0,
+        "name": "owner",
+        "presentable": false,
+        "required": true,
+        "system": false,
+        "type": "relation"
+      },
+      {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text724990059",
+        "max": 120,
+        "min": 0,
         "name": "title",
-        "type": "text",
-        "max": 120
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text999008199",
+        "max": 5000,
+        "min": 0,
         "name": "text",
-        "type": "text",
-        "max": 5000
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "json3776899405",
+        "maxSize": 200000,
         "name": "items",
-        "type": "json",
-        "maxSize": 200000
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
       },
       {
+        "hidden": false,
+        "id": "select1716930793",
+        "maxSelect": 1,
         "name": "color",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "select",
         "values": [
           "yellow",
@@ -339,195 +649,365 @@
           "pink",
           "lilac",
           "white"
-        ],
-        "maxSelect": 1
+        ]
       },
       {
+        "hidden": false,
+        "id": "bool3844597223",
         "name": "pinned",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "bool"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text245846248",
+        "max": 40,
+        "min": 0,
         "name": "label",
-        "type": "text",
-        "max": 40
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "select4010188122",
+        "maxSelect": 1,
         "name": "share",
+        "presentable": false,
+        "required": true,
+        "system": false,
         "type": "select",
         "values": [
           "private",
           "team",
           "people"
-        ],
-        "maxSelect": 1,
-        "required": true
+        ]
       },
       {
-        "name": "people",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation672557606",
         "maxSelect": 99,
-        "cascadeDelete": false
+        "minSelect": 0,
+        "name": "people",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text2568079693",
+        "max": 16,
+        "min": 0,
         "name": "remind",
-        "type": "text",
         "pattern": "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2})?$",
-        "max": 16
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "bool3034839569",
         "name": "reminded",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "bool"
       },
       {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       },
       {
+        "hidden": false,
+        "id": "autodate3332085495",
         "name": "updated",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": true
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       }
     ],
     "indexes": [
       "CREATE INDEX idx_notes_owner ON notes (owner)"
-    ]
+    ],
+    "system": false
   },
   {
     "id": "pc_notifs000001",
-    "name": "notifications",
-    "type": "base",
     "listRule": "user = @request.auth.id",
     "viewRule": "user = @request.auth.id",
     "createRule": null,
     "updateRule": "user = @request.auth.id && @request.body.user:isset = false && @request.body.kind:isset = false && @request.body.data:isset = false",
     "deleteRule": "user = @request.auth.id",
+    "name": "notifications",
+    "type": "base",
     "fields": [
       {
-        "name": "user",
-        "type": "relation",
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "cascadeDelete": true,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation2375276105",
         "maxSelect": 1,
+        "minSelect": 0,
+        "name": "user",
+        "presentable": false,
         "required": true,
-        "cascadeDelete": true
+        "system": false,
+        "type": "relation"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1002749145",
+        "max": 30,
+        "min": 0,
         "name": "kind",
-        "type": "text",
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
         "required": true,
-        "max": 30
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "json2918445923",
+        "maxSize": 20000,
         "name": "data",
-        "type": "json",
-        "maxSize": 20000
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
       },
       {
+        "hidden": false,
+        "id": "bool2555855207",
         "name": "read",
+        "presentable": false,
+        "required": false,
+        "system": false,
         "type": "bool"
       },
       {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       }
     ],
     "indexes": [
       "CREATE INDEX idx_notifs_user ON notifications (user, read)"
-    ]
+    ],
+    "system": false
   },
   {
     "id": "pc_reports00001",
+    "listRule": "user = @request.auth.id || @request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && (user.role = \"staff\" || user.role = \"supervisor\"))",
+    "viewRule": "user = @request.auth.id || @request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && (user.role = \"staff\" || user.role = \"supervisor\"))",
+    "createRule": "@request.body.user = @request.auth.id",
+    "updateRule": "user != @request.auth.id && (@request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && (user.role = \"staff\" || user.role = \"supervisor\"))) && @request.body.user:isset = false && @request.body.snap:isset = false && @request.body.week:isset = false",
+    "deleteRule": null,
     "name": "reports",
     "type": "base",
-    "listRule": "user = @request.auth.id || @request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && user.role = \"staff\")",
-    "viewRule": "user = @request.auth.id || @request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && user.role = \"staff\")",
-    "createRule": "@request.body.user = @request.auth.id",
-    "updateRule": "user != @request.auth.id && (@request.auth.role = \"admin\" || (@request.auth.role = \"manager\" && user.role = \"staff\")) && @request.body.user:isset = false && @request.body.snap:isset = false && @request.body.week:isset = false",
-    "deleteRule": null,
     "fields": [
       {
-        "name": "user",
-        "type": "relation",
+        "autogeneratePattern": "[a-z0-9]{15}",
+        "hidden": false,
+        "id": "text3208210256",
+        "max": 15,
+        "min": 15,
+        "name": "id",
+        "pattern": "^[a-z0-9]+$",
+        "presentable": false,
+        "primaryKey": true,
+        "required": true,
+        "system": true,
+        "type": "text"
+      },
+      {
+        "cascadeDelete": false,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation2375276105",
         "maxSelect": 1,
+        "minSelect": 0,
+        "name": "user",
+        "presentable": false,
         "required": true,
-        "cascadeDelete": false
+        "system": false,
+        "type": "relation"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1532651968",
+        "max": 10,
+        "min": 0,
         "name": "week",
-        "type": "text",
-        "required": true,
         "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-        "max": 10
+        "presentable": false,
+        "primaryKey": false,
+        "required": true,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "json912530846",
+        "maxSize": 500000,
         "name": "snap",
-        "type": "json",
-        "maxSize": 500000
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "json"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text3485334036",
+        "max": 1000,
+        "min": 0,
         "name": "note",
-        "type": "text",
-        "max": 1000
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "hidden": false,
+        "id": "select2063623452",
+        "maxSelect": 1,
         "name": "status",
+        "presentable": false,
+        "required": true,
+        "system": false,
         "type": "select",
         "values": [
           "pending",
           "approved",
           "returned"
-        ],
-        "maxSelect": 1,
-        "required": true
+        ]
       },
       {
-        "name": "decided_by",
-        "type": "relation",
+        "cascadeDelete": false,
         "collectionId": "_pb_users_auth_",
+        "hidden": false,
+        "id": "relation37346028",
         "maxSelect": 1,
-        "cascadeDelete": false
+        "minSelect": 0,
+        "name": "decided_by",
+        "presentable": false,
+        "required": false,
+        "system": false,
+        "type": "relation"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text1470494098",
+        "max": 20,
+        "min": 0,
         "name": "decided_at",
-        "type": "text",
-        "max": 20
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
+        "autogeneratePattern": "",
+        "hidden": false,
+        "id": "text2490651244",
+        "max": 1000,
+        "min": 0,
         "name": "comment",
-        "type": "text",
-        "max": 1000
+        "pattern": "",
+        "presentable": false,
+        "primaryKey": false,
+        "required": false,
+        "system": false,
+        "type": "text"
       },
       {
-        "name": "pdf",
-        "type": "file",
+        "hidden": false,
+        "id": "file250665868",
         "maxSelect": 1,
         "maxSize": 20971520,
         "mimeTypes": [
           "application/pdf"
         ],
-        "protected": true
+        "name": "pdf",
+        "presentable": false,
+        "protected": true,
+        "required": false,
+        "system": false,
+        "thumbs": null,
+        "type": "file"
       },
       {
+        "hidden": false,
+        "id": "autodate2990389176",
         "name": "created",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": false
+        "onUpdate": false,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       },
       {
+        "hidden": false,
+        "id": "autodate3332085495",
         "name": "updated",
-        "type": "autodate",
         "onCreate": true,
-        "onUpdate": true
+        "onUpdate": true,
+        "presentable": false,
+        "system": false,
+        "type": "autodate"
       }
     ],
     "indexes": [
       "CREATE INDEX idx_reports_user ON reports (user, week)"
-    ]
+    ],
+    "system": false
   }
 ]

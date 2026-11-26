@@ -134,7 +134,7 @@ onRecordAfterCreateSuccess((e) => {
     const pc = require(`${__hooks}/lib/pc.js`)
     const r = e.record, uid = r.getString("user")
     const owner = e.app.findRecordById("users", uid)
-    const approverRole = owner.getString("role") === "staff" ? "manager" : "admin"
+    const approverRole = ["staff", "supervisor"].indexOf(owner.getString("role")) >= 0 ? "manager" : "admin"
     e.app.findRecordsByFilter("users", "active = true && role = {:r} && id != {:u}", "", 100, 0, { r: approverRole, u: uid })
       .forEach((m) => pc.notify(e.app, m.id, "rep", { by: uid, rep: r.id }))
   } catch (err) { console.log("report create hook: " + err) }

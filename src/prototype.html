@@ -377,7 +377,7 @@ const T={en:{
  dueToday:"Due today",dueTom:"Due tomorrow",daysLate:"days overdue",dayLate:"1 day overdue",dueOn:"Due",from:"From",
  status:"Status",reassign:"Assigned to",none:"No tasks here yet. Add one to get started.",noneTeam:"No open tasks.",
  open:"open",teamKpi:"Team KPI",reachedN:"People who reached KPI",overdueN:"Overdue tasks",thisWeek:"This week",
- createUser:"Create user",name:"Full name",role:"Role",admin:"Admin",manager:"Manager",staff:"Staff",weeklyKpi:"Weekly KPI",active:"Active",
+ createUser:"Create user",name:"Full name",role:"Role",admin:"Admin",manager:"Manager",supervisor:"Supervisor",staff:"Staff",weeklyKpi:"Weekly KPI",active:"Active",
  resetPw:"Reset password",pwReset:"Password reset for",userMade:"User created",saved:"Task saved",markDone:"Mark as done",
  teamHelp:"Select a person to see their open tasks.",boardHelp:"Tasks completed this week. Only names and counts are shared.",
  usersHelp:"Set each person's role and weekly KPI target.",days:["M","T","W","T","F","S","S"],titleReq:"Enter a task title.",userReq:"Enter a name, username and password.",userDup:"That username is already taken.",
@@ -394,7 +394,7 @@ const T={en:{
  dueToday:"កំណត់ថ្ងៃនេះ",dueTom:"កំណត់ថ្ងៃស្អែក",daysLate:"ថ្ងៃ ហួសកំណត់",dayLate:"ហួសកំណត់ ១ ថ្ងៃ",dueOn:"កំណត់",from:"ពី",
  status:"ស្ថានភាព",reassign:"ចាត់ឱ្យ",none:"មិនទាន់មានភារកិច្ចទេ។ សូមបន្ថែមមួយដើម្បីចាប់ផ្តើម។",noneTeam:"គ្មានភារកិច្ចនៅសល់ទេ។",
  open:"នៅសល់",teamKpi:"KPI ក្រុម",reachedN:"អ្នកដែលសម្រេច KPI",overdueN:"ភារកិច្ចហួសកំណត់",thisWeek:"សប្តាហ៍នេះ",
- createUser:"បង្កើតអ្នកប្រើ",name:"ឈ្មោះពេញ",role:"តួនាទី",admin:"អ្នកគ្រប់គ្រងប្រព័ន្ធ",manager:"អ្នកគ្រប់គ្រង",staff:"បុគ្គលិក",weeklyKpi:"KPI ប្រចាំសប្តាហ៍",active:"សកម្ម",
+ createUser:"បង្កើតអ្នកប្រើ",name:"ឈ្មោះពេញ",role:"តួនាទី",admin:"អ្នកគ្រប់គ្រងប្រព័ន្ធ",manager:"អ្នកគ្រប់គ្រង",supervisor:"អ្នកត្រួតពិនិត្យ",staff:"បុគ្គលិក",weeklyKpi:"KPI ប្រចាំសប្តាហ៍",active:"សកម្ម",
  resetPw:"កំណត់ពាក្យសម្ងាត់ឡើងវិញ",pwReset:"បានកំណត់ពាក្យសម្ងាត់ឡើងវិញសម្រាប់",userMade:"បានបង្កើតអ្នកប្រើ",saved:"បានរក្សាទុកភារកិច្ច",markDone:"សម្គាល់ថារួចរាល់",
  teamHelp:"ជ្រើសរើសបុគ្គលិកម្នាក់ ដើម្បីមើលភារកិច្ចដែលនៅសល់។",boardHelp:"ភារកិច្ចដែលបានបញ្ចប់ក្នុងសប្តាហ៍នេះ។ បង្ហាញតែឈ្មោះ និងចំនួនប៉ុណ្ណោះ។",
  usersHelp:"កំណត់តួនាទី និង KPI ប្រចាំសប្តាហ៍សម្រាប់ម្នាក់ៗ។",days:["ច","អ","ព","ព្រ","សុ","ស","អា"],titleReq:"សូមបញ្ចូលចំណងជើងភារកិច្ច។",userReq:"សូមបញ្ចូលឈ្មោះ ឈ្មោះអ្នកប្រើ និងពាក្យសម្ងាត់។",userDup:"ឈ្មោះអ្នកប្រើនេះមានរួចហើយ។",
@@ -612,7 +612,7 @@ function vLogin(){
    <div class="demo"><span class="lab muted">${t("demo")}</span>${demo.map(([u,r])=>`<button class="btn" data-act="demo" data-u="${u}"><span>${u}</span><span class="muted">${t(r)}</span></button>`).join("")}</div>
    <button class="btn small" data-act="lang" style="align-self:flex-start">${S.lang==="en"?"ភាសាខ្មែរ":"English"}</button></div></div>`;
 }
-const NAV={staff:["tasks","notes","docs","board"],manager:["tasks","team","reports","notes","docs","board"],admin:["dash","users","reports","docs","notes","board"]};
+const NAV={staff:["tasks","notes","docs","board"],supervisor:["tasks","team","notes","docs","board"],manager:["tasks","team","reports","notes","docs","board"],admin:["dash","users","reports","docs","notes","board"]};
 const R={};
 const NI={tasks:'<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
  team:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
@@ -809,8 +809,8 @@ function buildReport(uid,wk){
     .map(k=>({title:k.title,client:k.client,est:k.est||0,spent:k.spent||0,doneAt:k.doneAt}));
   return {items,kpi:u.kpi,cap:u.cap,open:open.length,overdue:open.filter(k=>k.due<TODAY).length};
 }
-const approversOf=uid=>U(uid).role==="staff"?users.filter(u=>u.active&&u.role==="manager").map(u=>u.id):users.filter(u=>u.active&&u.role==="admin").map(u=>u.id);
-const canDecide=r=>{const m=me();return r.uid!==S.me&&(m.role==="admin"||(m.role==="manager"&&U(r.uid).role==="staff"))};
+const approversOf=uid=>["staff","supervisor"].includes(U(uid).role)?users.filter(u=>u.active&&u.role==="manager").map(u=>u.id):users.filter(u=>u.active&&u.role==="admin").map(u=>u.id);
+const canDecide=r=>{const m=me();return r.uid!==S.me&&(m.role==="admin"||(m.role==="manager"&&["staff","supervisor"].includes(U(r.uid).role)))};
 const pendingFor=()=>reports.filter(r=>r.status==="pending"&&canDecide(r)).length;
 users.filter(u=>u.active&&u.role!=="admin").forEach((u,ui)=>{for(let i=0;i<6;i++){const d=iso(addDays(wk0,-7+((i+ui)%5))),est=[3,4,5,6,4,3][i];
   _tpush({id:"t"+(++tid),title:POOL[(i*3+ui)%POOL.length],desc:"",to:u.id,by:i%2?"u2":u.id,due:d,prio:"normal",status:"done",doneAt:d,repeat:false,comments:[],client:["c1","c2","c3",""][(i+ui)%4],est,spent:Math.max(1,est+[0,1,-1,0.5,0,2][(i+ui)%6])})}});
@@ -909,10 +909,10 @@ async function makePdf(uid,wk,repId,btn){
   finally{holder.remove();pdfBusy=false;btn.disabled=false}
 }
 function vReports(){
-  const m=me(),mine=reports.filter(r=>r.uid!==S.me&&(m.role==="admin"||U(r.uid).role==="staff"));
+  const m=me(),mine=reports.filter(r=>r.uid!==S.me&&(m.role==="admin"||["staff","supervisor"].includes(U(r.uid).role)));
   const tab=(v,l)=>`<button data-act="rtab" data-v="${v}" aria-pressed="${S.rTab===v}">${l} (${mine.filter(r=>r.status===v).length})</button>`;
   const list=mine.filter(r=>r.status===S.rTab).sort((a,b)=>b.at.localeCompare(a.at));
-  const need=users.filter(u=>u.active&&u.id!==S.me&&(m.role==="admin"?u.role!=="admin":u.role==="staff")&&!reports.some(r=>r.uid===u.id&&r.wk===LWK&&r.status!=="returned"));
+  const need=users.filter(u=>u.active&&u.id!==S.me&&(m.role==="admin"?u.role!=="admin":["staff","supervisor"].includes(u.role))&&!reports.some(r=>r.uid===u.id&&r.wk===LWK&&r.status!=="returned"));
   return `<div class="head"><h1>${t("reports")}</h1></div>
    <div class="tabs">${tab("pending",t("stPending"))}${tab("approved",t("stApproved"))}${tab("returned",t("stReturned"))}</div>
    <p class="muted">${need.length?fill(t("notSubmitted"),need.map(u=>esc(u.name)).join(", ")):t("allSubmitted")}</p>
@@ -944,7 +944,7 @@ function dNotifs(){
 }
 
 function vDocs(){
-  const staff=me().role==="staff";
+  const staff=!["admin","manager"].includes(me().role);
   let list=docs.filter(d=>S.dTab==="company"?d.area==="company":S.dTab==="clients"?d.area==="client"&&(S.dClient==="all"||d.client===S.dClient):d.area==="mine"&&d.by===S.me);
   if(S.dq)list=list.filter(d=>d.name.toLowerCase().includes(S.dq.toLowerCase()));
   if(S.dType!=="any")list=list.filter(d=>kindOf(d.name)===S.dType);
@@ -1080,7 +1080,7 @@ function chat(){
       kpiConf[S.me]?"":`<button data-act="kpi-confirm">${t("confirmKpi")}</button>`))}
   const day=open.filter(k=>k.due<=TODAY).sort((a,b)=>a.due.localeCompare(b.due));
   out.push(msg(fmt(TODAY)+", 08:00",`<p>${fill(t("bMorning"),esc(m.name))}</p>${day.length?`<ul>${day.map(k=>`<li>${esc(k.title)}${k.due<TODAY?` <span class="late">(${t("overdue")})</span>`:""}</li>`).join("")}</ul>`:`<p>${t("bNothing")}</p>`}`,`<button data-act="tg-open">${t("bOpen")}</button>`));
-  if(m.role!=="staff"){const late=tasks.filter(k=>k.status!=="done"&&k.due<TODAY&&U(k.to).role==="staff"&&U(k.to).active);
+  if(m.role!=="staff"){const late=tasks.filter(k=>k.status!=="done"&&k.due<TODAY&&k.to!==S.me&&U(k.to).role!=="admin"&&U(k.to).active);
     out.push(msg(fmt(TODAY)+", 08:05",late.length?`<p>${t("bTeam")}</p><ul>${late.map(k=>`<li>${esc(U(k.to).name)}: ${esc(k.title)}</li>`).join("")}</ul>`:`<p>${t("bTeamOk")}</p>`,""))}
   if(!tgPick[S.me]){const nk=mine.filter(k=>k.by!==S.me&&k.status!=="done").slice(-1)[0],rk=open.find(k=>k.due===off(1)&&k!==nk);tgPick[S.me]={nk:nk?.id,rk:rk?.id}}
   const nk=tasks.find(k=>k.id===tgPick[S.me].nk),rk=tasks.find(k=>k.id===tgPick[S.me].rk);
