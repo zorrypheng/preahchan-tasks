@@ -35,7 +35,7 @@ function lbAll(){
   return {ranked,rest:list.filter(s=>!s.kpi)};
 }
 const stickerChip=(k,a,big)=>`<span class="stk ${big?"big":""}" title="${esc(fill(t("st_"+k),a))}: ${esc(t("st_"+k+"H"))}"><span aria-hidden="true">${STICKERS[k]}</span><span class="stkl">${esc(fill(t("st_"+k),a))}</span></span>`;
-const avatar=(u,cls)=>`<span class="lbav ${cls||""}">${esc(initials(u.name))}</span>`;
+const avatar=(u,cls)=>`<span class="lbav ${cls||""}">${avIn(u)}</span>`;
 function vBoard(){
   const {ranked,rest}=lbAll(),meI=ranked.findIndex(s=>s.u.id===S.me),meS=ranked[meI];
   const dow=new Date(TODAY+"T00:00:00").getDay(),left=dow===0?0:6-dow;
@@ -46,15 +46,15 @@ function vBoard(){
     hero=`<section class="lbme"><div class="lbring" style="--p:${Math.min(100,meS.pct)}"><b class="num">${meS.pct}%</b></div>
       <div class="lbmetext"><span class="eyebrow">${fill(t("youRank"),meI+1)} · ${fill(t("stagesN"),meS.n,meS.kpi)}</span><b>${msg}</b><span class="muted">${chase}</span>
       ${meS.st.length?`<div class="stks">${meS.st.map(x=>stickerChip(x[0],x[1],true)).join("")}</div>`:""}</div></section>`}
-  const pod=ranked.slice(0,3),order=[1,0,2].filter(i=>pod[i]);
+  const pod=ranked.filter(s=>s.pct>0).slice(0,3),order=[1,0,2].filter(i=>pod[i]);
   const podium=pod.length?`<div class="podium">${order.map(i=>{const s=pod[i];return `<div class="pod p${i+1} ${s.u.id===S.me?"me":""}"><span class="medal" aria-hidden="true">${["🥇","🥈","🥉"][i]}</span>${avatar(s.u,"lg")}
-      <b class="pname">${esc(s.u.name)}</b><span class="ppct num">${s.pct}%</span><span class="cap muted">${fill(t("stagesN"),s.n,s.kpi)}</span>
+      <b class="pname">${esc(s.u.name)}</b><span class="ppct num">${s.pct}%</span>
       ${s.st.length?`<div class="stks">${s.st.map(x=>`<span class="stk" title="${esc(fill(t("st_"+x[0]),x[1]))}" aria-label="${esc(fill(t("st_"+x[0]),x[1]))}">${STICKERS[x[0]]}</span>`).join("")}</div>`:""}
       <span class="step" aria-hidden="true">${i+1}</span></div>`}).join("")}</div>`:"";
   const row=(s,i)=>`<div class="lbrow ${s.u.id===S.me?"me":""}"><span class="lbrank num">${i!=null?i+1:"–"}</span>${avatar(s.u)}
     <span class="lbname"><b>${esc(s.u.name)}</b>${s.st.length?`<span class="stks">${s.st.map(x=>stickerChip(x[0],x[1])).join("")}</span>`:""}</span>
     <span class="lbbar ${s.pct>=100?"full":""}" role="img" aria-label="${s.pct}%"><i style="width:${Math.min(100,s.pct)}%"></i></span>
-    <span class="lbpct num"><b>${s.kpi?s.pct+"%":"–"}</b><span class="cap muted">${s.kpi?fill(t("stagesN"),s.n,s.kpi):t("noKpi")}</span></span></div>`;
+    <span class="lbpct num"><b>${s.kpi?s.pct+"%":"–"}</b>${s.kpi?"":`<span class="cap muted">${t("noKpi")}</span>`}</span></div>`;
   const used=new Set(ranked.flatMap(s=>s.st.map(x=>x[0])));
   return `<div class="head"><div class="rhead"><p class="eyebrow">${left?fill(t("daysLeft"),left):t("lastDay")}</p><h1>${t("board")}</h1></div></div>
    <p class="muted">${t("lbHelp")}</p>${hero}${podium}

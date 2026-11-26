@@ -107,7 +107,7 @@ function kCard(k,team,inOther){
     ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
      <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
-     ${team||inOther?`<span class="kwho"><span class="av">${esc(initials(U(k.to).name))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
+     ${team||inOther?`<span class="kwho"><span class="av">${avIn(U(k.to))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
     ${canFinish(k)&&(k.to===S.me||!team)&&ST(k.stage)?`<button class="btn small finishmini" data-act="finish-open" data-id="${k.id}">${fill(t("finishBtn"),esc(nm(ST(k.stage))))} →</button>`:""}
   </article>`;
@@ -166,7 +166,7 @@ function dHandoff(){
   const k=tasks.find(x=>x.id===S.dlg.id),s=ST(S.dlg.stage);if(!k||!s)return `<button class="btn" data-act="close">${t("close")}</button>`;
   const cands=users.filter(u=>u.active&&u.id!==k.to&&posOf(u.id).some(p=>p.statuses.includes(s.id)));
   return `<h2>${fill(t("handoffT"),esc(nm(s)))}</h2><p class="muted">${fill(t("handoffHelp"),esc(U(k.to).name),esc(nm(s)))}</p>
-   ${cands.length?`<div class="stack" style="gap:8px">${cands.map(u=>`<button class="btn hopick" data-act="handoff" data-u="${u.id}"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">${esc(posOf(u.id).map(nm).join(", "))}</span></span></button>`).join("")}</div>`
+   ${cands.length?`<div class="stack" style="gap:8px">${cands.map(u=>`<button class="btn hopick" data-act="handoff" data-u="${u.id}"><span class="av">${avIn(u)}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">${esc(posOf(u.id).map(nm).join(", "))}</span></span></button>`).join("")}</div>`
      :`<p class="empty">${fill(t("noHandoff"),esc(nm(s)))}</p>`}
    <div class="acts"><button class="btn" data-act="close">${fill(t("keepWith"),esc(U(k.to).name))}</button></div>`;
 }
@@ -187,7 +187,7 @@ function dUser(){
 function vUsers(){
   const opt=(v,cur)=>`<option value="${v}" ${v===cur?"selected":""}>${t(v)}</option>`;
   return `<div class="head"><h1>${t("users")}</h1><button class="btn primary" data-act="newuser">${t("createUser")}</button></div><p class="muted">${t("usersHelp")}</p>
-   <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${esc(initials(u.name))}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br>${u.role==="supervisor"?`<span class="cap muted">${t("teamOfT")}: ${teamOf(u.id).map(x=>esc(x.name)).join(", ")||t("noTeam")}</span><br>`:""}${(u.supervisors||[]).filter(id=>U(id)).length?`<span class="cap muted">${t("supBy")}: ${(u.supervisors||[]).map(U).filter(Boolean).map(x=>esc(x.name)).join(", ")}</span><br>`:""}<span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
+   <div class="rows">${users.map(u=>`<div class="urow"><div class="prow" style="padding:0;border:0;grid-template-columns:minmax(0,1fr)"><span class="nm"><span class="av">${avIn(u)}</span><span><b>${esc(u.name)}</b><br><span class="cap muted">@${esc(u.username)}</span><br>${u.role==="supervisor"?`<span class="cap muted">${t("teamOfT")}: ${teamOf(u.id).map(x=>esc(x.name)).join(", ")||t("noTeam")}</span><br>`:""}${(u.supervisors||[]).filter(id=>U(id)).length?`<span class="cap muted">${t("supBy")}: ${(u.supervisors||[]).map(U).filter(Boolean).map(x=>esc(x.name)).join(", ")}</span><br>`:""}<span class="pchips">${posOf(u.id).map(p=>`<span class="tag">${esc(nm(p))}</span>`).join("")||`<span class="cap muted">${t("noPos")}</span>`}</span></span></span></div>
     <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("supervisor",u.role)}${opt("assistant",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
      ${u.role!=="admin"?`<label class="f">${t("weeklyKpi")}<input type="number" id="kpi-${u.id}" min="0" max="99" value="${u.kpi}" data-ch="kpi" data-id="${u.id}"></label><label class="f">${t("weeklyHours")}<input type="number" id="cap-${u.id}" min="1" max="80" value="${u.cap}" data-ch="cap" data-id="${u.id}"></label>`:""}
      <label class="c"><input type="checkbox" id="act-${u.id}" data-ch="active" data-id="${u.id}" ${u.active?"checked":""} ${u.id===S.me?"disabled":""}>${t("active")}</label>

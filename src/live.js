@@ -22,7 +22,7 @@ async function loadAll(){
   statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done,hours:r.hours||"",pos:r.pos||"",workers:r.workers||[]}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
-  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[],supervisors:r.supervisors||[]}));
+  users.length=0;us.forEach(r=>users.push({id:r.id,name:r.name||r.username,username:r.username,role:r.role||"staff",kpi:r.kpi||0,cap:r.cap||44,active:!!r.active,lang:r.lang||"",tg:!!r.tg_on,positions:r.positions||[],supervisors:r.supervisors||[],photo:r.avatar?pb.files.getURL(r,r.avatar,{thumb:"256x256"}):""}));
   clients.length=0;cl.forEach(r=>clients.push({id:r.id,name:r.name,by:r.created_by}));
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
@@ -96,9 +96,10 @@ function repChip(uid){const r=reports.filter(x=>x.uid===uid&&x.wk===LWK).slice(-
 function vAccount(){
   const m=me(),L=S.tgLink;
   return `<div class="head"><h1>${t("account")}</h1></div>
-   <section class="card"><div class="who"><span class="av" style="width:48px;height:48px">${esc(initials(m.name))}</span><span><b>${esc(m.name)}</b><br><span class="cap muted">@${esc(m.username)} · ${t(m.role)}</span></span></div>
+   <section class="card"><div class="who"><span class="av" style="width:48px;height:48px">${avIn(m)}</span><span><b>${esc(m.name)}</b><br><span class="cap muted">@${esc(m.username)} · ${t(m.role)}</span></span></div>
     <div class="stack" style="gap:8px"><span class="lab">${t("language")}</span><div class="tabs"><button data-act="setlang" data-v="en" aria-pressed="${S.lang==="en"}">English</button><button data-act="setlang" data-v="km" aria-pressed="${S.lang==="km"}">ភាសាខ្មែរ</button></div></div>
     <button class="btn" data-act="signout" style="align-self:flex-start">${t("signout")}</button></section>
+   ${photoCard()}${themeCard()}
    <section class="card"><h2>${t("tgTitle")}</h2><p class="muted">${t("tgHelp")}</p>
     ${m.tg?`<p class="okline">${t("tgLinked")}</p><button class="btn" data-act="tg-off" style="align-self:flex-start">${t("tgDisconnect")}</button>`
      :L?`<a class="btn primary" href="${esc(L.url)}" target="_blank" rel="noopener" style="align-self:flex-start;display:inline-flex;align-items:center;text-decoration:none">${t("tgOpen")}</a>
