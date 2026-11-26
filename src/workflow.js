@@ -57,7 +57,7 @@ function taskCard(k,showWho){
    <button class="open" data-act="open" data-id="${k.id}"><h3>${esc(k.title)}</h3>
     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>
      <span>${showWho?esc(U(k.to).name):(mine?t("own"):t("from")+" "+esc(U(k.by).name))}</span>
-     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>${t("weekly")}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
+     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>${t("weekly")}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
    ${s==="done"?`<button class="btn small" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:stageChip(k)}</article>`;
 }
 const fOn2=()=>S.fDue!=="any"||S.fPrio!=="any"||S.fClient!=="any"||S.fType!=="any";
@@ -99,7 +99,7 @@ function kCard(k,team,inOther){
   const opts=flowOf(k.type).filter(x=>x.id!==k.stage&&seesStage(x.id));
   return `<article class="kcard ${s==="overdue"?"isover":""}" draggable="${movable}" data-id="${k.id}">
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
-     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
+     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
      ${team||inOther?`<span class="kwho"><span class="av">${esc(initials(U(k.to).name))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
   </article>`;
@@ -120,12 +120,13 @@ function dTask(){
   const types=ttypes.filter(x=>myTypes().includes(x)||x.id===k.type);
   return `<div class="ttl"><h2>${esc(k.title)}</h2>${s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k)}</div>
    <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
-   ${k.desc?`<p style="white-space:pre-wrap">${esc(k.desc)}</p>`:""}
    <div class="two"><label class="f">${t("status")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""} ${x.id!==k.stage&&!seesStage(x.id)?"disabled":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
    ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${people().map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
+   ${descBlock(k)}
+   ${attBlock(k.id)}
    <div class="stack"><span class="lab">${t("comments")}</span>
     ${k.comments.length?k.comments.map(c=>`<p class="cmt"><b>${esc(U(c.by).name)}</b><br>${esc(c.text)}</p>`).join(""):`<p class="muted cap">${t("noComments")}</p>`}
     <form class="cmtadd" data-form="comment"><input type="text" id="cm-text" maxlength="300" placeholder="${t("writeComment")}" aria-label="${t("writeComment")}" autocomplete="off"><button class="btn small">${t("addComment")}</button></form></div>
@@ -139,7 +140,8 @@ function dNew(){
    <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype">${types.map((x,i)=>`<option value="${x.id}" ${i===0?"selected":""}>${esc(nm(x))}</option>`).join("")}<option value="">${t("noType")}</option></select></label>
    <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel">${clientOpts("")}<option value="__new">${t("newClient")}</option></select></label></div>
    <label class="f" id="nt-newwrap" hidden>${t("newClientName")}<input type="text" id="nt-newclient" maxlength="60" autocomplete="off"></label>
-   <label class="f">${t("desc")}<textarea id="nt-desc" maxlength="500"></textarea></label>
+   <div class="stack" style="gap:6px"><span class="lab">${t("desc")}</span>${rtEditor("nt-body",S.dlg.body||"")}</div>
+   ${attBlock(null)}
    <div class="two">${who}<label class="f">${t("due")}<input type="date" id="nt-due" value="${off(2)}"></label>
    <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" value="${types[0]&&types[0].est?types[0].est:""}"></label>
    <label class="f">${t("prio")}<select id="nt-prio"><option value="normal">${t("normal")}</option><option value="high">${t("high")}</option><option value="low">${t("low")}</option></select></label></div>
@@ -175,6 +177,7 @@ function vUsers(){
     <div class="ctl"><label class="f">${t("role")}<select id="role-${u.id}" data-ch="role" data-id="${u.id}" ${u.id===S.me?"disabled":""}>${opt("staff",u.role)}${opt("manager",u.role)}${opt("admin",u.role)}</select></label>
      ${u.role!=="admin"?`<label class="f">${t("weeklyKpi")}<input type="number" id="kpi-${u.id}" min="0" max="99" value="${u.kpi}" data-ch="kpi" data-id="${u.id}"></label><label class="f">${t("weeklyHours")}<input type="number" id="cap-${u.id}" min="1" max="80" value="${u.cap}" data-ch="cap" data-id="${u.id}"></label>`:""}
      <label class="c"><input type="checkbox" id="act-${u.id}" data-ch="active" data-id="${u.id}" ${u.active?"checked":""} ${u.id===S.me?"disabled":""}>${t("active")}</label>
+     <button class="btn small" data-act="uedit" data-id="${u.id}">${t("editUser")}</button>
      <button class="btn small" data-act="upos-open" data-id="${u.id}">${t("editPos")}</button>
      <button class="btn small" data-act="resetpw" data-id="${u.id}">${t("resetPw")}</button></div></div>`).join("")}</div>`;
 }

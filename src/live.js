@@ -15,9 +15,10 @@ const locStamp=s=>{if(!s)return "";const d=new Date(String(s).replace(" ","T"));
 const docGroups={};
 async function loadAll(){
   const g=(c,o)=>pb.collection(c).getFullList(Object.assign({batch:500},o||{}));
-  const [us,cl,ts,cm,dc,nt,nf,rp,sts,tts,pos]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
+  const [us,cl,ts,cm,dc,nt,nf,rp,sts,tts,pos,att]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
     g("documents",{sort:"-created"}),g("notes",{sort:"-updated"}),pb.collection("notifications").getList(1,100,{sort:"-created"}).then(r=>r.items),g("reports",{sort:"created"}),
-    g("statuses",{sort:"sort"}).catch(()=>[]),g("task_types",{sort:"name"}).catch(()=>[]),g("positions",{sort:"name"}).catch(()=>[])]);
+    g("statuses",{sort:"sort"}).catch(()=>[]),g("task_types",{sort:"name"}).catch(()=>[]),g("positions",{sort:"name"}).catch(()=>[]),
+    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken()]);
   statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
@@ -26,7 +27,8 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||""})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||""})});
+  attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
   dc.forEach(r=>{if(!known.has(r.owner))return;const key=[r.area,r.client||"",r.area==="mine"?r.owner:"",r.name.toLowerCase()].join("|");
@@ -42,11 +44,11 @@ const BLOCKING=["new","user","note","log"];
 let stale=false;
 async function refresh(force){
   if(!S.me)return;
-  if(!force&&S.dlg&&BLOCKING.includes(S.dlg.type)){stale=true;return}
+  if(!force&&S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing)){stale=true;return}
   try{await loadAll();stale=false}catch(e){if(e&&e.status===401){signOut();return}console.error(e);if(!e||!e.status)toast(t("offline"))}
   render();
 }
-setInterval(()=>{if(stale&&!(S.dlg&&BLOCKING.includes(S.dlg.type)))refresh()},1500);
+setInterval(()=>{if(stale&&!(S.dlg&&(BLOCKING.includes(S.dlg.type)||S.dlg.editing)))refresh()},1500);
 function fail(e){
   console.error(e);let m=(e&&e.response&&e.response.message)||(e&&e.message)||"Error";
   const d=e&&e.response&&e.response.data;if(d&&typeof d==="object"){const k=Object.keys(d)[0];if(k&&d[k]&&d[k].message)m=k+": "+d[k].message}
@@ -233,8 +235,10 @@ document.addEventListener("submit",async e=>{
       if(client==="__new"){const n=val("nt-newclient");if(!n){er(t("clientReq"));if(btn)btn.disabled=false;return}
         const ex=clients.find(c=>c.name.toLowerCase()===n.toLowerCase());client=ex?ex.id:(await pb.collection("clients").create({name:n,created_by:S.me})).id}
       const type=val("nt-type"),fl=type?flowOf(type):[],first=fl.find(x=>seesStage(x.id))||fl[0]||null;
-      await pb.collection("tasks").create({title,desc:val("nt-desc"),assignee:val("nt-to")||S.me,creator:S.me,client:client||"",due:val("nt-due")||off(2),
+      const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
+      const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee:val("nt-to")||S.me,creator:S.me,client:client||"",due:val("nt-due")||off(2),
         priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:""});
+      for(const p of pend){try{toast(fill(t("uploadingA"),p.name));await uploadAttachment(created.id,p)}catch(x){fail(x)}}
       S.dlg=null;await refresh(true);toast(t("saved"))}
     catch(err){if(btn)btn.disabled=false;fail(err)}return}
   if(f==="client"){stop();const n=val("cl-name");if(!n)return;if(clients.some(c=>c.name.toLowerCase()===n.toLowerCase())){toast(t("clientDup"));return}

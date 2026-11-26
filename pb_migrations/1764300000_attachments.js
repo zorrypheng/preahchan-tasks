@@ -1,0 +1,10 @@
+/// <reference path="../pb_data/types.d.ts" />
+// Rich-text task description and the attachments table. Does nothing if they already exist; errors are logged.
+migrate((app) => {
+  try {
+    const tasks = app.findCollectionByNameOrId("tasks")
+    if (!tasks.fields.getByName("body")) { tasks.fields.add(new EditorField({ name: "body", maxSize: 100000, convertURLs: false })); app.save(tasks) }
+  } catch (err) { console.log("body field migration failed: " + err) }
+  try { app.findCollectionByNameOrId("attachments"); return } catch (e) {}
+  try { app.importCollections([{"id": "pc_attachments1", "name": "attachments", "type": "base", "listRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"", "viewRule": "task.assignee = @request.auth.id || task.creator = @request.auth.id || @request.auth.role != \"staff\"", "createRule": "@request.body.owner = @request.auth.id && (@request.body.task.assignee = @request.auth.id || @request.body.task.creator = @request.auth.id || @request.auth.role != \"staff\")", "updateRule": null, "deleteRule": "owner = @request.auth.id || @request.auth.role != \"staff\"", "fields": [{"name": "task", "type": "relation", "collectionId": "pc_tasks0000001", "maxSelect": 1, "required": true, "cascadeDelete": true}, {"name": "owner", "type": "relation", "collectionId": "_pb_users_auth_", "maxSelect": 1, "required": true, "cascadeDelete": false}, {"name": "kind", "type": "select", "values": ["image", "video", "link", "file"], "maxSelect": 1, "required": true}, {"name": "url", "type": "url", "onlyDomains": null, "exceptDomains": null}, {"name": "name", "type": "text", "max": 240}, {"name": "size", "type": "number", "min": 0}, {"name": "file", "type": "file", "maxSelect": 1, "maxSize": 104857600, "protected": true}, {"name": "created", "type": "autodate", "onCreate": true, "onUpdate": false}], "indexes": ["CREATE INDEX idx_attachments_task ON attachments (task)"]}], false) } catch (err) { console.log("attachments migration failed: " + err) }
+}, (app) => {})

@@ -214,6 +214,12 @@ cronAdd("pc_morning", "0 * * * *", () => {
   if (now.hour === 8 && now.dow !== 0) pc.morning($app)
 })
 
+// Every night at 03:00 Cambodia time: remove finished tasks unchanged for 6 months
+cronAdd("pc_cleanup", "0 * * * *", () => {
+  const pc = require(`${__hooks}/lib/pc.js`)
+  if (pc.ict().hour === 3) pc.cleanupDone($app)
+})
+
 cronAdd("pc_note_reminders", "* * * * *", () => {
   require(`${__hooks}/lib/pc.js`).noteReminders($app)
 })

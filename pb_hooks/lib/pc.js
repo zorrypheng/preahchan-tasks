@@ -329,6 +329,21 @@ module.exports = {
     })
   },
 
+  // Finished tasks that nobody has changed for 6 months are removed (with their comments and attachments).
+  // Weekly reports keep their own copy of the numbers, so past reports are not affected.
+  cleanupDone(app) {
+    const cutoff = new Date(Date.now() - 182 * 86400000).toISOString().replace("T", " ")
+    let total = 0
+    for (let round = 0; round < 20; round++) {
+      const old = app.findRecordsByFilter("tasks", "status = 'done' && updated < {:c}", "updated", 200, 0, { c: cutoff })
+      if (!old.length) break
+      old.forEach((k) => { try { app.delete(k); total++ } catch (e) { console.log("cleanup: could not delete task " + k.id + ": " + e) } })
+      if (old.length < 200) break
+    }
+    if (total) console.log("cleanup: deleted " + total + " finished tasks unchanged since " + cutoff)
+    return total
+  },
+
   noteReminders(app) {
     const now = this.ict().stamp
     const due = app.findRecordsByFilter("notes", "remind != '' && remind <= {:n} && reminded = false", "remind", 200, 0, { n: now })

@@ -1,3 +1,5 @@
+/* elements marked hidden stay hidden even when a class sets display */
+[hidden]{display:none!important}
 /* ===== Workflow: status colours, Kanban, Settings ===== */
 .sc-gray{background:#e3e6ee;color:#3d4a6b}.sc-blue{background:#d9ecf2;color:#0b5f7a}.sc-purple{background:#e7e2f3;color:#4b3a8a}
 .sc-orange{background:#fbe3d0;color:#a33f06}.sc-yellow{background:#fbe9b7;color:#6b4a00}.sc-pink{background:#fbdcd8;color:#9b2335}
@@ -35,3 +37,35 @@
 .pchips{display:inline-flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 .pchips .tag{background:var(--note-blue);font-size:12px;line-height:20px;font-weight:600}
 .hopick{display:flex!important;align-items:center;gap:10px;justify-content:flex-start;text-align:left;min-height:52px!important}
+
+/* ===== Rich text and attachments ===== */
+.rt{border:1px solid var(--line-strong);border-radius:var(--r-md);background:var(--surface-raised);overflow:hidden}
+.rt:focus-within{outline:2px solid var(--brand);outline-offset:2px}
+.rt-bar{display:flex;flex-wrap:wrap;gap:2px;padding:4px;border-bottom:1px solid var(--line-soft);background:var(--surface)}
+.rtb{width:34px;height:34px;border:0;border-radius:8px;background:none;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.rtb:hover{background:var(--surface-raised)}
+.rtb svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.rtsep{width:1px;background:var(--line);margin:4px 3px}
+.rt-area{min-height:120px;max-height:320px;overflow:auto;padding:10px 12px;outline:none;font-size:15px;line-height:24px;overflow-wrap:anywhere}
+.rt-area:empty::before{content:attr(aria-label);color:var(--ink-muted)}
+.rt-area h3,.rt-view h3{font-size:17px;line-height:26px;margin:6px 0 2px}
+.rt-area p,.rt-view p,.rt-area div,.rt-view div{margin:0 0 4px}
+.rt-area ul,.rt-area ol,.rt-view ul,.rt-view ol{margin:4px 0;padding-left:22px}
+.rt-area blockquote,.rt-view blockquote{margin:6px 0;padding:4px 12px;border-left:3px solid var(--moon);background:var(--surface);border-radius:0 8px 8px 0}
+.rt-area a,.rt-view a{color:var(--done);text-decoration:underline}
+.rt-view{background:var(--surface);border-radius:var(--r-md);padding:10px 12px;overflow-wrap:anywhere;font-size:15px;line-height:24px}
+.row-acts{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.atts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.att{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-md);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.att img,.att video{width:100%;height:120px;object-fit:cover;display:block;background:#000}
+.attmeta{display:flex;flex-direction:column;gap:2px;padding:6px 8px;min-width:0}
+.attmeta .cap{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.attmeta .btn{align-self:flex-start;margin-top:4px}
+.att-link,.att-pend{grid-column:1/-1;flex-direction:row;align-items:center;gap:8px;padding:8px 10px;flex-wrap:wrap}
+.att-link svg{width:18px;height:18px;fill:none;stroke:var(--done);stroke-width:2;stroke-linecap:round;flex:none}
+.att-link a{color:var(--done);font-weight:600;overflow-wrap:anywhere;flex:1;min-width:0}
+.att-pend .cap{flex:1;min-width:0;overflow-wrap:anywhere}
+.attadd{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.attadd label.btn{display:inline-flex;align-items:center;cursor:pointer}
+.attadd input[type=url]{flex:1;min-width:160px;min-height:36px;border:1px solid var(--line-strong);border-radius:var(--r-md);padding:6px 10px;font-size:14px;background:var(--surface-raised)}
+.attc{display:inline-flex;align-items:center;gap:2px}.attc svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
