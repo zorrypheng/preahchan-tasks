@@ -159,6 +159,16 @@ module.exports = {
     const all = app.findRecordsByFilter("statuses", "id != ''", "sort", 200, 0)
     return all.filter((s) => !ids.length || ids.indexOf(s.id) >= 0)
   },
+  // A task's own stages (custom), always ending with the finished status; otherwise its type's stages
+  taskFlow(app, task) {
+    let ids = null
+    try { ids = jsonOf(task, "flow") } catch (e) {}
+    if (!Array.isArray(ids) || !ids.length) return this.flow(app, task.getString("type"))
+    const all = app.findRecordsByFilter("statuses", "id != ''", "sort", 200, 0)
+    const list = all.filter((x) => ids.indexOf(x.id) >= 0 || x.getBool("done"))
+    const doneOne = list.filter((x) => x.getBool("done"))
+    return list.filter((x) => !x.getBool("done")).concat(doneOne.slice(0, 1))
+  },
   userSees(app, user, stageId) {
     if (!user || user.getString("role") === "admin") return true
     const pids = user.getStringSlice("positions")
@@ -169,13 +179,13 @@ module.exports = {
     try { const s = app.findRecordById("statuses", id); return (lang === "km" && s.getString("name_km")) || s.getString("name") } catch (e) { return "" }
   },
   nextOf(app, task) {
-    const f = this.flow(app, task.getString("type"))
+    const f = this.taskFlow(app, task)
     const i = f.findIndex((s) => s.id === task.getString("stage"))
     return i >= 0 ? (f[i + 1] || null) : (f[0] || null)
   },
   // Keep the simple done/not-done status in step with the workflow status, for KPI, hours and reports
   syncStage(app, r, isNew) {
-    const f = this.flow(app, r.getString("type"))
+    const f = this.taskFlow(app, r)
     if (!f.length) return
     const o = isNew ? null : r.original()
     const statusNow = r.getString("status"), statusBefore = o ? o.getString("status") : ""
@@ -210,7 +220,7 @@ module.exports = {
     let target = ""
     if (r.getString("stage") && r.getString("stage") !== o.getString("stage")) target = r.getString("stage")
     else if (r.getString("status") === "done" && o.getString("status") !== "done") {
-      const d = this.flow(app, r.getString("type")).find((s) => s.getBool("done"))
+      const d = this.taskFlow(app, r).find((s) => s.getBool("done"))
       if (d) target = d.id
     }
     if (target && !this.userSees(app, auth, target)) throw new ForbiddenError("Your position can't move tasks to " + this.stageName(app, target, "en") + ".")
@@ -219,7 +229,7 @@ module.exports = {
     if (task.getString("status") === "done") return null
     const nx = this.nextOf(app, task)
     if (!nx) return null
-    const cur = this.flow(app, task.getString("type")).find((s) => s.id === task.getString("stage"))
+    const cur = this.taskFlow(app, task).find((s) => s.id === task.getString("stage"))
     const name = cur ? ((lang === "km" && cur.getString("name_km")) || cur.getString("name")) : ((lang === "km" && nx.getString("name_km")) || nx.getString("name"))
     return [{ text: fill(this.t(lang, cur ? "finish" : "next"), { s: name }), callback_data: "n:" + task.id }]
   },
@@ -241,7 +251,7 @@ module.exports = {
   finishStage(app, actor, task, opts) {
     opts = opts || {}
     const lang = this.lang(actor)
-    const flow = this.flow(app, task.getString("type"))
+    const flow = this.taskFlow(app, task)
     const cur = flow.find((s) => s.id === task.getString("stage"))
     if (!cur || cur.getBool("done") || task.getString("status") === "done") throw new BadRequestError(this.t(lang, "lastStep"))
     const i = flow.findIndex((s) => s.id === cur.id), nx = flow[i + 1]
@@ -869,7 +879,7 @@ module.exports = {
     }
     if (parts[0] === "n" || parts[0] === "d") {
       const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
-      const flow = this.flow(app, k.getString("type")), cur = flow.find((s) => s.id === k.getString("stage")), nx = this.nextOf(app, k)
+      const flow = this.taskFlow(app, k), cur = flow.find((s) => s.id === k.getString("stage")), nx = this.nextOf(app, k)
       if (!cur || !nx || k.getString("status") === "done") { answer(this.t(lang, "lastStep")); return }
       if (!nx.getBool("done") && !this.planPeople(this.planOf(k)[nx.id]).length) {
         answer(this.t(lang, "pickInApp"))

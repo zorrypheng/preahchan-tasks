@@ -111,8 +111,9 @@ onRecordAfterUpdateSuccess((e) => {
       next.set("plan", r.get("plan"))
       next.set("est_plan", r.get("est_plan"))
       // the copy starts again with the person planned for the first stage
-      try { const f = pc.flow(e.app, r.getString("type")); const p0 = f.length ? pc.planPeople(pc.planOf(r)[f[0].id]) : []; if (p0.length) { next.set("assignee", p0[0]); next.set("helpers", p0.slice(1)) } } catch (err) {}
+      try { const f = pc.taskFlow(e.app, r); const p0 = f.length ? pc.planPeople(pc.planOf(r)[f[0].id]) : []; if (p0.length) { next.set("assignee", p0[0]); next.set("helpers", p0.slice(1)) } } catch (err) {}
       next.set("repeat_rule", r.getString("repeat_rule"))
+      next.set("flow", r.get("flow"))
       next.set("due", pc.nextRepeat(r.getString("due") || pc.ict().date, r.getString("repeat_rule")))
       e.app.save(next)
       // the task no longer repeats itself; its copy carries the repeat on

@@ -28,7 +28,7 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null,project:r.project||"",milestone:r.milestone||"",repeatRule:r.repeat_rule||"",helpers:r.helpers||[]})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null,project:r.project||"",milestone:r.milestone||"",repeatRule:r.repeat_rule||"",helpers:r.helpers||[],flow:Array.isArray(r.flow)?r.flow:null})});
   attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
@@ -239,16 +239,17 @@ document.addEventListener("submit",async e=>{
     try{let client=val("nt-client");if(client==="__none")client="";
       if(client==="__new"){const n=val("nt-newclient");if(!n){er(t("clientReq"));if(btn)btn.disabled=false;return}
         const ex=clients.find(c=>c.name.toLowerCase()===n.toLowerCase());client=ex?ex.id:(await pb.collection("clients").create({name:n,created_by:S.me})).id}
-      const type=val("nt-type")==="__none"?"":val("nt-type");keepPlan();
+      const rawType=val("nt-type"),custom=rawType==="__custom",type=rawType==="__none"||custom?"":rawType;keepPlan();
+      if(custom&&!customStages(S.dlg.cflow).length){er(t("needStage"));if(btn)btn.disabled=false;return}
       // the stage plan: the first stage's person gets the task; the others get it as each stage is finished
-      const st=planStages(type),plan={},estPlan={};
+      const st=custom?customStages(S.dlg.cflow):planStages(type),plan={},estPlan={};
       st.forEach(s=>{const p=(S.dlg.plan||{})[s.id];if(p)plan[s.id]=p;const h=parseFloat((S.dlg.estPlan||{})[s.id]);if(h>0)estPlan[s.id]=h});
       if(me().role==="staff"&&st[0])plan[st[0].id]=S.me;
       st.forEach(s=>{if(plan[s.id]!==undefined)plan[s.id]=isTeam(s)?pp(plan[s.id]):pp(plan[s.id])[0]||"";if(!plan[s.id]||(Array.isArray(plan[s.id])&&!plan[s.id].length))delete plan[s.id]});
       const first=st[0]||null,firstPeople=first?pp(plan[first.id]):[],assignee=firstPeople[0]||S.me,helpers=firstPeople.slice(1);
       const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
       const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee,creator:S.me,client:client||"",due:val("nt-due")||off(2),
-        priority:val("nt-prio")||"normal",status:"todo",est,helpers,...readRepeat("nt"),type,stage:first?first.id:"",plan,est_plan:estPlan,project:val("nt-project")||"",milestone:val("nt-ms")||""});
+        priority:val("nt-prio")||"normal",status:"todo",est,helpers,...readRepeat("nt"),type,stage:first?first.id:"",plan,est_plan:estPlan,project:val("nt-project")||"",milestone:val("nt-ms")||"",flow:custom?st.map(s=>s.id):null});
       if(typeof afterTaskCreated==="function")await afterTaskCreated(created);
       for(const p of pend){try{toast(fill(t("uploadingA"),p.name));await uploadAttachment(created.id,p)}catch(x){fail(x)}}
       S.dlg=null;render();await refresh(true);toast(t("saved"))}

@@ -103,7 +103,7 @@ function personOpts(s,cur,allowEmpty){
   if(c.only)return `${allowEmpty?`<option value="">${t("pickLater")}</option>`:""}${extra}${c.good.map(o).join("")}`;
   return `${allowEmpty?`<option value="">${t("pickLater")}</option>`:""}${extra}${c.good.length?`<optgroup label="${t("suggested")}">${c.good.map(o).join("")}</optgroup><optgroup label="${t("everyone")}">${c.rest.map(o).join("")}</optgroup>`:c.rest.map(o).join("")}`;
 }
-const planStages=typeId=>flowOf(typeId).filter(s=>!s.done);
+const planStages=typeId=>typeId==="__custom"?customStages(S.dlg&&S.dlg.cflow):flowOf(typeId).filter(s=>!s.done);
 
 /* ---------- Add task: the stage plan ---------- */
 function defaultPlan(typeId,clientId){
@@ -134,7 +134,7 @@ function planBlock(){
 }
 /* type changed: a fresh plan. Client changed: fill only the stages nobody picked by hand. */
 function applyPlanDefaults(keepTouched){
-  const tid=S.dlg.ptype==="__none"?"":S.dlg.ptype,cl=val("nt-client");
+  const tid=S.dlg.ptype==="__none"?"":S.dlg.ptype,cl=val("nt-client");if(tid==="__custom"&&!(S.dlg.cflow||[]).length){S.dlg.plan={};return}
   const d=defaultPlan(tid,cl&&cl!=="__none"&&cl!=="__new"?cl:"");
   if(keepTouched){const t0=S.dlg.touched||{};Object.keys(d.plan).forEach(k=>{if(!t0[k])S.dlg.plan[k]=d.plan[k]});if(d.from)S.dlg.planFrom=d.from;return}
   S.dlg.plan=d.plan;S.dlg.planFrom=d.from;S.dlg.crew="";S.dlg.touched={};
@@ -145,7 +145,7 @@ const fmtH=h=>(Math.round(h*100)/100)+" h";
 function timerText(at){const m=Math.max(0,Math.floor((Date.now()-at)/60000));return Math.floor(m/60)+":"+String(m%60).padStart(2,"0")}
 setInterval(()=>document.querySelectorAll("[data-since]").forEach(el=>{el.textContent=timerText(+el.dataset.since)}),20000);
 function stageBlock(k){
-  const f=flowOf(k.type).filter(s=>!s.done),ci=f.findIndex(s=>s.id===k.stage),done=k.status==="done",plan=k.plan||{},est=k.estPlan||{};
+  const f=taskFlowOf(k).filter(s=>!s.done),ci=f.findIndex(s=>s.id===k.stage),done=k.status==="done",plan=k.plan||{},est=k.estPlan||{};
   const logs=wlogs.filter(l=>l.task===k.id),total=logs.reduce((a,l)=>a+l.hours,0),edit=canPlan(k)&&!done;
   const canEditLog=l=>isMgr(me())||(l.user===S.me&&l.day===TODAY);
   const rows=f.map((s,i)=>{
@@ -302,8 +302,8 @@ document.addEventListener("click",async e=>{
   if(a==="crew-del"){const c=crews.find(x=>x.id===S.dlg.crew);if(!c||!confirm(fill(t("crewDelAsk"),c.name)))return;
     try{await pb.collection("crews").delete(c.id);await loadStageData();S.dlg.crew="";rerenderKeep();toast(t("crewDeleted"))}catch(x){fail(x)}return}
   if(a==="dup"){const k=tasks.find(x=>x.id===S.dlg.id);if(!k)return;
-    S.dlg={type:"new",body:k.body||(k.desc?esc(k.desc).replace(/\n/g,"<br>"):""),autoTpl:"",ptype:k.type||"__none",plan:Object.assign({},k.plan||{}),estPlan:Object.assign({},k.estPlan||{}),planFrom:"",
-      dup:{title:fill(t("copyOf"),k.title).slice(0,120),type:k.type||"__none",client:k.client||"__none",prio:k.prio,est:k.est,repeat:k.repeat,repeatRule:k.repeatRule}};render();return}
+    const cust=!k.type&&Array.isArray(k.flow)&&k.flow.length;S.dlg={type:"new",body:k.body||(k.desc?esc(k.desc).replace(/\n/g,"<br>"):""),autoTpl:"",ptype:cust?"__custom":(k.type||"__none"),cflow:cust?k.flow.slice():[],plan:Object.assign({},k.plan||{}),estPlan:Object.assign({},k.estPlan||{}),planFrom:"",
+      dup:{title:fill(t("copyOf"),k.title).slice(0,120),type:cust?"__custom":(k.type||"__none"),client:k.client||"__none",prio:k.prio,est:k.est,repeat:k.repeat,repeatRule:k.repeatRule}};render();return}
   if(a==="ts-tab"){S.tsTab=b.dataset.v;render();return}
   if(a==="ts-wk"){S.tsWeek=iso(addDays(new Date(tsWeek()+"T00:00:00"),+b.dataset.d));if(S.tsWeek>WK0)S.tsWeek=WK0;render();return}
   if(a==="ts-cell"){S.dlg={type:"logday",u:b.dataset.u,d:b.dataset.d};render();return}

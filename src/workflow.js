@@ -50,7 +50,7 @@ function seesStage(stageId,uid){uid=uid||S.me;const u=U(uid);if(!u)return false;
 function myStages(){return sortedSt().filter(s=>seesStage(s.id))}
 function myTypes(){const u=me(),ps=posOf(S.me);if(u.role==="admin"||!ps.length)return ttypes.slice();const ids=new Set(ps.flatMap(p=>p.types));return ttypes.filter(x=>ids.has(x.id))}
 const doneStageOf=typeId=>flowOf(typeId).find(s=>s.done)||sortedSt().find(s=>s.done)||null;
-function nextStageOf(k){const f=flowOf(k.type),i=f.findIndex(s=>s.id===k.stage);return i>=0?(f[i+1]||null):(f[0]||null)}
+function nextStageOf(k){const f=taskFlowOf(k),i=f.findIndex(s=>s.id===k.stage);return i>=0?(f[i+1]||null):(f[0]||null)}
 function stageChip(k){const s=ST(k.stage);if(!s){const x=stat(k);return `<span class="chip ${x}">${t(x)}</span>`}return `<span class="chip sc-${s.color||"gray"}">${esc(nm(s))}</span>`}
 
 /* ---------- task list ---------- */
@@ -62,7 +62,7 @@ function taskCard(k,showWho){
    <button class="open" data-act="open" data-id="${k.id}"><h3>${esc(k.title)}</h3>
     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>
      <span>${showWho?esc(U(k.to).name):(mine?t("own"):t("from")+" "+esc(U(k.by).name))}</span>
-     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
+     ${typeLabel(k)?`<span>${esc(typeLabel(k))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
    ${s==="done"?`<button class="btn small" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:stageChip(k)}</article>`;
 }
 const fOn2=()=>S.fDue!=="any"||S.fPrio!=="any"||S.fClient!=="any"||S.fType!=="any";
@@ -101,12 +101,12 @@ function vTasks(){
 /* ---------- Kanban ---------- */
 function kCard(k,team,inOther){
   const s=stat(k),cols=new Set(myStages().map(x=>x.id)),movable=!inOther&&cols.has(k.stage)&&canMoveAny(k);
-  const opts=flowOf(k.type).filter(x=>x.id!==k.stage);
+  const opts=taskFlowOf(k).filter(x=>x.id!==k.stage);
   const cover=coverOf(k);
   return `<article class="kcard ${s==="overdue"?"isover":""}" draggable="${movable}" data-id="${k.id}">
     ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
-     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
+     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${typeLabel(k)?`<span>${esc(typeLabel(k))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
      ${team||inOther?`<span class="kwho"><span class="av">${avIn(U(k.to))}</span>${esc(U(k.to).name)}${(k.helpers||[]).length?` <span class="cap muted">+${k.helpers.length}</span>`:""}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
     ${canFinish(k)&&(k.to===S.me||!team)&&ST(k.stage)?`<button class="btn small finishmini" data-act="finish-open" data-id="${k.id}">${fill(t("finishBtn"),esc(nm(ST(k.stage))))} →</button>`:""}
@@ -124,11 +124,11 @@ function vKanban(list,team){
 
 /* ---------- task dialogs ---------- */
 function dTask(){
-  const k=tasks.find(x=>x.id===S.dlg.id),s=stat(k),m=me(),flow=flowOf(k.type);
+  const k=tasks.find(x=>x.id===S.dlg.id),s=stat(k),m=me(),flow=taskFlowOf(k);
   const types=ttypes.filter(x=>myTypes().includes(x)||x.id===k.type);
   return `${taskTitle(k,s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k))}${delBanner(k)}
    <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}</p>
-   ${stageBlock(k)}
+   ${stageBlock(k)}${editStagesBlock(k)}
    <div class="two">${canMoveAny(k)?`<label class="f">${t("moveStage")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>`:""}
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
    ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isTaskMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
@@ -152,10 +152,10 @@ function dNew(){
   const who=false&&canAssign?`<label class="f">${t("assignTo")}<select id="nt-to"><option value="${m.id}" ${S.dlg.assign?"":"selected"}>${t("me")}</option>${assignables().map((u,i)=>`<option value="${u.id}" ${S.dlg.assign&&(S.expand?u.id===S.expand:i===0)?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:"";
   return `<h2>${S.dlg.assign?t("assignTask"):t("addTask")}</h2><p class="err" id="nt-err" role="alert" hidden></p>
    <form data-form="task" novalidate><label class="f">${t("title")}<input type="text" id="nt-title" maxlength="120" autocomplete="off" value="${esc(dp.title||"")}"></label>
-   <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph(dp.type)}${types.map(x=>`<option value="${x.id}" ${dp.type===x.id?"selected":""}>${esc(nm(x))}</option>`).join("")}<option value="__none" ${dp.type==="__none"?"selected":""}>${t("noType")}</option></select></label>
+   <div class="two"><label class="f">${t("type")}<select id="nt-type" data-x="ntype" required>${ph(dp.type)}${types.map(x=>`<option value="${x.id}" ${dp.type===x.id?"selected":""}>${esc(nm(x))}</option>`).join("")}<option value="__none" ${dp.type==="__none"?"selected":""}>${t("noType")}</option><option value="__custom" ${dp.type==="__custom"?"selected":""}>${t("customType")}</option></select></label>
    <label class="f">${t("client")}<select id="nt-client" data-ch="clientsel" required>${ph(dp.client)}${clientOpts(dp.client&&dp.client!=="__none"?dp.client:"").replace('<option value="">',`<option value="__none" ${dp.client==="__none"?"selected":""}>`)}${isMgr(me())?`<option value="__new">${t("newClient")}</option>`:""}</select></label></div>
    <div class="two">${projectField(S.dlg.pclient!==undefined?S.dlg.pclient:(dp.client||""),S.dlg.dupProject||"","nt-project")}${milestoneField(S.dlg.dupProject||"","","nt-ms")}</div>
-   ${planBlock()}
+   ${customBlock()}${planBlock()}
    <label class="f" id="nt-newwrap" hidden>${t("newClientName")}<input type="text" id="nt-newclient" maxlength="60" autocomplete="off"></label>
    <div class="stack" style="gap:6px"><span class="lab">${t("desc")}</span>${rtEditor("nt-body",S.dlg.body||"")}</div>
    ${attBlock(null)}
@@ -311,7 +311,7 @@ document.addEventListener("change",e=>{
   if(el.dataset.x==="move"&&el.value){e.stopImmediatePropagation();moveTo(tasks.find(x=>x.id===el.dataset.id),el.value);return}
   if(el.dataset.x==="stage"&&el.value){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id);moveTo(k,el.value);return}
   if(el.dataset.x==="ttype"){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id),f=flowOf(el.value);
-    const data={type:el.value};if(el.value&&!f.some(s=>s.id===k.stage))data.stage=(f[0]||{}).id||"";run(()=>pb.collection("tasks").update(k.id,data));return}
+    const data={type:el.value,flow:null};if(el.value&&!f.some(s=>s.id===k.stage))data.stage=(f[0]||{}).id||"";run(()=>pb.collection("tasks").update(k.id,data));return}
   if(el.dataset.x==="ntype"){
     const area=document.getElementById("nt-body"),tpl=tplFor(el.value),cur=area?cleanHTML(area.innerHTML):"";
     if(area&&(!plainText(cur).trim()&&!/<table/i.test(cur)||cur===S.dlg.autoTpl)){const html=tpl?cleanHTML(tpl.body):"";area.innerHTML=html;S.dlg.body=html;S.dlg.autoTpl=cleanHTML(area.innerHTML)}return}
@@ -327,7 +327,7 @@ let dragId=null;
 document.addEventListener("dragstart",e=>{const c=e.target.closest&&e.target.closest(".kcard[draggable=true]");if(!c)return;dragId=c.dataset.id;c.classList.add("dragging");try{e.dataTransfer.setData("text/plain",dragId);e.dataTransfer.effectAllowed="move"}catch(x){}});
 document.addEventListener("dragend",()=>{dragId=null;document.querySelectorAll(".dragging,.dropok").forEach(x=>x.classList.remove("dragging","dropok"))});
 document.addEventListener("dragover",e=>{const col=e.target.closest&&e.target.closest(".kcol[data-stage]");if(!col||!dragId)return;
-  const k=tasks.find(x=>x.id===dragId),sid=col.dataset.stage;if(!k||sid===k.stage||!flowOf(k.type).some(s=>s.id===sid))return;
+  const k=tasks.find(x=>x.id===dragId),sid=col.dataset.stage;if(!k||sid===k.stage||!taskFlowOf(k).some(s=>s.id===sid))return;
   e.preventDefault();document.querySelectorAll(".dropok").forEach(x=>x!==col&&x.classList.remove("dropok"));col.classList.add("dropok")});
 document.addEventListener("dragleave",e=>{const col=e.target.closest&&e.target.closest(".kcol");if(col&&!col.contains(e.relatedTarget))col.classList.remove("dropok")});
 document.addEventListener("drop",e=>{const col=e.target.closest&&e.target.closest(".kcol[data-stage]");if(!col||!dragId)return;e.preventDefault();

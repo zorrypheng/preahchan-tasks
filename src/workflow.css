@@ -432,3 +432,6 @@
 .fprow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:10px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line)}
 .fprow .av{width:28px;height:28px;font-size:11px}
 .fprow input[type=number]{min-height:40px}
+
+.cfrom{flex:0 1 240px}
+.cfrom select{min-height:36px}
