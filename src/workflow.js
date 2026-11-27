@@ -62,7 +62,7 @@ function taskCard(k,showWho){
    <button class="open" data-act="open" data-id="${k.id}"><h3>${esc(k.title)}</h3>
     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>
      <span>${showWho?esc(U(k.to).name):(mine?t("own"):t("from")+" "+esc(U(k.by).name))}</span>
-     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>${t("weekly")}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
+     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
    ${s==="done"?`<button class="btn small" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:stageChip(k)}</article>`;
 }
 const fOn2=()=>S.fDue!=="any"||S.fPrio!=="any"||S.fClient!=="any"||S.fType!=="any";
@@ -127,11 +127,12 @@ function dTask(){
   const k=tasks.find(x=>x.id===S.dlg.id),s=stat(k),m=me(),flow=flowOf(k.type);
   const types=ttypes.filter(x=>myTypes().includes(x)||x.id===k.type);
   return `${taskTitle(k,s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k))}${delBanner(k)}
-   <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
+   <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}</p>
    ${stageBlock(k)}
    <div class="two">${canMoveAny(k)?`<label class="f">${t("moveStage")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>`:""}
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
    ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isTaskMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
+   ${canPlan(k)?repeatField("tk",k.repeat,k.repeatRule):""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    <div class="two">${projectField(k.client,k.project,"tk-project")}${milestoneField(k.project,k.milestone,"tk-ms")}</div>${projectLink(k)}${guideBtn(k)}
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
@@ -161,7 +162,7 @@ function dNew(){
    <div class="two"><label class="f">${t("due")}<input type="date" id="nt-due" required></label>
    <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" required value="${dp.est||""}"></label>
    <label class="f">${t("prio")}<select id="nt-prio" required>${ph(dp.prio)}${["normal","high","low"].map(v=>`<option value="${v}" ${dp.prio===v?"selected":""}>${t(v)}</option>`).join("")}</select></label></div>
-   <label class="c"><input type="checkbox" id="nt-rep">${t("repeat")}</label>
+   ${repeatField("nt",!!dp.repeat,dp.repeatRule||"")}
    <div class="acts"><button type="button" class="btn" data-act="close">${t("cancel")}</button><button class="btn primary">${t("save")}</button></div></form>`;
 }
 function dHandoff(){

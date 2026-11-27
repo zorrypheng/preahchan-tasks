@@ -112,7 +112,8 @@ onRecordAfterUpdateSuccess((e) => {
       next.set("est_plan", r.get("est_plan"))
       // the copy starts again with the person planned for the first stage
       try { const f = pc.flow(e.app, r.getString("type")); const p0 = f.length ? pc.planOf(r)[f[0].id] : ""; if (p0) next.set("assignee", p0) } catch (err) {}
-      next.set("due", pc.addDays(r.getString("due") || pc.ict().date, 7))
+      next.set("repeat_rule", r.getString("repeat_rule"))
+      next.set("due", pc.nextRepeat(r.getString("due") || pc.ict().date, r.getString("repeat_rule")))
       e.app.save(next)
       // the task no longer repeats itself; its copy carries the repeat on
       r.set("repeat", false)

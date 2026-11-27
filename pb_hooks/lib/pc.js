@@ -92,6 +92,22 @@ module.exports = {
     return { date: s.slice(0, 10), hm: s.slice(11, 16), stamp: s.slice(0, 10) + "T" + s.slice(11, 16), dow: d.getUTCDay(), hour: d.getUTCHours() }
   },
   addDays(dateStr, n) { const d = new Date(dateStr + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10) },
+  // Same day n months later; the 31st becomes the last day of a shorter month
+  addMonths(dateStr, n) {
+    const [y, m, d] = dateStr.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + n, 1))
+    const last = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() + 1, 0)).getUTCDate()
+    t.setUTCDate(Math.min(d, last)); return t.toISOString().slice(0, 10)
+  },
+  // Next due date of a repeating task: "weekly", "monthly", or "N:days|weeks|months" (empty = weekly)
+  nextRepeat(dateStr, rule) {
+    rule = String(rule || "weekly")
+    if (rule === "weekly") return this.addDays(dateStr, 7)
+    if (rule === "monthly") return this.addMonths(dateStr, 1)
+    const m = rule.match(/^(\d{1,3}):(days|weeks|months)$/)
+    if (!m) return this.addDays(dateStr, 7)
+    const n = Math.max(1, Math.min(365, parseInt(m[1])))
+    return m[2] === "months" ? this.addMonths(dateStr, n) : this.addDays(dateStr, m[2] === "weeks" ? n * 7 : n)
+  },
   weekStart(dateStr) { const d = new Date(dateStr + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10) },
   shortDate(dateStr) {
     const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]

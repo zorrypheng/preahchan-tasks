@@ -780,6 +780,13 @@ nav.nav.openmenu.enter{animation:menu .22s var(--ease) both;transform-origin:top
 @media (max-width:560px){.msrow{grid-template-columns:14px minmax(0,1fr) 48px}.msrow .lbbar{grid-column:2/4}.arow.ms{grid-template-columns:20px minmax(0,1fr) auto}.arow.ms input[type=date]{grid-column:2/3}}
 .cbar2 select{flex:0 1 260px}
 .cbar2 label.c{white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+
+/* Repeat choice */
+.repf{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.repf>.f{flex:0 1 220px}
+.repc{display:flex;gap:8px;align-items:center}
+.repc input{width:76px;min-height:44px}
+.repc select{min-height:44px}
 </style>
 
 </head>
@@ -1603,7 +1610,7 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null,project:r.project||"",milestone:r.milestone||""})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null,project:r.project||"",milestone:r.milestone||"",repeatRule:r.repeat_rule||""})});
   attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
@@ -1822,7 +1829,7 @@ document.addEventListener("submit",async e=>{
       const first=st[0]||null,assignee=(first&&plan[first.id])||S.me;
       const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
       const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee,creator:S.me,client:client||"",due:val("nt-due")||off(2),
-        priority:val("nt-prio")||"normal",status:"todo",est,repeat:document.getElementById("nt-rep").checked,type,stage:first?first.id:"",plan,est_plan:estPlan,project:val("nt-project")||"",milestone:val("nt-ms")||""});
+        priority:val("nt-prio")||"normal",status:"todo",est,...readRepeat("nt"),type,stage:first?first.id:"",plan,est_plan:estPlan,project:val("nt-project")||"",milestone:val("nt-ms")||""});
       if(typeof afterTaskCreated==="function")await afterTaskCreated(created);
       for(const p of pend){try{toast(fill(t("uploadingA"),p.name));await uploadAttachment(created.id,p)}catch(x){fail(x)}}
       S.dlg=null;render();await refresh(true);toast(t("saved"))}
@@ -1918,7 +1925,7 @@ function taskCard(k,showWho){
    <button class="open" data-act="open" data-id="${k.id}"><h3>${esc(k.title)}</h3>
     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>
      <span>${showWho?esc(U(k.to).name):(mine?t("own"):t("from")+" "+esc(U(k.by).name))}</span>
-     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>${t("weekly")}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
+     ${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
    ${s==="done"?`<button class="btn small" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:stageChip(k)}</article>`;
 }
 const fOn2=()=>S.fDue!=="any"||S.fPrio!=="any"||S.fClient!=="any"||S.fType!=="any";
@@ -1983,11 +1990,12 @@ function dTask(){
   const k=tasks.find(x=>x.id===S.dlg.id),s=stat(k),m=me(),flow=flowOf(k.type);
   const types=ttypes.filter(x=>myTypes().includes(x)||x.id===k.type);
   return `${taskTitle(k,s==="done"?`<span class="chip done">${t("done")}</span>`:stageChip(k))}${delBanner(k)}
-   <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>${t("weekly")}</span>`:""}</p>
+   <p class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span><span>${k.by===k.to?t("own"):t("from")+" "+esc(U(k.by).name)}</span><span>${esc(U(k.to).name)}</span><span class="pr ${k.prio}">${t("prio")}: ${t(k.prio)}</span>${timeMeta(k)}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}</p>
    ${stageBlock(k)}
    <div class="two">${canMoveAny(k)?`<label class="f">${t("moveStage")}<select id="tk-stage" data-x="stage">${flow.map(x=>`<option value="${x.id}" ${x.id===k.stage?"selected":""}>${esc(nm(x))}</option>`).join("")}${!ST(k.stage)?`<option value="" selected>${t(stat(k))}</option>`:""}</select></label>`:""}
     <label class="f">${t("type")}<select id="tk-type" data-x="ttype"><option value="">${t("noType")}</option>${types.map(x=>`<option value="${x.id}" ${x.id===k.type?"selected":""}>${esc(nm(x))}</option>`).join("")}</select></label></div>
    ${m.role!=="staff"?`<label class="f">${t("reassign")}<select id="re-to" data-ch="reassign">${(isTaskMgr(m)?people():[m,...teamOf(m.id),U(k.to)].filter((u,i,a)=>u&&a.indexOf(u)===i)).map(u=>`<option value="${u.id}" ${u.id===k.to?"selected":""}>${esc(u.name)}</option>`).join("")}</select></label>`:""}
+   ${canPlan(k)?repeatField("tk",k.repeat,k.repeatRule):""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    <div class="two">${projectField(k.client,k.project,"tk-project")}${milestoneField(k.project,k.milestone,"tk-ms")}</div>${projectLink(k)}${guideBtn(k)}
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
@@ -2017,7 +2025,7 @@ function dNew(){
    <div class="two"><label class="f">${t("due")}<input type="date" id="nt-due" required></label>
    <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" required value="${dp.est||""}"></label>
    <label class="f">${t("prio")}<select id="nt-prio" required>${ph(dp.prio)}${["normal","high","low"].map(v=>`<option value="${v}" ${dp.prio===v?"selected":""}>${t(v)}</option>`).join("")}</select></label></div>
-   <label class="c"><input type="checkbox" id="nt-rep">${t("repeat")}</label>
+   ${repeatField("nt",!!dp.repeat,dp.repeatRule||"")}
    <div class="acts"><button type="button" class="btn" data-act="close">${t("cancel")}</button><button class="btn primary">${t("save")}</button></div></form>`;
 }
 function dHandoff(){
@@ -2691,6 +2699,27 @@ Object.assign(T.km,{rename:"ប្តូរឈ្មោះ",renameT:"ឈ្ម�
   delAsked:"{a} សុំលុបភារកិច្ចនេះ · {b}",delAskedMe:"អ្នកបានសុំលុបភារកិច្ចនេះ · {b}",delWait:"កំពុងរង់ចាំអ្នកគ្រប់គ្រងសម្រេច។",keepTask:"រក្សាទុកភារកិច្ច",kept:"បានរក្សាទុកភារកិច្ច",
   delChip:"សុំលុប",tDelReq:"{a} សុំលុប {b}",tDelOk:"{a} បានលុប {b} តាមសំណើរបស់អ្នក",tDelNo:"{a} បានរក្សាទុក {b}; សំណើលុបរបស់អ្នកមិនត្រូវបានយល់ព្រម"});
 
+/* ---------- Repeating tasks: weekly, monthly or custom ---------- */
+Object.assign(T.en,{repeatT:"Repeat",rep_none:"Does not repeat",rep_weekly:"Every week",rep_monthly:"Every month",rep_custom:"Custom…",
+  repEvery:"Every",u_days:"days",u_weeks:"weeks",u_months:"months",monthly:"Monthly",everyN:"Every {a} {b}",repSaved:"Repeat updated",
+  repHelp:"When the task is finished, a new copy is made with the next due date."});
+Object.assign(T.km,{repeatT:"ធ្វើម្តងទៀត",rep_none:"មិនធ្វើម្តងទៀត",rep_weekly:"រៀងរាល់សប្តាហ៍",rep_monthly:"រៀងរាល់ខែ",rep_custom:"កំណត់ខ្លួនឯង…",
+  repEvery:"រៀងរាល់",u_days:"ថ្ងៃ",u_weeks:"សប្តាហ៍",u_months:"ខែ",monthly:"ប្រចាំខែ",everyN:"រៀងរាល់ {a} {b}",repSaved:"បានធ្វើបច្ចុប្បន្នភាពការធ្វើម្តងទៀត",
+  repHelp:"ពេលភារកិច្ចបញ្ចប់ ច្បាប់ចម្លងថ្មីត្រូវបានបង្កើតជាមួយកាលបរិច្ឆេទកំណត់បន្ទាប់។"});
+/* rule: "weekly", "monthly" or "N:days|weeks|months"; empty rule on a repeating task = weekly (older tasks) */
+function repParts(repeat,rule){if(!repeat)return {kind:"none",n:2,u:"weeks"};rule=rule||"weekly";
+  if(rule==="weekly"||rule==="monthly")return {kind:rule,n:2,u:"weeks"};const m=String(rule).match(/^(\d+):(days|weeks|months)$/);return m?{kind:"custom",n:+m[1],u:m[2]}:{kind:"weekly",n:2,u:"weeks"}}
+function repeatLabel(k){if(!k.repeat)return "";const p=repParts(true,k.repeatRule);return p.kind==="weekly"?t("weekly"):p.kind==="monthly"?t("monthly"):fill(t("everyN"),p.n,t("u_"+p.u))}
+function repeatField(px,repeat,rule,data){const p=repParts(repeat,rule);
+  return `<div class="repf"><label class="f">${t("repeatT")}<select id="${px}-rep" ${data||""}>${["none","weekly","monthly","custom"].map(v=>`<option value="${v}" ${p.kind===v?"selected":""}>${t("rep_"+v)}</option>`).join("")}</select></label>
+   <span class="repc" id="${px}-repc" ${p.kind==="custom"?"":"hidden"}><span class="lab">${t("repEvery")}</span><input type="number" id="${px}-repn" min="1" max="365" value="${p.n}" aria-label="${t("repEvery")}" ${data||""}>
+   <select id="${px}-repu" aria-label="${t("repeatT")}" ${data||""}>${["days","weeks","months"].map(u=>`<option value="${u}" ${p.u===u?"selected":""}>${t("u_"+u)}</option>`).join("")}</select></span></div>`}
+function readRepeat(px){const k=val(px+"-rep");if(k==="none"||!k)return {repeat:false,repeat_rule:""};if(k!=="custom")return {repeat:true,repeat_rule:k};
+  const n=Math.max(1,Math.min(365,parseInt(val(px+"-repn"))||1));return {repeat:true,repeat_rule:n+":"+(val(px+"-repu")||"weeks")}}
+document.addEventListener("change",e=>{const el=e.target;if(!el.id)return;const m=el.id.match(/^(nt|tk)-rep(n|u)?$/);if(!m)return;
+  const c=document.getElementById(m[1]+"-repc");if(c&&!m[2])c.hidden=el.value!=="custom";
+  if(m[1]==="tk"&&S.dlg&&S.dlg.id){e.stopImmediatePropagation();run(()=>pb.collection("tasks").update(S.dlg.id,readRepeat("tk")),t("repSaved"))}},true);
+
 /* same rule as the server: creator, admins and managers, and the supervisor of the person doing it */
 function canDeleteTask(k){const m=me();if(!m||!k)return false;if(isTaskMgr(m)||k.by===m.id)return true;return m.role==="supervisor"&&((U(k.to)||{}).supervisors||[]).includes(m.id)}
 const delChip=k=>k.delBy?`<span class="delchip">${t("delChip")}</span>`:"";
@@ -3008,7 +3037,7 @@ document.addEventListener("click",async e=>{
     try{await pb.collection("crews").delete(c.id);await loadStageData();S.dlg.crew="";rerenderKeep();toast(t("crewDeleted"))}catch(x){fail(x)}return}
   if(a==="dup"){const k=tasks.find(x=>x.id===S.dlg.id);if(!k)return;
     S.dlg={type:"new",body:k.body||(k.desc?esc(k.desc).replace(/\n/g,"<br>"):""),autoTpl:"",ptype:k.type||"__none",plan:Object.assign({},k.plan||{}),estPlan:Object.assign({},k.estPlan||{}),planFrom:"",
-      dup:{title:fill(t("copyOf"),k.title).slice(0,120),type:k.type||"__none",client:k.client||"__none",prio:k.prio,est:k.est}};render();return}
+      dup:{title:fill(t("copyOf"),k.title).slice(0,120),type:k.type||"__none",client:k.client||"__none",prio:k.prio,est:k.est,repeat:k.repeat,repeatRule:k.repeatRule}};render();return}
   if(a==="ts-tab"){S.tsTab=b.dataset.v;render();return}
   if(a==="ts-wk"){S.tsWeek=iso(addDays(new Date(tsWeek()+"T00:00:00"),+b.dataset.d));if(S.tsWeek>WK0)S.tsWeek=WK0;render();return}
   if(a==="ts-cell"){S.dlg={type:"logday",u:b.dataset.u,d:b.dataset.d};render();return}

@@ -10,6 +10,27 @@ Object.assign(T.km,{rename:"ប្តូរឈ្មោះ",renameT:"ឈ្ម�
   delAsked:"{a} សុំលុបភារកិច្ចនេះ · {b}",delAskedMe:"អ្នកបានសុំលុបភារកិច្ចនេះ · {b}",delWait:"កំពុងរង់ចាំអ្នកគ្រប់គ្រងសម្រេច។",keepTask:"រក្សាទុកភារកិច្ច",kept:"បានរក្សាទុកភារកិច្ច",
   delChip:"សុំលុប",tDelReq:"{a} សុំលុប {b}",tDelOk:"{a} បានលុប {b} តាមសំណើរបស់អ្នក",tDelNo:"{a} បានរក្សាទុក {b}; សំណើលុបរបស់អ្នកមិនត្រូវបានយល់ព្រម"});
 
+/* ---------- Repeating tasks: weekly, monthly or custom ---------- */
+Object.assign(T.en,{repeatT:"Repeat",rep_none:"Does not repeat",rep_weekly:"Every week",rep_monthly:"Every month",rep_custom:"Custom…",
+  repEvery:"Every",u_days:"days",u_weeks:"weeks",u_months:"months",monthly:"Monthly",everyN:"Every {a} {b}",repSaved:"Repeat updated",
+  repHelp:"When the task is finished, a new copy is made with the next due date."});
+Object.assign(T.km,{repeatT:"ធ្វើម្តងទៀត",rep_none:"មិនធ្វើម្តងទៀត",rep_weekly:"រៀងរាល់សប្តាហ៍",rep_monthly:"រៀងរាល់ខែ",rep_custom:"កំណត់ខ្លួនឯង…",
+  repEvery:"រៀងរាល់",u_days:"ថ្ងៃ",u_weeks:"សប្តាហ៍",u_months:"ខែ",monthly:"ប្រចាំខែ",everyN:"រៀងរាល់ {a} {b}",repSaved:"បានធ្វើបច្ចុប្បន្នភាពការធ្វើម្តងទៀត",
+  repHelp:"ពេលភារកិច្ចបញ្ចប់ ច្បាប់ចម្លងថ្មីត្រូវបានបង្កើតជាមួយកាលបរិច្ឆេទកំណត់បន្ទាប់។"});
+/* rule: "weekly", "monthly" or "N:days|weeks|months"; empty rule on a repeating task = weekly (older tasks) */
+function repParts(repeat,rule){if(!repeat)return {kind:"none",n:2,u:"weeks"};rule=rule||"weekly";
+  if(rule==="weekly"||rule==="monthly")return {kind:rule,n:2,u:"weeks"};const m=String(rule).match(/^(\d+):(days|weeks|months)$/);return m?{kind:"custom",n:+m[1],u:m[2]}:{kind:"weekly",n:2,u:"weeks"}}
+function repeatLabel(k){if(!k.repeat)return "";const p=repParts(true,k.repeatRule);return p.kind==="weekly"?t("weekly"):p.kind==="monthly"?t("monthly"):fill(t("everyN"),p.n,t("u_"+p.u))}
+function repeatField(px,repeat,rule,data){const p=repParts(repeat,rule);
+  return `<div class="repf"><label class="f">${t("repeatT")}<select id="${px}-rep" ${data||""}>${["none","weekly","monthly","custom"].map(v=>`<option value="${v}" ${p.kind===v?"selected":""}>${t("rep_"+v)}</option>`).join("")}</select></label>
+   <span class="repc" id="${px}-repc" ${p.kind==="custom"?"":"hidden"}><span class="lab">${t("repEvery")}</span><input type="number" id="${px}-repn" min="1" max="365" value="${p.n}" aria-label="${t("repEvery")}" ${data||""}>
+   <select id="${px}-repu" aria-label="${t("repeatT")}" ${data||""}>${["days","weeks","months"].map(u=>`<option value="${u}" ${p.u===u?"selected":""}>${t("u_"+u)}</option>`).join("")}</select></span></div>`}
+function readRepeat(px){const k=val(px+"-rep");if(k==="none"||!k)return {repeat:false,repeat_rule:""};if(k!=="custom")return {repeat:true,repeat_rule:k};
+  const n=Math.max(1,Math.min(365,parseInt(val(px+"-repn"))||1));return {repeat:true,repeat_rule:n+":"+(val(px+"-repu")||"weeks")}}
+document.addEventListener("change",e=>{const el=e.target;if(!el.id)return;const m=el.id.match(/^(nt|tk)-rep(n|u)?$/);if(!m)return;
+  const c=document.getElementById(m[1]+"-repc");if(c&&!m[2])c.hidden=el.value!=="custom";
+  if(m[1]==="tk"&&S.dlg&&S.dlg.id){e.stopImmediatePropagation();run(()=>pb.collection("tasks").update(S.dlg.id,readRepeat("tk")),t("repSaved"))}},true);
+
 /* same rule as the server: creator, admins and managers, and the supervisor of the person doing it */
 function canDeleteTask(k){const m=me();if(!m||!k)return false;if(isTaskMgr(m)||k.by===m.id)return true;return m.role==="supervisor"&&((U(k.to)||{}).supervisors||[]).includes(m.id)}
 const delChip=k=>k.delBy?`<span class="delchip">${t("delChip")}</span>`:"";

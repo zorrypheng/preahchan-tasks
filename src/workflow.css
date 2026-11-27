@@ -406,3 +406,10 @@
 @media (max-width:560px){.msrow{grid-template-columns:14px minmax(0,1fr) 48px}.msrow .lbbar{grid-column:2/4}.arow.ms{grid-template-columns:20px minmax(0,1fr) auto}.arow.ms input[type=date]{grid-column:2/3}}
 .cbar2 select{flex:0 1 260px}
 .cbar2 label.c{white-space:nowrap;display:inline-flex;align-items:center;gap:8px}
+
+/* Repeat choice */
+.repf{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.repf>.f{flex:0 1 220px}
+.repc{display:flex;gap:8px;align-items:center}
+.repc input{width:76px;min-height:44px}
+.repc select{min-height:44px}
