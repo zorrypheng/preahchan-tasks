@@ -413,3 +413,8 @@
 .repc{display:flex;gap:8px;align-items:center}
 .repc input{width:76px;min-height:44px}
 .repc select{min-height:44px}
+
+/* a gentle shake when a click outside is refused */
+@keyframes nudge{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.dlg.nudge{animation:nudge .25s ease}
+@media (prefers-reduced-motion: reduce){.dlg.nudge{animation:none}}
