@@ -418,3 +418,17 @@
 @keyframes nudge{0%,100%{transform:none}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .dlg.nudge{animation:nudge .25s ease}
 @media (prefers-reduced-motion: reduce){.dlg.nudge{animation:none}}
+
+/* Team stages */
+.msel{border:1px solid var(--line-strong);border-radius:12px;background:var(--surface-raised);min-width:0}
+.msel summary{cursor:pointer;padding:9px 12px;list-style:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.msel summary::after{content:"▾";float:right;margin-left:8px;color:var(--ink-muted)}
+.msel[open] summary{border-bottom:1px solid var(--line)}
+.mselbox{display:flex;flex-direction:column;max-height:220px;overflow:auto;padding:4px 10px}
+.mselbox label.c{min-height:36px}
+.samerow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.samerow .f{flex:0 1 200px}
+.fprows{display:flex;flex-direction:column;gap:6px}
+.fprow{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:10px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line)}
+.fprow .av{width:28px;height:28px;font-size:11px}
+.fprow input[type=number]{min-height:40px}

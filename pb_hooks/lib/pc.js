@@ -32,7 +32,7 @@ const TEXT = {
     badCode: "That code did not work. Open the app and tap Connect Telegram again for a new code.",
     approved: "Approved", notAllowed: "You can't do that.",
     kpi: "This week: {n} of {kpi} stages finished · {h} of {cap} hours logged.",
-    meet: "Meeting with <b>{client}</b> today: {title}", projectsH: "Your projects:", lateN: "{n} overdue", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
+    meet: "Meeting with <b>{client}</b> today: {title}", teamlog: "{by} finished {s} for the team on <b>{title}</b> · you: {h} h. If that's wrong, fix it in the app today.", teamSame: "Everyone on this stage gets the same hours.", projectsH: "Your projects:", lateN: "{n} overdue", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
     pickInApp: "Open the app to choose who does the next stage.", finishedStage: "Finished {s} · {h} h logged", finishedRec: "Finished {s}",
     nudge: "Today you logged {h} h across {n} stages.", nudgeNone: "You haven't logged any hours today. Anything missing?", nudgeOk: "Thanks! Anything missing? You can still log it in the app.",
     hoursNeeded: "Enter the hours you spent.", nextNeeded: "Choose who does the next stage.", notYours: "Only the person on this stage, or a manager, can finish it.",
@@ -67,7 +67,7 @@ const TEXT = {
     badCode: "លេខកូដនេះមិនដំណើរការទេ។ សូមបើកកម្មវិធី ហើយចុច ភ្ជាប់ Telegram ម្តងទៀត។",
     approved: "បានអនុម័ត", notAllowed: "អ្នកមិនអាចធ្វើបែបនេះបានទេ។",
     kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ដំណាក់កាល · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
-    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", projectsH: "គម្រោងរបស់អ្នក៖", lateN: "ហួសកំណត់ {n}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
+    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", teamlog: "{by} បានបញ្ចប់ {s} ជំនួសក្រុមលើ <b>{title}</b> · អ្នក៖ {h} ម៉ោង។ បើខុស សូមកែក្នុងកម្មវិធីថ្ងៃនេះ។", teamSame: "អ្នកទាំងអស់ក្នុងដំណាក់កាលនេះទទួលម៉ោងដូចគ្នា។", projectsH: "គម្រោងរបស់អ្នក៖", lateN: "ហួសកំណត់ {n}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
     pickInApp: "បើកកម្មវិធីដើម្បីជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", finishedStage: "បានបញ្ចប់ {s} · បានកត់ត្រា {h} ម៉ោង", finishedRec: "បានបញ្ចប់ {s}",
     nudge: "ថ្ងៃនេះអ្នកបានកត់ត្រា {h} ម៉ោង ក្នុង {n} ដំណាក់កាល។", nudgeNone: "ថ្ងៃនេះអ្នកមិនទាន់កត់ត្រាម៉ោងទេ។ មានអ្វីខ្វះទេ?", nudgeOk: "អរគុណ! មានអ្វីខ្វះទេ? អ្នកនៅតែអាចកត់ត្រាក្នុងកម្មវិធី។",
     hoursNeeded: "សូមបញ្ចូលម៉ោងដែលអ្នកបានចំណាយ។", nextNeeded: "សូមជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", notYours: "មានតែអ្នកនៅដំណាក់កាលនេះ ឬអ្នកគ្រប់គ្រងទេ ដែលអាចបញ្ចប់វាបាន។",
@@ -234,6 +234,10 @@ module.exports = {
   },
   planOf(task) { return jsonOf(task, "plan") || {} },
   // actor: the user clicking Finish. opts: { hours, note, to }
+  // The people a plan entry names: a team stage stores a list, a one-person stage one id
+  planPeople(v) { return (Array.isArray(v) ? v : (v ? [v] : [])).map(String).filter((x, i, arr) => x && arr.indexOf(x) === i) },
+  // actor: the user clicking Finish. opts: { hours, note, to, toList, people: [{ u, h }] }
+  // A team stage (several people) is finished by one of them for everyone: one work log per person.
   finishStage(app, actor, task, opts) {
     opts = opts || {}
     const lang = this.lang(actor)
@@ -242,21 +246,28 @@ module.exports = {
     if (!cur || cur.getBool("done") || task.getString("status") === "done") throw new BadRequestError(this.t(lang, "lastStep"))
     const i = flow.findIndex((s) => s.id === cur.id), nx = flow[i + 1]
     if (!nx) throw new BadRequestError(this.t(lang, "lastStep"))
-    const worker = task.getString("assignee"), role = actor.getString("role")
-    let allowed = worker === actor.id || role === "admin" || role === "manager" || role === "assistant"
+    const worker = task.getString("assignee"), helpers = task.getStringSlice("helpers"), role = actor.getString("role")
+    let allowed = worker === actor.id || helpers.indexOf(actor.id) >= 0 || role === "admin" || role === "manager" || role === "assistant"
     if (!allowed && role === "supervisor") { try { allowed = app.findRecordById("users", worker).getStringSlice("supervisors").indexOf(actor.id) >= 0 } catch (e) {} }
     if (!allowed) throw new ForbiddenError(this.t(lang, "notYours"))
     const mode = this.hoursMode(app, cur, flow)
-    let hours = Math.round((parseFloat(opts.hours) || 0) * 100) / 100
-    if (mode === "none") hours = 0
-    if (hours < 0 || hours > 24) throw new BadRequestError(this.t(lang, "hoursNeeded"))
-    if (mode === "required" && !(hours > 0)) throw new BadRequestError(this.t(lang, "hoursNeeded"))
+    const clean = (h) => { h = Math.round((parseFloat(h) || 0) * 100) / 100; return mode === "none" ? 0 : h }
+    // who gets a log: the list sent by the app, or everyone on the stage with the same hours (Telegram, extension)
+    let people = Array.isArray(opts.people) && opts.people.length
+      ? opts.people.map((x) => ({ u: String(x && x.u || ""), h: clean(x && x.h) })).filter((x, k, arr) => x.u && arr.findIndex((y) => y.u === x.u) === k)
+      : this.planPeople([worker].concat(helpers)).map((u) => ({ u: u, h: clean(opts.hours) }))
+    if (!people.length) throw new BadRequestError(this.t(lang, "hoursNeeded"))
+    people.forEach((x) => {
+      if (x.h < 0 || x.h > 24 || (mode === "required" && !(x.h > 0))) throw new BadRequestError(this.t(lang, "hoursNeeded"))
+      try { app.findRecordById("users", x.u) } catch (e) { throw new BadRequestError(this.t(lang, "hoursNeeded")) }
+    })
     const plan = this.planOf(task)
-    let to = ""
+    let next = []
     if (!nx.getBool("done")) {
-      to = String(opts.to || plan[nx.id] || "")
-      if (!to) throw new BadRequestError(this.t(lang, "nextNeeded"))
-      try { const u = app.findRecordById("users", to); if (!u.getBool("active")) throw new Error("inactive") } catch (e) { throw new BadRequestError(this.t(lang, "nextNeeded")) }
+      next = this.planPeople(nx.getBool("team") ? (opts.toList || opts.to || plan[nx.id]) : (opts.to || this.planPeople(plan[nx.id])[0]))
+      if (!nx.getBool("team")) next = next.slice(0, 1)
+      if (!next.length) throw new BadRequestError(this.t(lang, "nextNeeded"))
+      next.forEach((u) => { try { if (!app.findRecordById("users", u).getBool("active")) throw new Error("inactive") } catch (e) { throw new BadRequestError(this.t(lang, "nextNeeded")) } })
     }
     const now = this.ict()
     // time in this stage: since the previous finish on this task, or since the task was created
@@ -267,16 +278,22 @@ module.exports = {
     } catch (e) {}
     let waitH = 0
     try { const ms = Date.now() - new Date(since.replace(" ", "T")).getTime(); if (ms > 0) waitH = Math.round(ms / 36000) / 100 } catch (e) {}
-    const log = new Record(app.findCollectionByNameOrId("work_logs"))
-    log.set("task", task.id); log.set("task_id", task.id); log.set("stage", cur.id)
-    log.set("user", worker); log.set("by", actor.id)
-    log.set("hours", hours); log.set("note", String(opts.note || "").substring(0, 300))
-    log.set("day", now.date); log.set("at", now.stamp); log.set("wait_h", waitH)
-    log.set("title", task.getString("title").substring(0, 200)); log.set("client", task.getString("client")); log.set("type", task.getString("type"))
-    app.save(log)
+    const logs = people.map((x) => {
+      const log = new Record(app.findCollectionByNameOrId("work_logs"))
+      log.set("task", task.id); log.set("task_id", task.id); log.set("stage", cur.id)
+      log.set("user", x.u); log.set("by", actor.id)
+      log.set("hours", x.h); log.set("note", String(opts.note || "").substring(0, 300))
+      log.set("day", now.date); log.set("at", now.stamp); log.set("wait_h", waitH)
+      log.set("title", task.getString("title").substring(0, 200)); log.set("client", task.getString("client")); log.set("type", task.getString("type"))
+      app.save(log)
+      return log
+    })
     task.set("stage", nx.id)
     task.set("timer", null)
-    if (to) { plan[nx.id] = to; task.set("plan", plan); task.set("assignee", to) }
+    if (next.length) {
+      plan[nx.id] = nx.getBool("team") ? next : next[0]
+      task.set("plan", plan); task.set("assignee", next[0]); task.set("helpers", next.slice(1))
+    } else task.set("helpers", [])
     if (nx.getBool("done")) {
       let total = 0
       app.findRecordsByFilter("work_logs", "task_id = {:t}", "", 500, 0, { t: task.id }).forEach((l) => { total += l.getFloat("hours") })
@@ -284,7 +301,13 @@ module.exports = {
       task.set("done_at", now.date)
     }
     app.save(task)
-    return { log: log.id, stage: nx.id, stageName: (lang === "km" && nx.getString("name_km")) || nx.getString("name"), done: nx.getBool("done"), to: to, hours: hours, from: cur.id,
+    // the rest of the next team hears it is their turn (the first person is told by the assignee hook)
+    next.slice(1).forEach((u) => { try { this.notify(app, u, "turn", { by: actor.id, task: task.id, prev: cur.id }) } catch (e) {} })
+    // people whose hours someone else logged hear what was logged for them
+    people.forEach((x) => { if (x.u !== actor.id) { try { this.notify(app, x.u, "teamlog", { by: actor.id, task: task.id, stage: cur.id, h: x.h }) } catch (e) {} } })
+    const mine = people.find((x) => x.u === actor.id) || people[0]
+    return { log: logs[0].id, logs: logs.length, stage: nx.id, stageName: (lang === "km" && nx.getString("name_km")) || nx.getString("name"), done: nx.getBool("done"),
+      to: next[0] || "", toList: next, hours: mine.h, total: Math.round(people.reduce((a2, x) => a2 + x.h, 0) * 100) / 100, from: cur.id,
       fromName: (lang === "km" && cur.getString("name_km")) || cur.getString("name") }
   },
 
@@ -408,6 +431,9 @@ module.exports = {
       let client = ""
       try { client = app.findRecordById("clients", data.client).getString("name") } catch (e) {}
       text = fill(this.t(lang, "meet"), { client: esc(client), title: esc(data.title || "") })
+    } else if (kind === "teamlog") {
+      const k = task(); const title = k ? k.getString("title") : ""
+      text = fill(this.t(lang, "teamlog"), { by: by, s: esc(this.stageName(app, data.stage, lang)), title: esc(title), h: round2(data.h || 0) })
     } else if (kind === "turn") {
       const k = task(); if (!k) return
       text = fill(this.t(lang, "turn"), { by: by, prev: esc(this.stageName(app, data.prev, lang)), title: esc(k.getString("title")), s: esc(this.stageName(app, k.getString("stage"), lang)), due: this.shortDate(k.getString("due")) })
@@ -442,7 +468,7 @@ module.exports = {
 
   todayText(app, user) {
     const lang = this.lang(user), today = this.ict().date
-    const list = app.findRecordsByFilter("tasks", "assignee = {:u} && status != 'done' && due <= {:d}", "due", 30, 0, { u: user.id, d: today })
+    const list = app.findRecordsByFilter("tasks", "(assignee = {:u} || helpers.id ?= {:u}) && status != 'done' && due <= {:d}", "due", 30, 0, { u: user.id, d: today })
     let text = fill(this.t(lang, "morning"), { name: esc(user.getString("name") || user.getString("username")) }) + "\n"
     if (!list.length) text += this.t(lang, "nothing")
     list.forEach((k) => { text += "\n• " + esc(k.getString("title")) + (k.getString("due") < today ? " " + this.t(lang, "overdueTag") : "") })
@@ -825,7 +851,7 @@ module.exports = {
     this.setActor(user.id)
     const lang = this.lang(user), data = String(cq.data || ""), parts = data.split(":")
     const msg = cq.message || {}, chat = msg.chat ? msg.chat.id : null, mid = msg.message_id
-    const ownTask = (id) => { try { const k = app.findRecordById("tasks", id); return k.getString("assignee") === user.id ? k : null } catch (e) { return null } }
+    const ownTask = (id) => { try { const k = app.findRecordById("tasks", id); return (k.getString("assignee") === user.id || k.getStringSlice("helpers").indexOf(user.id) >= 0) ? k : null } catch (e) { return null } }
 
     if (parts[0] === "s") {
       const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
@@ -845,7 +871,7 @@ module.exports = {
       const k = ownTask(parts[1]); if (!k) { answer(this.t(lang, "notAllowed")); return }
       const flow = this.flow(app, k.getString("type")), cur = flow.find((s) => s.id === k.getString("stage")), nx = this.nextOf(app, k)
       if (!cur || !nx || k.getString("status") === "done") { answer(this.t(lang, "lastStep")); return }
-      if (!nx.getBool("done") && !this.planOf(k)[nx.id]) {
+      if (!nx.getBool("done") && !this.planPeople(this.planOf(k)[nx.id]).length) {
         answer(this.t(lang, "pickInApp"))
         const open = this.openButton(app, lang)
         this.tg("sendMessage", { chat_id: chat, parse_mode: "HTML", text: esc(k.getString("title")) + "\n" + this.t(lang, "pickInApp"), reply_markup: { inline_keyboard: open ? [open] : [] } })
@@ -863,7 +889,8 @@ module.exports = {
       const kb = [btns.slice(0, 3), btns.slice(3)]
       if (mode === "optional") kb.push([{ text: "0 h", callback_data: "h:" + k.id + ":0" }])
       answer("")
-      this.tg("sendMessage", { chat_id: chat, parse_mode: "HTML", text: fill(this.t(lang, "hoursQ"), { title: esc(k.getString("title") + " · " + ((lang === "km" && cur.getString("name_km")) || cur.getString("name"))) }), reply_markup: { inline_keyboard: kb.filter((r) => r.length) } })
+      const team = k.getStringSlice("helpers").length ? "\n" + this.t(lang, "teamSame") : ""
+      this.tg("sendMessage", { chat_id: chat, parse_mode: "HTML", text: fill(this.t(lang, "hoursQ"), { title: esc(k.getString("title") + " · " + ((lang === "km" && cur.getString("name_km")) || cur.getString("name"))) }) + team, reply_markup: { inline_keyboard: kb.filter((r) => r.length) } })
       return
     }
     if (parts[0] === "h") {

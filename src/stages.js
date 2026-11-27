@@ -1,7 +1,9 @@
 /* ---------- Stage plan, finishing stages and work logs ----------
    Each task has a plan: the person for every stage. Finishing a stage logs the work (hours when the
    stage asks for them) and passes the task to the next stage's person. KPI and hours come from the logs. */
-Object.assign(T.en,{assistant:"Assistant manager",n_time:"Timesheet",time:"Timesheet",
+Object.assign(T.en,{pickTeam:"Choose people…",teamFinishHelp:"Finish for everyone on this stage: enter each person's hours, or untick anyone who didn't take part.",
+  sameHours:"Same hours for everyone",applyAll:"Fill everyone",addPerson:"+ Add person",pickSomeone:"Tick at least one person.",hoursEach:"Enter hours for each ticked person.",
+  finishedTeam:"Finished {a} for {b} people",teamStage:"Several people (team)",tTeamlog:"{a} logged your hours on {b} · {c}",assistant:"Assistant manager",n_time:"Timesheet",time:"Timesheet",
   stagePlan:"Stage plan",stagePlanHelp:"Pick who does each stage. The task moves to the next person when a stage is finished.",
   pickLater:"— choose at hand-off —",suggested:"Suggested",everyone:"Everyone",estH:"Est h",recordOnly:"Record only",hoursOpt:"hours optional",
   crew:"Crew",useCrew:"Use a saved crew…",saveCrew:"Save as crew",crewName:"Name for this crew (for example: Client A crew)",crewSaved:"Crew saved",crewDel:"Delete crew",crewDelAsk:"Delete the crew “{a}”?",crewDeleted:"Crew deleted",
@@ -18,7 +20,9 @@ Object.assign(T.en,{assistant:"Assistant manager",n_time:"Timesheet",time:"Times
   stRep:"Average hours and time in each stage for finished stages.",colFinished:"Finished",colAvgWait:"Avg time in stage",colTotalH:"Total hours",days1:"{a} days",hours1:"{a} h",
   logsOf:"{a} · {b}",noLogs:"No work logged.",
   byTask:"By task",colStage:"Stage",colPerson:"Person"});
-Object.assign(T.km,{assistant:"ជំនួយការអ្នកគ្រប់គ្រង",n_time:"តារាងម៉ោង",time:"តារាងម៉ោង",
+Object.assign(T.km,{pickTeam:"ជ្រើសមនុស្ស…",teamFinishHelp:"បញ្ចប់ជំនួសអ្នកទាំងអស់ក្នុងដំណាក់កាលនេះ៖ បញ្ចូលម៉ោងរបស់ម្នាក់ៗ ឬដកធីកអ្នកដែលមិនបានចូលរួម។",
+  sameHours:"ម៉ោងដូចគ្នាសម្រាប់គ្រប់គ្នា",applyAll:"បំពេញគ្រប់គ្នា",addPerson:"+ បន្ថែមមនុស្ស",pickSomeone:"សូមធីកយ៉ាងហោចណាស់ម្នាក់។",hoursEach:"សូមបញ្ចូលម៉ោងសម្រាប់អ្នកដែលបានធីកម្នាក់ៗ។",
+  finishedTeam:"បានបញ្ចប់ {a} សម្រាប់ {b} នាក់",teamStage:"មនុស្សច្រើននាក់ (ក្រុម)",tTeamlog:"{a} បានកត់ត្រាម៉ោងរបស់អ្នកលើ {b} · {c}",assistant:"ជំនួយការអ្នកគ្រប់គ្រង",n_time:"តារាងម៉ោង",time:"តារាងម៉ោង",
   stagePlan:"ផែនការដំណាក់កាល",stagePlanHelp:"ជ្រើសអ្នកធ្វើដំណាក់កាលនីមួយៗ។ ភារកិច្ចនឹងទៅអ្នកបន្ទាប់ពេលដំណាក់កាលបញ្ចប់។",
   pickLater:"— ជ្រើសពេលប្រគល់ —",suggested:"ណែនាំ",everyone:"ទាំងអស់គ្នា",estH:"ម៉ោងប៉ាន់",recordOnly:"កត់ត្រាតែប៉ុណ្ណោះ",hoursOpt:"ម៉ោងស្រេចចិត្ត",
   crew:"ក្រុមការងារ",useCrew:"ប្រើក្រុមដែលបានរក្សាទុក…",saveCrew:"រក្សាទុកជាក្រុម",crewName:"ឈ្មោះក្រុមនេះ (ឧ. ក្រុមអតិថិជន A)",crewSaved:"បានរក្សាទុកក្រុម",crewDel:"លុបក្រុម",crewDelAsk:"លុបក្រុម “{a}”?",crewDeleted:"បានលុបក្រុម",
@@ -48,7 +52,10 @@ const isTaskMgr=u=>!!u&&["admin","manager","assistant"].includes(u.role);
 const supervises=(uid,who)=>((U(who)||{}).supervisors||[]).includes(uid);
 /* how a stage asks for hours: required, optional or none (record who did it) */
 function hoursMode(s,typeId){if(!s)return "none";if(s.hours)return s.hours;if(s.done)return "none";const f=flowOf(typeId);return f.length&&f[0].id===s.id?"none":"required"}
-const canFinish=k=>!!k&&k.status!=="done"&&!!nextStageOf(k)&&(k.to===S.me||isTaskMgr(me())||supervises(S.me,k.to));
+const pp=v=>(Array.isArray(v)?v:v?[v]:[]).filter((x,i,a)=>x&&a.indexOf(x)===i);
+const isOn=(k,uid)=>!!k&&(k.to===uid||(k.helpers||[]).includes(uid));
+const isTeam=s=>!!(s&&s.team);
+const canFinish=k=>!!k&&k.status!=="done"&&!!nextStageOf(k)&&(isOn(k,S.me)||isTaskMgr(me())||supervises(S.me,k.to));
 const canPlan=k=>!!k&&(isTaskMgr(me())||k.by===S.me||supervises(S.me,k.to));
 
 async function loadStageData(){
@@ -67,7 +74,7 @@ function weekItems(uid){
   return wlogs.filter(l=>l.user===uid&&l.hours>0&&l.day>=WK0&&l.day<=WK6).map(l=>({doneAt:l.day,spent:l.hours}));
 }
 /* workload shown next to names: hours this week, open tasks */
-function loadLabel(u){const h=weekItems(u.id).reduce((a,x)=>a+x.spent,0),n=tasks.filter(k=>k.to===u.id&&k.status!=="done").length;
+function loadLabel(u){const h=weekItems(u.id).reduce((a,x)=>a+x.spent,0),n=tasks.filter(k=>isOn(k,u.id)&&k.status!=="done").length;
   return `${u.name} · ${Math.round(h*10)/10}/${u.cap||44} h · ${n} ${t("open")}`}
 /* people for a stage: those whose position is the stage's default position or who work on that stage first */
 /* people for a stage: only those whose position is ticked for it in Settings (everyone if none is ticked) */
@@ -84,6 +91,12 @@ function stageCandidates(s){
   return {good:sorted.filter(u=>fit(u)>0),rest:sorted.filter(u=>fit(u)===0)};
 }
 function suggestFor(s){const c=stageCandidates(s);return c.good[0]?c.good[0].id:""}
+/* several people for a team stage: a tick list in a drop-down */
+function teamPicker(s,chosen,attr){const c=stageCandidates(s),all=c.good.concat(c.rest),ch=pp(chosen);
+  const extra=ch.filter(id=>!all.some(u=>u.id===id)).map(U).filter(Boolean),names=ch.map(id=>(U(id)||{name:"?"}).name);
+  return `<details class="msel" data-msel="${s.id}"><summary>${names.length?esc(names.join(", ")):`<span class="muted">${t("pickTeam")}</span>`}</summary><div class="mselbox">${extra.concat(all).map(u=>`<label class="c"><input type="checkbox" ${attr}="${s.id}" value="${u.id}" ${ch.includes(u.id)?"checked":""}>${esc(loadLabel(u))}</label>`).join("")}</div></details>`}
+function pickedTeam(attr,sid){return [...document.querySelectorAll(`.dlg [${attr}="${sid}"]:checked`)].map(x=>x.value)}
+function setTeamSummary(sid,ids){const sm=document.querySelector(`.dlg [data-msel="${sid}"] summary`);if(sm)sm.innerHTML=ids.length?esc(ids.map(id=>(U(id)||{name:"?"}).name).join(", ")):`<span class="muted">${t("pickTeam")}</span>`}
 function personOpts(s,cur,allowEmpty){
   const c=stageCandidates(s),o=u=>`<option value="${u.id}" ${u.id===cur?"selected":""}>${esc(loadLabel(u))}</option>`;
   const extra=cur&&!c.good.concat(c.rest).some(u=>u.id===cur)&&U(cur)?o(U(cur)):"";
@@ -101,6 +114,7 @@ function defaultPlan(typeId,clientId){
   const can=(s,uid)=>{const c=stageCandidates(s);return !c.only||c.good.some(u=>u.id===uid)};
   st.forEach((s,i)=>{if(!plan[s.id])plan[s.id]=i===0?(S.dlg.assign&&S.expand?S.expand:(can(s,S.me)?S.me:suggestFor(s))):suggestFor(s)});
   if(me().role==="staff"&&st[0])plan[st[0].id]=S.me;
+  st.forEach(s=>{if(isTeam(s))plan[s.id]=pp(plan[s.id]);else if(Array.isArray(plan[s.id]))plan[s.id]=plan[s.id][0]||""});
   return {plan,est,from};
 }
 function planBlock(){
@@ -110,7 +124,7 @@ function planBlock(){
   const myCrews=crews.filter(c=>!c.type||c.type===tid);
   const rows=st.map((s,i)=>{const mode=hoursMode(s,tid),lock=staff&&i===0;
     return `<div class="plrow"><span class="chip sc-${s.color||"gray"}">${esc(nm(s))}</span>
-     <select data-plan="${s.id}" aria-label="${esc(nm(s))}" ${lock?"disabled":""}>${lock?`<option value="${S.me}">${esc(me().name)}</option>`:personOpts(s,S.dlg.plan[s.id]||"",i>0)}</select>
+     ${isTeam(s)&&!lock?teamPicker(s,S.dlg.plan[s.id],"data-plant"):`<select data-plan="${s.id}" aria-label="${esc(nm(s))}" ${lock?"disabled":""}>${lock?`<option value="${S.me}">${esc(me().name)}</option>`:personOpts(s,pp(S.dlg.plan[s.id])[0]||"",i>0)}</select>`}
      ${mode==="none"?`<span class="cap muted plhint">${t("recordOnly")}</span>`:`<input type="number" min="0" max="99" step="0.25" inputmode="decimal" data-pest="${s.id}" value="${S.dlg.estPlan[s.id]||""}" placeholder="${t("estH")}" aria-label="${t("estH")} ${esc(nm(s))}">`}</div>`}).join("");
   return `<section class="planbox"><div class="plhead"><span class="lab">${t("stagePlan")}</span>
      <span class="plcrew">${myCrews.length?`<select data-x="crew" aria-label="${t("crew")}"><option value="">${t("useCrew")}</option>${myCrews.map(c=>`<option value="${c.id}" ${S.dlg.crew===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select>`:""}
@@ -141,11 +155,11 @@ function stageBlock(k){
       ${canEditLog(l)?`<button type="button" class="linkbtn" data-act="log-edit" data-id="${l.id}">${t("editLog")}</button>`:""}</li>`).join("");
     let who="";
     if(cur){const tm=k.timer&&k.timer.s===s.id&&k.timer.at?k.timer:null;
-      who=`<b>${esc((U(k.to)||{name:"?"}).name)}</b> <span class="nowtag">${t("nowAt")}</span>${est[s.id]?` · ${t("estShort")} ${fmtH(est[s.id])}`:""}
+      who=`<b>${esc([k.to,...(k.helpers||[])].map(id=>(U(id)||{name:"?"}).name).join(", "))}</b> <span class="nowtag">${t("nowAt")}</span>${est[s.id]?` · ${t("estShort")} ${fmtH(est[s.id])}`:""}
        ${tm?` · <span class="timer">⏱ <span data-since="${tm.at}">${timerText(tm.at)}</span></span> ${k.to===S.me?`<button type="button" class="linkbtn" data-act="timer-stop">${t("timerStop")}</button>`:""}`
          :(k.to===S.me&&mode!=="none"?` <button type="button" class="linkbtn" data-act="timer-start">${t("timerStart")}</button>`:"")}`}
-    else if(!past){who=edit?`<select class="plsel" data-replan="${s.id}" aria-label="${esc(nm(s))}">${personOpts(s,plan[s.id]||"",true)}</select>`
-      :(plan[s.id]&&U(plan[s.id])?esc(U(plan[s.id]).name):`<span class="muted">${t("pickLater")}</span>`);
+    else if(!past){who=edit?(isTeam(s)?teamPicker(s,plan[s.id],"data-replant"):`<select class="plsel" data-replan="${s.id}" aria-label="${esc(nm(s))}">${personOpts(s,pp(plan[s.id])[0]||"",true)}</select>`)
+      :(pp(plan[s.id]).length?esc(pp(plan[s.id]).map(id=>(U(id)||{name:"?"}).name).join(", ")):`<span class="muted">${t("pickLater")}</span>`);
       if(est[s.id])who+=` <span class="cap muted">${t("estShort")} ${fmtH(est[s.id])}</span>`}
     return `<li class="tl ${cur?"cur":past?"past":"next"}"><span class="tldot sc-${s.color||"gray"}" aria-hidden="true"></span><div class="tlbody"><span class="tlname">${esc(nm(s))}</span>
       ${who?`<div class="tlwho">${who}</div>`:""}${logLines?`<ul class="tllogs">${logLines}</ul>`:""}</div></li>`}).join("");
@@ -155,7 +169,29 @@ function stageBlock(k){
     ${canFinish(k)&&s?`<button class="btn primary finishbtn" data-act="finish-open" data-id="${k.id}">${fill(t("finishBtn"),esc(nm(s)))} →</button>`:""}</section>`;
 }
 
+/* finishing a team stage: one row per person with their hours */
+function teamRows(k){const ids=pp([k.to,...(k.helpers||[]),...(S.dlg.extra||[])]);return ids}
+function dFinishTeam(k,s,mode,nx,plan){
+  const tm=k.timer&&k.timer.s===k.stage&&k.timer.at?k.timer:null,def=tm?Math.max(0.25,Math.round((Date.now()-tm.at)/900000)/4):((k.estPlan||{})[k.stage]||"");
+  const ids=teamRows(k),others=users.filter(u=>u.active&&u.role!=="admin"&&!ids.includes(u.id));
+  return `<h2>${fill(t("finishT"),esc(nm(s)))}</h2><p><b>${esc(k.title)}</b><br><span class="cap muted">${t("teamFinishHelp")}</span></p>
+   <form data-form="finish" class="stack" novalidate>
+   ${mode==="none"?"":`<div class="samerow"><label class="f">${t("sameHours")}<input type="number" id="fin-same" min="0" max="24" step="0.25" inputmode="decimal" value="${def}"></label>
+     <div class="tabs">${[0.5,1,2,3,4].map(h=>`<button type="button" data-act="fin-same" data-h="${h}">${fh(h)}</button>`).join("")}<button type="button" class="btn small" data-act="fin-same">${t("applyAll")}</button></div></div>`}
+   <div class="fprows">${ids.map(id=>{const u=U(id)||{name:"?",id};return `<div class="fprow"><label class="c"><input type="checkbox" id="fp-${id}" data-fp="${id}" checked><span class="av">${avIn(u)}</span>${esc(u.name)}</label>
+     ${mode==="none"?`<span class="cap muted">${t("recordOnly")}</span>`:`<input type="number" id="fph-${id}" data-fph="${id}" min="0" max="24" step="0.25" inputmode="decimal" value="${def}" aria-label="${t("colHours")}: ${esc(u.name)}">`}</div>`}).join("")}</div>
+   ${others.length?`<label class="f">${t("addPerson")}<select data-x="finadd"><option value="">${t("pickOne")}</option>${others.map(u=>`<option value="${u.id}">${esc(u.name)}</option>`).join("")}</select></label>`:""}
+   <label class="f">${t("noteQ")}<input type="text" id="fin-note" maxlength="300" autocomplete="off"></label>
+   ${nextPicker(nx,plan)}
+   <p class="err" id="fin-err" role="alert" hidden></p>
+   <div class="acts"><button type="button" class="btn" data-act="fin-cancel">${t("cancel")}</button><button class="btn primary">${t("finishGo")}</button></div></form>`;
+}
+function nextPicker(nx,plan){if(!nx||nx.done)return `<p class="okline">${t("finishesTask")}</p>`;
+  if(isTeam(nx))return `<div class="f"><span class="lab">${fill(t("whoNext"),esc(nm(nx)))}</span>${teamPicker(nx,pp(plan[nx.id]).length?plan[nx.id]:[suggestFor(nx)],"data-fto")}</div>`;
+  return `<label class="f">${fill(t("whoNext"),esc(nm(nx)))}<select id="fin-to">${personOpts(nx,pp(plan[nx.id])[0]||suggestFor(nx),true)}</select></label>`}
+function teamFinishChange(el){if(el.dataset.x==="finadd"&&el.value){S.dlg.extra=pp([...(S.dlg.extra||[]),el.value]);rerenderKeep()}}
 function dFinish(){
+  {const k0=tasks.find(x=>x.id===S.dlg.id),s0=k0&&ST(k0.stage);if(k0&&s0&&(isTeam(s0)||(k0.helpers||[]).length))return dFinishTeam(k0,s0,hoursMode(s0,k0.type),nextStageOf(k0),k0.plan||{})}
   const k=tasks.find(x=>x.id===S.dlg.id);if(!k)return `<button class="btn" data-act="close">${t("close")}</button>`;
   const s=ST(k.stage),mode=hoursMode(s,k.type),nx=nextStageOf(k),plan=k.plan||{};
   const tm=k.timer&&k.timer.s===k.stage&&k.timer.at?k.timer:null;
@@ -165,24 +201,28 @@ function dFinish(){
    ${mode==="none"?"":`<label class="f">${t(mode==="optional"?"hoursOptQ":"hoursQ2")}<input type="number" id="fin-h" min="0" max="24" step="0.25" inputmode="decimal" value="${def}"></label>
      <div class="tabs">${[0.5,1,2,3,4].map(h=>`<button type="button" data-act="fin-h" data-h="${h}">${fh(h)}</button>`).join("")}</div>`}
    <label class="f">${t("noteQ")}<input type="text" id="fin-note" maxlength="300" autocomplete="off"></label>
-   ${nx&&!nx.done?`<label class="f">${fill(t("whoNext"),esc(nm(nx)))}<select id="fin-to">${personOpts(nx,plan[nx.id]||suggestFor(nx),true)}</select></label>`:`<p class="okline">${t("finishesTask")}</p>`}
+   ${nextPicker(nx,plan)}
    <p class="err" id="fin-err" role="alert" hidden></p>
    <div class="acts"><button type="button" class="btn" data-act="fin-cancel">${t("cancel")}</button><button class="btn primary">${t("finishGo")}</button></div></form>`;
 }
 async function doFinish(){
   const k=tasks.find(x=>x.id===S.dlg.id),s=ST(k.stage),mode=hoursMode(s,k.type),nx=nextStageOf(k);
   const er=m=>{const el=document.getElementById("fin-err");el.textContent=m;el.hidden=!m};
-  const hEl=document.getElementById("fin-h"),h=hEl?parseFloat(hEl.value)||0:0,to=val("fin-to");
-  if(mode==="required"&&!(h>0)){er(t("hoursNeed"));hEl&&hEl.focus();return}
-  if(h<0||h>24){er(t("hoursNeed"));return}
-  if(nx&&!nx.done&&!to){er(t("nextNeed"));return}
+  const hEl=document.getElementById("fin-h"),h=hEl?parseFloat(hEl.value)||0:0,to=val("fin-to"),toList=nx&&isTeam(nx)?pickedTeam("data-fto",nx.id):[];
+  const team=!!document.querySelector(".dlg .fprows");let people=null;
+  if(team){people=[...document.querySelectorAll(".dlg [data-fp]:checked")].map(c=>{const hi=document.getElementById("fph-"+c.dataset.fp);return {u:c.dataset.fp,h:hi?parseFloat(hi.value)||0:0}});
+    if(!people.length){er(t("pickSomeone"));return}
+    if(people.some(x=>x.h<0||x.h>24||(mode==="required"&&!(x.h>0)))){er(t("hoursEach"));return}}
+  else{if(mode==="required"&&!(h>0)){er(t("hoursNeed"));hEl&&hEl.focus();return}
+    if(h<0||h>24){er(t("hoursNeed"));return}}
+  if(nx&&!nx.done&&!(isTeam(nx)?toList.length:to)){er(t("nextNeed"));return}
   const btn=document.querySelector('[data-form="finish"] .primary');if(btn)btn.disabled=true;
   const u=me(),before=weekItems(S.me).length,back=S.dlg.back;
-  try{const r=await pb.send("/api/pc/finish",{method:"POST",body:{task:k.id,hours:h,note:val("fin-note"),to}});
+  try{const r=await pb.send("/api/pc/finish",{method:"POST",body:Object.assign({task:k.id,hours:h,note:val("fin-note"),to,toList},people?{people}:{})});
     S.dlg=back&&!r.done&&r.to===S.me?{type:"task",id:k.id}:null;await loadAll();
     const after=weekItems(S.me).length,hit=k.to===S.me&&r.hours>0&&before<u.kpi&&after>=u.kpi;
     S.bump=k.to===S.me&&r.hours>0;S.celebrate=hit;render();
-    toast(hit?fill(t("kpiYay"),fh(r.hours)):r.hours>0?fill(t("finishedT"),r.fromName,fh(r.hours)):fill(t("finishedR"),r.fromName));
+    toast(hit?fill(t("kpiYay"),fh(r.hours)):people&&people.length>1?fill(t("finishedTeam"),r.fromName,people.length):r.hours>0?fill(t("finishedT"),r.fromName,fh(r.hours)):fill(t("finishedR"),r.fromName));
   }catch(e){if(btn)btn.disabled=false;er((e&&e.response&&e.response.message)||(e&&e.message)||t("error"))}
 }
 
@@ -243,10 +283,12 @@ function sheetCSV(){
 /* ---------- events ---------- */
 document.addEventListener("click",async e=>{
   const b=e.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
-  const mine=["finish-open","fin-h","fin-cancel","timer-start","timer-stop","log-edit","log-back","log-del","crew-save","crew-del","dup","ts-tab","ts-wk","ts-cell","ts-csv","st-per"];
+  const mine=["finish-open","fin-h","fin-same","fin-cancel","timer-start","timer-stop","log-edit","log-back","log-del","crew-save","crew-del","dup","ts-tab","ts-wk","ts-cell","ts-csv","st-per"];
   if(!mine.includes(a))return;e.preventDefault();e.stopImmediatePropagation();
   if(a==="finish-open"){const k=tasks.find(x=>x.id===b.dataset.id);if(!canFinish(k))return;S.arm=null;S.dlg={type:"finish",id:k.id,back:!!(S.dlg&&S.dlg.type==="task")};render();document.getElementById("fin-h")?.focus();return}
   if(a==="fin-h"){const i=document.getElementById("fin-h");if(i)i.value=b.dataset.h;return}
+  if(a==="fin-same"){const sm=document.getElementById("fin-same");if(b.dataset.h&&sm)sm.value=b.dataset.h;const v=sm?sm.value:"";
+    document.querySelectorAll(".dlg [data-fph]").forEach(i=>{const c=document.getElementById("fp-"+i.dataset.fph);if(!c||c.checked)i.value=v});return}
   if(a==="fin-cancel"){S.dlg=S.dlg.back?{type:"task",id:S.dlg.id}:null;render();return}
   if(a==="timer-start"||a==="timer-stop"){const k=tasks.find(x=>x.id===S.dlg.id);run(()=>pb.collection("tasks").update(k.id,{timer:a==="timer-start"?{u:S.me,s:k.stage,at:Date.now()}:null}));return}
   if(a==="log-edit"){S.arm=null;S.dlg={type:"editlog",id:b.dataset.id,back:S.dlg};render();return}
@@ -270,10 +312,15 @@ document.addEventListener("click",async e=>{
 },true);
 /* keep the plan the user picked when the form re-renders */
 function keepPlan(){document.querySelectorAll(".dlg [data-plan]").forEach(el=>{if(!el.disabled)S.dlg.plan[el.dataset.plan]=el.value});
+  document.querySelectorAll(".dlg [data-msel]").forEach(d=>{const sid=d.dataset.msel;if(d.querySelector("[data-plant]"))S.dlg.plan[sid]=pickedTeam("data-plant",sid)});
   document.querySelectorAll(".dlg [data-pest]").forEach(el=>{S.dlg.estPlan[el.dataset.pest]=el.value})}
 document.addEventListener("change",e=>{
   const el=e.target;if(!S.dlg)return;
   if(el.dataset.plan){S.dlg.plan[el.dataset.plan]=el.value;(S.dlg.touched=S.dlg.touched||{})[el.dataset.plan]=1;S.dlg.crew="";return}
+  if(el.dataset.plant){const sid=el.dataset.plant,ids=pickedTeam("data-plant",sid);S.dlg.plan[sid]=ids;(S.dlg.touched=S.dlg.touched||{})[sid]=1;S.dlg.crew="";setTeamSummary(sid,ids);return}
+  if(el.dataset.replant){e.stopImmediatePropagation();const sid=el.dataset.replant,ids=pickedTeam("data-replant",sid);setTeamSummary(sid,ids);const k=tasks.find(x=>x.id===S.dlg.id);
+    clearTimeout(window.__replant);window.__replant=setTimeout(()=>run(()=>pb.collection("tasks").update(k.id,{plan:Object.assign({},k.plan||{},{[sid]:ids})}),t("savedT")),900);return}
+  if(el.dataset.fp||el.dataset.x==="finadd"){teamFinishChange(el);return}
   if(el.dataset.x==="crew"){const c=crews.find(x=>x.id===el.value);S.dlg.crew=el.value;if(c){keepPlan();S.dlg.touched=S.dlg.touched||{};Object.keys(c.plan||{}).forEach(k=>{S.dlg.plan[k]=c.plan[k];S.dlg.touched[k]=1});S.dlg.planFrom=""}rerenderKeep();return}
   if(el.dataset.replan){e.stopImmediatePropagation();const k=tasks.find(x=>x.id===S.dlg.id);const plan=Object.assign({},k.plan||{});if(el.value)plan[el.dataset.replan]=el.value;else delete plan[el.dataset.replan];
     run(()=>pb.collection("tasks").update(k.id,{plan}),t("savedT"));return}

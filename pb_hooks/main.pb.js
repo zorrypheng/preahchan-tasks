@@ -111,7 +111,7 @@ onRecordAfterUpdateSuccess((e) => {
       next.set("plan", r.get("plan"))
       next.set("est_plan", r.get("est_plan"))
       // the copy starts again with the person planned for the first stage
-      try { const f = pc.flow(e.app, r.getString("type")); const p0 = f.length ? pc.planOf(r)[f[0].id] : ""; if (p0) next.set("assignee", p0) } catch (err) {}
+      try { const f = pc.flow(e.app, r.getString("type")); const p0 = f.length ? pc.planPeople(pc.planOf(r)[f[0].id]) : []; if (p0.length) { next.set("assignee", p0[0]); next.set("helpers", p0.slice(1)) } } catch (err) {}
       next.set("repeat_rule", r.getString("repeat_rule"))
       next.set("due", pc.nextRepeat(r.getString("due") || pc.ict().date, r.getString("repeat_rule")))
       e.app.save(next)
@@ -169,7 +169,7 @@ routerAdd("POST", "/api/pc/finish", (e) => {
   let task
   try { task = e.app.findRecordById("tasks", String(body.task || "")) } catch (err) { throw new NotFoundError("Task not found.") }
   pc.setActor(actor.id)
-  try { return e.json(200, pc.finishStage(e.app, actor, task, { hours: body.hours, note: body.note, to: body.to })) } finally { pc.setActor("") }
+  try { return e.json(200, pc.finishStage(e.app, actor, task, { hours: body.hours, note: body.note, to: body.to, toList: body.toList, people: body.people })) } finally { pc.setActor("") }
 }, $apis.requireAuth("users"))
 
 // Leaderboard and KPI numbers: finished stages and hours per person

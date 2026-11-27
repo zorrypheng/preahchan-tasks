@@ -82,11 +82,11 @@ function vTasks(){
     ${kan&&u.role!=="staff"?`<span class="tsep" aria-hidden="true"></span><button data-act="scope" data-v="mine" aria-pressed="${!team}">${t("mine")}</button><button data-act="scope" data-v="team" aria-pressed="${team}">${t("teamV")}</button>`:""}</div>`;
   const head=`<div class="head"><div class="rhead"><p class="eyebrow">${greetLine()}</p><h1>${t("tasks")}</h1></div><button class="btn" data-act="go-report">${t("rep_btn")}</button><button class="btn primary" data-act="new">${t("addTask")}</button></div>`;
   if(kan){
-    const pool=team?tasks.filter(k=>U(k.to)&&U(k.to).active):tasks.filter(k=>k.to===u.id);
+    const pool=team?tasks.filter(k=>U(k.to)&&U(k.to).active):tasks.filter(k=>isOn(k,u.id));
     const list=applyF(pool.filter(k=>k.status!=="done"||(k.doneAt&&k.doneAt>=WK0)));
     return `${head}${kpiTile(u)}${seg}${filterBar()}<p class="note-hint">${t("dragHint")}</p>${vKanban(list,team)}`;
   }
-  let list=tasks.filter(k=>k.to===u.id);
+  let list=tasks.filter(k=>isOn(k,u.id));
   const nDone=list.filter(k=>k.status==="done").length;
   if(S.filter==="done")list=list.filter(k=>k.status==="done").sort((a,b)=>b.doneAt.localeCompare(a.doneAt));
   else{list=sortT(list.filter(k=>k.status!=="done"));if(S.filter==="mgr")list=list.filter(k=>k.by!==u.id); if(S.filter==="own")list=list.filter(k=>k.by===u.id)}
@@ -107,7 +107,7 @@ function kCard(k,team,inOther){
     ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
      <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${k.type&&TT(k.type)?`<span>${esc(nm(TT(k.type)))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
-     ${team||inOther?`<span class="kwho"><span class="av">${avIn(U(k.to))}</span>${esc(U(k.to).name)}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
+     ${team||inOther?`<span class="kwho"><span class="av">${avIn(U(k.to))}</span>${esc(U(k.to).name)}${(k.helpers||[]).length?` <span class="cap muted">+${k.helpers.length}</span>`:""}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
     ${canFinish(k)&&(k.to===S.me||!team)&&ST(k.stage)?`<button class="btn small finishmini" data-act="finish-open" data-id="${k.id}">${fill(t("finishBtn"),esc(nm(ST(k.stage))))} →</button>`:""}
   </article>`;
@@ -209,7 +209,7 @@ function vSettings(){
   let body="";
   if(S.setTab==="statuses"){
     const list=sortedSt();
-    body=`<div class="rows">${list.map((s,i)=>`<div class="srow"><span class="kdot sc-${s.color||"gray"}"></span><span class="sname"><b>${esc(s.name)}</b>${s.name_km?` <span class="muted">· ${esc(s.name_km)}</span>`:""}<br><span class="cap muted">${s.done?`<span class="conf">${t("finishedTag")}</span> · `:`${t("hours_"+hoursMode(s,""))} · ${(s.workers||[]).length?(s.workers||[]).map(PO).filter(Boolean).map(p=>esc(nm(p))).join(", ")+" · ":""}`}${fill(t("usedBy"),count(k=>k.stage===s.id))}</span></span>
+    body=`<div class="rows">${list.map((s,i)=>`<div class="srow"><span class="kdot sc-${s.color||"gray"}"></span><span class="sname"><b>${esc(s.name)}</b>${s.name_km?` <span class="muted">· ${esc(s.name_km)}</span>`:""}<br><span class="cap muted">${s.done?`<span class="conf">${t("finishedTag")}</span> · `:`${s.team?"👥 "+t("teamStage")+" · ":""}${t("hours_"+hoursMode(s,""))} · ${(s.workers||[]).length?(s.workers||[]).map(PO).filter(Boolean).map(p=>esc(nm(p))).join(", ")+" · ":""}`}${fill(t("usedBy"),count(k=>k.stage===s.id))}</span></span>
       <span class="sacts"><button class="iconbtn sm" data-act="st-move" data-id="${s.id}" data-d="-1" ${i===0?"disabled":""} aria-label="${t("up")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button><button class="iconbtn sm" data-act="st-move" data-id="${s.id}" data-d="1" ${i===list.length-1?"disabled":""} aria-label="${t("down")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="btn small" data-act="st-edit" data-id="${s.id}">${t("editT")}</button></span></div>`).join("")}</div>
       <button class="btn primary" data-act="st-edit" data-id="" style="align-self:flex-start">${t("addStatus")}</button>`;
   }else if(S.setTab==="types"){
@@ -234,6 +234,7 @@ function sdActs(){return `<p class="err" id="sd-err" role="alert" hidden></p><di
 function dStEdit(){const d=S.dlg.draft;return `<h2>${d.id?t("editT"):t("addStatus")}</h2>${nameFields(d)}
   <div class="stack" style="gap:8px"><span class="lab">${t("colour")}</span><div class="sw">${STCOLORS.map(c=>`<button type="button" class="sc-${c}" data-act="sd-color" data-c="${c}" aria-pressed="${d.color===c}" aria-label="${c}"></button>`).join("")}</div></div>
   <label class="c"><input type="checkbox" data-sd-b="done" ${d.done?"checked":""}>${t("finished")}</label>
+  <label class="c"><input type="checkbox" data-sd-b="team" ${d.team?"checked":""}>👥 ${t("teamStage")}</label>
   <div class="two"><label class="f">${t("hoursSet")}<select data-sd="hours"><option value="">${t("hoursAuto")}</option>${["required","optional","none"].map(v=>`<option value="${v}" ${d.hours===v?"selected":""}>${t("hours_"+v)}</option>`).join("")}</select></label>
 </div>
   <div class="stack" style="gap:4px"><span class="lab">${t("workersT")}</span><span class="cap muted">${t("workersHelp")}</span>${checks(positions,"workers",d.workers)}</div>${sdActs()}`}
@@ -256,7 +257,7 @@ async function moveTo(k,stageId){
     render();toast(fill(t("movedTo"),nm(s)))}catch(e){fail(e);refresh(true)}
 }
 function draftFor(kind,id){
-  if(kind==="stEdit"){const s=ST(id)||{name:"",name_km:"",color:"gray",done:false};return {id:s.id||null,name:s.name,name_km:s.name_km||"",color:s.color||"gray",done:!!s.done,hours:s.hours||"",pos:s.pos||"",workers:[...(s.workers||(s.pos?[s.pos]:[]))]}}
+  if(kind==="stEdit"){const s=ST(id)||{name:"",name_km:"",color:"gray",done:false};return {id:s.id||null,name:s.name,name_km:s.name_km||"",color:s.color||"gray",done:!!s.done,hours:s.hours||"",pos:s.pos||"",team:!!s.team,workers:[...(s.workers||(s.pos?[s.pos]:[]))]}}
   if(kind==="ttEdit"){const x=TT(id)||{name:"",name_km:"",statuses:[],est:0};return {id:x.id||null,name:x.name,name_km:x.name_km||"",statuses:[...(x.statuses||[])],est:x.est||""}}
   const p=PO(id)||{name:"",name_km:"",types:[],statuses:[]};return {id:p.id||null,name:p.name,name_km:p.name_km||"",types:[...p.types],statuses:[...p.statuses]};
 }
@@ -265,7 +266,7 @@ async function saveDraft(){
   if(!d.name.trim()){er.textContent=t("nameReq");er.hidden=false;return}
   const col=kind==="stEdit"?"statuses":kind==="ttEdit"?"task_types":"positions";
   const data={name:d.name.trim(),name_km:(d.name_km||"").trim()};
-  if(kind==="stEdit"){data.color=d.color;data.done=!!d.done;data.hours=d.hours||"";data.workers=positions.filter(p=>d.workers.includes(p.id)).map(p=>p.id);if(!d.id)data.sort=(sortedSt().slice(-1)[0]?.sort||0)+10}
+  if(kind==="stEdit"){data.color=d.color;data.done=!!d.done;data.hours=d.hours||"";data.team=!!d.team;data.workers=positions.filter(p=>d.workers.includes(p.id)).map(p=>p.id);if(!d.id)data.sort=(sortedSt().slice(-1)[0]?.sort||0)+10}
   if(kind==="ttEdit"){data.statuses=sortedSt().filter(s=>d.statuses.includes(s.id)).map(s=>s.id);data.est=parseFloat(d.est)||0}
   if(kind==="poEdit"){data.types=d.types;data.statuses=d.statuses}
   try{d.id?await pb.collection(col).update(d.id,data):await pb.collection(col).create(data);S.dlg=null;S.arm=null;await refresh(true);toast(t("savedT"))}

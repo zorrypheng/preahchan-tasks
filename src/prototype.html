@@ -464,7 +464,7 @@ const U=id=>users.find(u=>u.id===id);
 const me=()=>U(S.me);
 const stat=k=>k.status==="done"?"done":(k.due<TODAY?"overdue":k.status);
 const doneWeek=u=>weekItems(u);
-const openOf=u=>tasks.filter(k=>k.to===u&&k.status!=="done");
+const openOf=u=>tasks.filter(k=>(k.to===u||(k.helpers||[]).includes(u))&&k.status!=="done");
 const people=()=>users.filter(u=>u.active&&u.role!=="admin");
 const initials=n=>n.split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase();
 const order={overdue:0,doing:1,todo:2,done:3};
@@ -930,6 +930,7 @@ function nText(n){
    case "repok":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRok"),by,r?wkLabel(r.wk):"")}
    case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}
    case "meet":return fill(t("tMeet"),esc(C(p.client)),esc(p.title||""));
+   case "teamlog":return fill(t("tTeamlog"),by,tt,esc(nm(ST(p.stage))||"")+" "+fh(p.h||0));
    case "turn":return fill(t("tTurn"),by,tt,esc(nm(ST(p.prev))||""));
    case "delreq":return fill(t("tDelReq"),by,tt||"<b>"+esc(p.title||"")+"</b>");
    case "delok":return fill(t("tDelOk"),by,"<b>"+esc(p.title||"")+"</b>");
