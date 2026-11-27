@@ -343,7 +343,9 @@ routerAdd("GET", "/api/pc/status", (e) => {
 cronAdd("pc_morning", "0 * * * *", () => {
   const pc = require(`${__hooks}/lib/pc.js`)
   const now = pc.ict()
-  if (now.hour === 8 && now.dow !== 0) pc.morning($app)
+  // no summary on Sundays or public holidays; posting-day reminders go out every day
+  if (now.hour === 8 && now.dow !== 0 && !pc.isHoliday($app, now.date)) pc.morning($app)
+  if (now.hour === 8) { try { pc.postReminders($app) } catch (err) { console.log("post reminders: " + err) } }
   if (now.hour === 8) { try { pc.meetingReminders($app) } catch (err) { console.log("meeting reminders: " + err) } }
 })
 
@@ -357,7 +359,7 @@ cronAdd("pc_cleanup", "0 * * * *", () => {
 cronAdd("pc_nudge", "30 * * * *", () => {
   const pc = require(`${__hooks}/lib/pc.js`)
   const now = pc.ict()
-  if (now.hour === 17 && now.dow !== 0) pc.nudge($app)
+  if (now.hour === 17 && now.dow !== 0 && !pc.isHoliday($app, now.date)) pc.nudge($app)
 })
 
 cronAdd("pc_note_reminders", "* * * * *", () => {

@@ -12,12 +12,20 @@ Ideas agreed to revisit after the workflow update (statuses, task types, positio
 - **Weekly project update:** Monday Telegram summary to the lead and managers (progress, overdue, hours vs budget).
 - **Duplicate project:** copy a project with its tasks and stage plans, with new dates (project templates).
 
+## Calendar: next steps (agreed for later)
+- **Leave and days off:** staff request leave (full/half day, sick), a manager approves; shown on the calendar, timesheet and KPI expect no hours that day, the stage plan warns.
+- **Subscribe on your phone:** private iCal link with your tasks and posts for Google Calendar / iPhone.
+- **Project timeline:** Gantt-style bars per task with milestone markers.
+- **Busy days:** planned hours per person per day in the Week view.
+- **Contract renewal:** contract end date per client on the calendar, reminder 30 days before.
+
 ## Built
+- **Calendar** (month / week / agenda; due dates, posting dates with Facebook, Instagram, TikTok, Telegram, meetings, milestones; drag to reschedule; click a day to add; Cambodian public holidays; client content plan PDF; posting-day reminder).
 - **Per-stage hours** (stage plan, Finish with hours, work logs, KPI by finished stages, timesheet, stage report, crews, timer, 17:30 nudge).
 
 ## Agency features
 1. **Client approval link:** a no-login link where the client approves or comments; approving moves the card to *Ready to post*.
-2. **Content calendar:** posting date and platform per task, monthly calendar per client, reminder on posting day.
+2. ~~Content calendar~~ (built, see Calendar).
 3. **Client packages:** monthly quota per client (for example 12 posters + 4 videos) with progress and over/under warnings.
 4. **Hours and profit per client:** monthly hours per client against the package price.
 5. **Revision counter:** counts returns from *Client approval*, warns past the agreed limit.

@@ -18,7 +18,7 @@ async function loadAll(){
   const [us,cl,ts,cm,dc,nt,nf,rp,sts,tts,pos,att]=await Promise.all([g("users",{sort:"name"}),g("clients",{sort:"name"}),g("tasks",{sort:"due"}),g("comments",{sort:"created"}),
     g("documents",{sort:"-created"}),g("notes",{sort:"-updated"}),pb.collection("notifications").getList(1,100,{sort:"-created"}).then(r=>r.items),g("reports",{sort:"created"}),
     g("statuses",{sort:"sort"}).catch(()=>[]),g("task_types",{sort:"name"}).catch(()=>[]),g("positions",{sort:"name"}).catch(()=>[]),
-    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken(),loadTemplates(),loadCosts(),loadStageData(),loadClientData()]);
+    g("attachments",{sort:"created"}).catch(()=>[]),ensureFileToken(),loadTemplates(),loadCosts(),loadStageData(),loadClientData(),loadCalData()]);
   statuses.length=0;sts.forEach(r=>statuses.push({id:r.id,name:r.name,name_km:r.name_km||"",color:r.color||"gray",sort:r.sort||0,done:!!r.done,hours:r.hours||"",pos:r.pos||"",workers:r.workers||[],team:!!r.team}));
   ttypes.length=0;tts.forEach(r=>ttypes.push({id:r.id,name:r.name,name_km:r.name_km||"",statuses:r.statuses||[],est:r.est||0}));
   positions.length=0;pos.forEach(r=>positions.push({id:r.id,name:r.name,name_km:r.name_km||"",types:r.types||[],statuses:r.statuses||[]}));
@@ -28,7 +28,7 @@ async function loadAll(){
   const known=new Set(users.map(u=>u.id));
   tasks.length=0;ts.forEach(r=>{if(!known.has(r.assignee)||!known.has(r.creator))return;
     tasks.push({id:r.id,title:r.title,desc:r.desc||"",to:r.assignee,by:r.creator,client:r.client||"",due:r.due||TODAY,prio:r.priority||"normal",status:r.status||"todo",
-      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null,project:r.project||"",milestone:r.milestone||"",repeatRule:r.repeat_rule||"",helpers:r.helpers||[],flow:Array.isArray(r.flow)?r.flow:null})});
+      est:r.est||0,spent:r.status==="done"?(r.spent||0):null,doneAt:r.status==="done"?(r.done_at||TODAY):null,repeat:!!r.repeat,comments:[],type:r.type||"",stage:r.stage||"",body:r.body||"",delBy:r.del_by||"",delReason:r.del_reason||"",delAt:r.del_at||"",plan:r.plan||{},estPlan:r.est_plan||{},timer:r.timer||null,project:r.project||"",milestone:r.milestone||"",repeatRule:r.repeat_rule||"",helpers:r.helpers||[],flow:Array.isArray(r.flow)?r.flow:null,postAt:r.post_at||"",platforms:r.platforms||[]})});
   attachments.length=0;att.forEach(r=>attachments.push({id:r.id,task:r.task,owner:r.owner,kind:r.kind,url:r.url||"",name:r.name||r.file||"",size:r.size||0,rec:r}));
   cm.forEach(c=>{const k=tasks.find(x=>x.id===c.task);if(k&&known.has(c.author))k.comments.push({by:c.author,text:c.text,at:locStamp(c.created)})});
   docs.length=0;for(const k in docGroups)delete docGroups[k];
@@ -249,7 +249,7 @@ document.addEventListener("submit",async e=>{
       const first=st[0]||null,firstPeople=first?pp(plan[first.id]):[],assignee=firstPeople[0]||S.me,helpers=firstPeople.slice(1);
       const body=cleanHTML(S.dlg.body||""),pend=(S.dlg.pend||[]).slice();
       const created=await pb.collection("tasks").create({title,body,desc:plainText(body).slice(0,2000),assignee,creator:S.me,client:client||"",due:val("nt-due")||off(2),
-        priority:val("nt-prio")||"normal",status:"todo",est,helpers,...readRepeat("nt"),type,stage:first?first.id:"",plan,est_plan:estPlan,project:val("nt-project")||"",milestone:val("nt-ms")||"",flow:custom?st.map(s=>s.id):null});
+        priority:val("nt-prio")||"normal",status:"todo",est,helpers,...readRepeat("nt"),type,stage:first?first.id:"",plan,est_plan:estPlan,project:val("nt-project")||"",milestone:val("nt-ms")||"",flow:custom?st.map(s=>s.id):null,post_at:val("nt-post")||"",platforms:readPlatforms("nt")});
       if(typeof afterTaskCreated==="function")await afterTaskCreated(created);
       for(const p of pend){try{toast(fill(t("uploadingA"),p.name));await uploadAttachment(created.id,p)}catch(x){fail(x)}}
       S.dlg=null;render();await refresh(true);toast(t("saved"))}

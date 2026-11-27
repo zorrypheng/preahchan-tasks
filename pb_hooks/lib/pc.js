@@ -32,7 +32,7 @@ const TEXT = {
     badCode: "That code did not work. Open the app and tap Connect Telegram again for a new code.",
     approved: "Approved", notAllowed: "You can't do that.",
     kpi: "This week: {n} of {kpi} stages finished · {h} of {cap} hours logged.",
-    meet: "Meeting with <b>{client}</b> today: {title}", teamlog: "{by} finished {s} for the team on <b>{title}</b> · you: {h} h. If that's wrong, fix it in the app today.", teamSame: "Everyone on this stage gets the same hours.", projectsH: "Your projects:", lateN: "{n} overdue", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
+    meet: "Meeting with <b>{client}</b> today: {title}", postToday: "📣 Post today: <b>{title}</b> · {time} · {pf}", teamlog: "{by} finished {s} for the team on <b>{title}</b> · you: {h} h. If that's wrong, fix it in the app today.", teamSame: "Everyone on this stage gets the same hours.", projectsH: "Your projects:", lateN: "{n} overdue", finish: "Finish: {s}", turn: "{by} finished {prev}. Your turn: <b>{title}</b> · {s}\nDue {due}",
     pickInApp: "Open the app to choose who does the next stage.", finishedStage: "Finished {s} · {h} h logged", finishedRec: "Finished {s}",
     nudge: "Today you logged {h} h across {n} stages.", nudgeNone: "You haven't logged any hours today. Anything missing?", nudgeOk: "Thanks! Anything missing? You can still log it in the app.",
     hoursNeeded: "Enter the hours you spent.", nextNeeded: "Choose who does the next stage.", notYours: "Only the person on this stage, or a manager, can finish it.",
@@ -67,7 +67,7 @@ const TEXT = {
     badCode: "លេខកូដនេះមិនដំណើរការទេ។ សូមបើកកម្មវិធី ហើយចុច ភ្ជាប់ Telegram ម្តងទៀត។",
     approved: "បានអនុម័ត", notAllowed: "អ្នកមិនអាចធ្វើបែបនេះបានទេ។",
     kpi: "សប្តាហ៍នេះ៖ បានបញ្ចប់ {n} នៃ {kpi} ដំណាក់កាល · បានកត់ត្រា {h} នៃ {cap} ម៉ោង។",
-    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", teamlog: "{by} បានបញ្ចប់ {s} ជំនួសក្រុមលើ <b>{title}</b> · អ្នក៖ {h} ម៉ោង។ បើខុស សូមកែក្នុងកម្មវិធីថ្ងៃនេះ។", teamSame: "អ្នកទាំងអស់ក្នុងដំណាក់កាលនេះទទួលម៉ោងដូចគ្នា។", projectsH: "គម្រោងរបស់អ្នក៖", lateN: "ហួសកំណត់ {n}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
+    meet: "ប្រជុំជាមួយ <b>{client}</b> ថ្ងៃនេះ៖ {title}", postToday: "📣 ប៉ុស្តិ៍ថ្ងៃនេះ៖ <b>{title}</b> · {time} · {pf}", teamlog: "{by} បានបញ្ចប់ {s} ជំនួសក្រុមលើ <b>{title}</b> · អ្នក៖ {h} ម៉ោង។ បើខុស សូមកែក្នុងកម្មវិធីថ្ងៃនេះ។", teamSame: "អ្នកទាំងអស់ក្នុងដំណាក់កាលនេះទទួលម៉ោងដូចគ្នា។", projectsH: "គម្រោងរបស់អ្នក៖", lateN: "ហួសកំណត់ {n}", finish: "បញ្ចប់៖ {s}", turn: "{by} បានបញ្ចប់ {prev}។ វេនរបស់អ្នក៖ <b>{title}</b> · {s}\nកំណត់ {due}",
     pickInApp: "បើកកម្មវិធីដើម្បីជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", finishedStage: "បានបញ្ចប់ {s} · បានកត់ត្រា {h} ម៉ោង", finishedRec: "បានបញ្ចប់ {s}",
     nudge: "ថ្ងៃនេះអ្នកបានកត់ត្រា {h} ម៉ោង ក្នុង {n} ដំណាក់កាល។", nudgeNone: "ថ្ងៃនេះអ្នកមិនទាន់កត់ត្រាម៉ោងទេ។ មានអ្វីខ្វះទេ?", nudgeOk: "អរគុណ! មានអ្វីខ្វះទេ? អ្នកនៅតែអាចកត់ត្រាក្នុងកម្មវិធី។",
     hoursNeeded: "សូមបញ្ចូលម៉ោងដែលអ្នកបានចំណាយ។", nextNeeded: "សូមជ្រើសអ្នកធ្វើដំណាក់កាលបន្ទាប់។", notYours: "មានតែអ្នកនៅដំណាក់កាលនេះ ឬអ្នកគ្រប់គ្រងទេ ដែលអាចបញ្ចប់វាបាន។",
@@ -342,6 +342,19 @@ module.exports = {
     app.save(log)
   },
 
+  // ---------- Calendar ----------
+  isHoliday(app, day) { try { return app.findRecordsByFilter("holidays", "date = {:d}", "", 1, 0, { d: day }).length > 0 } catch (e) { return false } },
+  PLATFORM: { facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", telegram: "Telegram" },
+  // 08:00 every day: the people on a task whose post date is today
+  postReminders(app) {
+    const today = this.ict().date
+    app.findRecordsByFilter("tasks", "post_at ~ {:d} && status != 'done'", "post_at", 300, 0, { d: today + "%" }).forEach((k) => {
+      if (k.getString("post_at").slice(0, 10) !== today) return
+      const who = this.planPeople([k.getString("assignee")].concat(k.getStringSlice("helpers")))
+      who.forEach((u) => { try { this.notify(app, u, "post", { task: k.id, at: k.getString("post_at"), platforms: k.getStringSlice("platforms") }) } catch (e) {} })
+    })
+  },
+
   // 08:00: everyone in a meeting planned for today hears about it
   meetingReminders(app) {
     const today = this.ict().date
@@ -441,6 +454,11 @@ module.exports = {
       let client = ""
       try { client = app.findRecordById("clients", data.client).getString("name") } catch (e) {}
       text = fill(this.t(lang, "meet"), { client: esc(client), title: esc(data.title || "") })
+    } else if (kind === "post") {
+      const k = task(); if (!k) return
+      const pf = (data.platforms || []).map((p) => this.PLATFORM[p] || p).join(" + ")
+      text = fill(this.t(lang, "postToday"), { title: esc(k.getString("title")), time: String(data.at || "").slice(11, 16), pf: esc(pf || "—") })
+      const nb = this.nextButton(app, k, lang); if (nb) rows.push(nb)
     } else if (kind === "teamlog") {
       const k = task(); const title = k ? k.getString("title") : ""
       text = fill(this.t(lang, "teamlog"), { by: by, s: esc(this.stageName(app, data.stage, lang)), title: esc(title), h: round2(data.h || 0) })

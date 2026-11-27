@@ -7,7 +7,7 @@ let dlgKey="",dlgDirty=false;
 const dlgKeyNow=()=>S.dlg?S.dlg.type+":"+(S.dlg.id||""):"";
 function trackDlg(){const k=dlgKeyNow();if(k!==dlgKey){dlgKey=k;dlgDirty=false}}
 /* fields in the task window that save by themselves */
-function autosaves(el){const d=el.dataset||{};return !!(d.ch||d.replan||d.af||d.cf||d.pf||["stage","ttype","setproj","setms","move"].includes(d.x)||/^tk-(stage|type|client|project|ms|rep|repn|repu)$/.test(el.id||"")||el.id==="re-to")}
+function autosaves(el){const d=el.dataset||{};return !!(d.ch||d.replan||d.af||d.cf||d.pf||["stage","ttype","setproj","setms","move"].includes(d.x)||/^tk-(stage|type|client|project|ms|rep|repn|repu|post|pf-.+)$/.test(el.id||"")||el.id==="re-to")}
 function markDirty(e){const el=e.target;if(!el.closest||!el.closest(".dlg")||el.type==="file"||autosaves(el))return;trackDlg();dlgDirty=true}
 document.addEventListener("input",markDirty,true);
 document.addEventListener("change",markDirty,true);

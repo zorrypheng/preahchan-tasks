@@ -62,7 +62,7 @@ function taskCard(k,showWho){
    <button class="open" data-act="open" data-id="${k.id}"><h3>${esc(k.title)}</h3>
     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>
      <span>${showWho?esc(U(k.to).name):(mine?t("own"):t("from")+" "+esc(U(k.by).name))}</span>
-     ${typeLabel(k)?`<span>${esc(typeLabel(k))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
+     ${typeLabel(k)?`<span>${esc(typeLabel(k))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${timeMeta(k)}${attCount(k)}${delChip(k)}${postChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}${k.repeat?`<span>🔁 ${esc(repeatLabel(k))}</span>`:""}${k.comments.length?`<span>${k.comments.length} ${t("comments").toLowerCase()}</span>`:""}</span></button>
    ${s==="done"?`<button class="btn small" data-act="reopen" data-id="${k.id}">${t("reopen")}</button>`:stageChip(k)}</article>`;
 }
 const fOn2=()=>S.fDue!=="any"||S.fPrio!=="any"||S.fClient!=="any"||S.fType!=="any";
@@ -106,7 +106,7 @@ function kCard(k,team,inOther){
   return `<article class="kcard ${s==="overdue"?"isover":""}" draggable="${movable}" data-id="${k.id}">
     ${cover?`<img class="kcover" src="${esc(cover)}" alt="" loading="lazy" referrerpolicy="no-referrer" draggable="false" onerror="this.remove()">`:""}
     <button class="open" data-act="open" data-id="${k.id}"><b>${esc(k.title)}</b>
-     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${typeLabel(k)?`<span>${esc(typeLabel(k))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
+     <span class="meta"><span class="${s==="overdue"?"late":""}">${dueText(k)}</span>${typeLabel(k)?`<span>${esc(typeLabel(k))}</span>`:""}<span class="pr ${k.prio}">${t(k.prio)}</span>${k.est?`<span class="num">${fh(k.status==="done"&&k.spent!=null?k.spent:k.est)}</span>`:""}${attCount(k)}${delChip(k)}${postChip(k)}${k.client?`<span>${esc(C(k.client))}</span>`:""}</span>
      ${team||inOther?`<span class="kwho"><span class="av">${avIn(U(k.to))}</span>${esc(U(k.to).name)}${(k.helpers||[]).length?` <span class="cap muted">+${k.helpers.length}</span>`:""}${inOther?" · "+stageChip(k):""}</span>`:""}</button>
     ${movable&&opts.length&&k.status!=="done"?`<select class="kmove" data-x="move" data-id="${k.id}" aria-label="${t("moveTo")} ${esc(k.title)}"><option value="">${t("moveTo")}</option>${opts.map(x=>`<option value="${x.id}">${esc(nm(x))}</option>`).join("")}</select>`:""}
     ${canFinish(k)&&(k.to===S.me||!team)&&ST(k.stage)?`<button class="btn small finishmini" data-act="finish-open" data-id="${k.id}">${fill(t("finishBtn"),esc(nm(ST(k.stage))))} →</button>`:""}
@@ -135,6 +135,7 @@ function dTask(){
    ${canPlan(k)?repeatField("tk",k.repeat,k.repeatRule):""}
    <label class="f">${t("client")}<select id="tk-client" data-ch="setclient">${clientOpts(k.client)}</select></label>
    <div class="two">${projectField(k.client,k.project,"tk-project")}${milestoneField(k.project,k.milestone,"tk-ms")}</div>${projectLink(k)}${guideBtn(k)}
+   ${postFields("tk",k)}
    ${k.client?`<button class="btn small" data-act="gofiles" data-c="${k.client}" style="align-self:flex-start">${t("clientFiles")}: ${esc(C(k.client))} (${docs.filter(d=>d.area==="client"&&d.client===k.client).length})</button>`:""}
    ${descBlock(k)}
    ${attBlock(k.id)}
@@ -159,9 +160,10 @@ function dNew(){
    <label class="f" id="nt-newwrap" hidden>${t("newClientName")}<input type="text" id="nt-newclient" maxlength="60" autocomplete="off"></label>
    <div class="stack" style="gap:6px"><span class="lab">${t("desc")}</span>${rtEditor("nt-body",S.dlg.body||"")}</div>
    ${attBlock(null)}
-   <div class="two"><label class="f">${t("due")}<input type="date" id="nt-due" required></label>
+   <div class="two"><label class="f">${t("due")}<input type="date" id="nt-due" required value="${esc(dp.due||"")}"></label>
    <label class="f">${t("est")}<input type="number" id="nt-est" min="0.25" max="99" step="0.25" inputmode="decimal" style="width:100%" required value="${dp.est||""}"></label>
    <label class="f">${t("prio")}<select id="nt-prio" required>${ph(dp.prio)}${["normal","high","low"].map(v=>`<option value="${v}" ${dp.prio===v?"selected":""}>${t(v)}</option>`).join("")}</select></label></div>
+   ${postFields("nt",null,dp)}
    ${repeatField("nt",!!dp.repeat,dp.repeatRule||"")}
    <div class="acts"><button type="button" class="btn" data-act="close">${t("cancel")}</button><button class="btn primary">${t("save")}</button></div></form>`;
 }
@@ -225,7 +227,7 @@ function vSettings(){
       <button class="btn primary" data-act="po-edit" data-id="" style="align-self:flex-start">${t("addPosition")}</button>`;
   }
   return `<div class="head"><h1>${t("settings")}</h1></div><p class="muted">${t("settingsHelp")}</p>
-   <div class="tabs">${tab("statuses","statusesT")}${tab("types","typesT")}${tab("positions","positionsT")}</div>${body}`;
+   <div class="tabs">${tab("statuses","statusesT")}${tab("types","typesT")}${tab("positions","positionsT")}${tab("holidays","holidaysT")}</div>${S.setTab==="holidays"?holidaysTab():body}`;
 }
 function nameFields(d){return `<div class="two"><label class="f">${t("nameEn")}<input type="text" id="sd-name" data-sd="name" value="${esc(d.name)}" maxlength="60" autocomplete="off"></label>
   <label class="f">${t("nameKm")}<input type="text" id="sd-km" data-sd="name_km" value="${esc(d.name_km||"")}" maxlength="80" autocomplete="off"></label></div>`}

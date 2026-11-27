@@ -931,6 +931,7 @@ function nText(n){
    case "repback":{const r=reports.find(x=>x.id===p.rep);return fill(t("nRback"),by,r?wkLabel(r.wk):"")}
    case "meet":return fill(t("tMeet"),esc(C(p.client)),esc(p.title||""));
    case "teamlog":return fill(t("tTeamlog"),by,tt,esc(nm(ST(p.stage))||"")+" "+fh(p.h||0));
+   case "post":return fill(t("tPost"),esc((p.platforms||[]).map(x=>t("pf_"+x)).join(" + ")),tt);
    case "turn":return fill(t("tTurn"),by,tt,esc(nm(ST(p.prev))||""));
    case "delreq":return fill(t("tDelReq"),by,tt||"<b>"+esc(p.title||"")+"</b>");
    case "delok":return fill(t("tDelOk"),by,"<b>"+esc(p.title||"")+"</b>");
